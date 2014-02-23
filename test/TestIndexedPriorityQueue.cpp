@@ -1,6 +1,6 @@
 //
 //  TestIndexedPriorityQueue.cpp
-//  multistrain_abm
+//  malariamodel
 //
 //  Created by Ed Baskerville on 2/21/14.
 //  Copyright (c) 2014 Ed Baskerville. All rights reserved.
