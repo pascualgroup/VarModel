@@ -1,0 +1,11 @@
+.DS_Store
+.Trashes
+xcuserdata
+project.xcworkspace
+boost
+*.log
+*.aux
+*.pdf
+mbostock*
+d3*
+*~

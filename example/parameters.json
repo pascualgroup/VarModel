@@ -1,0 +1,14 @@
+{
+	"randomSeed" : 0,
+	
+	"tEnd" : 100,
+	
+	"initialPopulationSize" : 100,
+	
+	"nVarGenes" : 1000,
+	
+	"birthRate" : 0.01,
+	"deathRate" : 0.01,
+	
+	"bitingRate" : 0.01
+}
