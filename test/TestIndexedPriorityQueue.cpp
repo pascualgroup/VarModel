@@ -7,7 +7,7 @@
 //
 
 #include "catch.hpp"
-#include "types.h"
+#include "random.h"
 #include "IndexedPriorityQueue.h"
 
 using namespace std;

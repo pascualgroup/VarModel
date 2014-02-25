@@ -2,7 +2,7 @@
 #define __malariamodel__EventSampler__
 
 #include <vector>
-#include "types.h"
+#include "random.h"
 #include "IndexedPriorityQueue.h"
 
 class Event;
@@ -34,7 +34,9 @@ public:
 	SimpleEvent(SimpleEvent const & event) : Event(), constantRate(event.constantRate) {}
 	
 	SimpleEvent(double rate) : Event(), constantRate(rate) {}
-	void setRate(double rate) { constantRate = rate; }
+	virtual void setRate(double rate) { constantRate = rate; }
+	virtual double getRate() { return constantRate; }
+	virtual std::vector<Event *> performEvent(double time) { return std::vector<Event *>(0); }
 private:
 	double constantRate;
 };

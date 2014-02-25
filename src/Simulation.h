@@ -6,14 +6,12 @@
 #include <boost/array.hpp>
 
 #include "Database.h"
-#include "types.h"
+#include "random.h"
 #include "strutils.h"
 #include "SimParameters.h"
 #include "Host.h"
 
 #include "EventSampler.h"
-
-using namespace std;
 
 class Simulation;
 
@@ -21,26 +19,9 @@ class SimulationEvent : public Event
 {
 public:
 	SimulationEvent(Simulation * sim) : sim(sim) {}
+	virtual std::string toJsonString() = 0;
 protected:
 	Simulation * sim;
-};
-
-class BirthEvent : public SimulationEvent
-{
-public:
-	BirthEvent(Simulation * sim) : SimulationEvent(sim) {}
-	
-	virtual double getRate();
-	virtual std::vector<Event *> performEvent(double time);
-};
-
-class DeathEvent : public SimulationEvent
-{
-public:
-	DeathEvent(Simulation * sim) : SimulationEvent(sim) {}
-	
-	virtual double getRate();
-	virtual std::vector<Event *> performEvent(double time);
 };
 
 class BitingEvent : public SimulationEvent
@@ -48,6 +29,7 @@ class BitingEvent : public SimulationEvent
 public:
 	BitingEvent(Simulation * sim) : SimulationEvent(sim) {}
 	
+	virtual std::string toJsonString();
 	virtual double getRate();
 	virtual std::vector<Event *> performEvent(double time);
 };
@@ -57,6 +39,7 @@ class ImmigrationEvent : public SimulationEvent
 public:
 	ImmigrationEvent(Simulation * sim) : SimulationEvent(sim) {}
 	
+	virtual std::string toJsonString();
 	virtual double getRate();
 	virtual std::vector<Event *> performEvent(double time);
 };
@@ -77,10 +60,10 @@ private:
 	
 	std::vector<std::unique_ptr<Host>> hosts;
 	
-	BirthEvent birthEvent;
-	DeathEvent deathEvent;
 	BitingEvent bitingEvent;
 	ImmigrationEvent immigrationEvent;
+	
+	uint64_t nextHostId;
 	
 	std::unique_ptr<EventSampler> samplerPtr;
 };

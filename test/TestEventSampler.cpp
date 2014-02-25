@@ -7,7 +7,7 @@
 //
 
 #include "catch.hpp"
-#include "types.h"
+#include "random.h"
 #include "EventSampler.h"
 
 using namespace std;

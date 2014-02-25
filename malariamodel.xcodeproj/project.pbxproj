@@ -27,6 +27,10 @@
 		692A385018B94BE80085986A /* vecutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A384E18B94BE80085986A /* vecutils.cpp */; };
 		692A385118B94BE80085986A /* vecutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A384E18B94BE80085986A /* vecutils.cpp */; };
 		692A385218B94D4C0085986A /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 692A382F18B94A060085986A /* libsqlite3.0.dylib */; };
+		693F00F318BC0C69000F31C7 /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F118BC0C69000F31C7 /* random.cpp */; };
+		693F00F418BC0C69000F31C7 /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F118BC0C69000F31C7 /* random.cpp */; };
+		693F00F718BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
+		693F00F818BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -66,7 +70,6 @@
 		692A382018B949590085986A /* Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Simulation.h; sourceTree = "<group>"; };
 		692A382118B949590085986A /* strutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = strutils.cpp; sourceTree = "<group>"; };
 		692A382218B949590085986A /* strutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = strutils.h; sourceTree = "<group>"; };
-		692A382318B949590085986A /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		692A382F18B94A060085986A /* libsqlite3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.0.dylib; path = usr/lib/libsqlite3.0.dylib; sourceTree = SDKROOT; };
 		692A383518B94A640085986A /* test_malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
 		692A383F18B94A700085986A /* catch.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
@@ -76,6 +79,10 @@
 		692A384E18B94BE80085986A /* vecutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vecutils.cpp; sourceTree = "<group>"; };
 		692A384F18B94BE80085986A /* vecutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vecutils.h; sourceTree = "<group>"; };
 		693B771918B94655009D10D4 /* malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
+		693F00F118BC0C69000F31C7 /* random.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = random.cpp; sourceTree = "<group>"; };
+		693F00F218BC0C69000F31C7 /* random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		693F00F518BCFC63000F31C7 /* Strain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Strain.cpp; sourceTree = "<group>"; };
+		693F00F618BCFC63000F31C7 /* Strain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Strain.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +114,8 @@
 				692A381F18B949590085986A /* Simulation.cpp */,
 				692A381A18B949590085986A /* Host.h */,
 				692A381918B949590085986A /* Host.cpp */,
+				693F00F618BCFC63000F31C7 /* Strain.h */,
+				693F00F518BCFC63000F31C7 /* Strain.cpp */,
 				692A381D18B949590085986A /* Parameters.h */,
 				692A381818B949590085986A /* EventSampler.h */,
 				692A381718B949590085986A /* EventSampler.cpp */,
@@ -114,11 +123,12 @@
 				692A381B18B949590085986A /* IndexedPriorityQueue.cpp */,
 				692A381618B949590085986A /* Database.h */,
 				692A381518B949590085986A /* Database.cpp */,
-				692A382318B949590085986A /* types.h */,
 				692A382218B949590085986A /* strutils.h */,
 				692A382118B949590085986A /* strutils.cpp */,
 				692A384F18B94BE80085986A /* vecutils.h */,
 				692A384E18B94BE80085986A /* vecutils.cpp */,
+				693F00F218BC0C69000F31C7 /* random.h */,
+				693F00F118BC0C69000F31C7 /* random.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -226,9 +236,11 @@
 				692A384418B94A700085986A /* TestEventSampler.cpp in Sources */,
 				692A384918B94B4C0085986A /* Simulation.cpp in Sources */,
 				692A384718B94B4C0085986A /* EventSampler.cpp in Sources */,
+				693F00F818BCFC63000F31C7 /* Strain.cpp in Sources */,
 				692A384B18B94B4C0085986A /* Database.cpp in Sources */,
 				692A384818B94B4C0085986A /* IndexedPriorityQueue.cpp in Sources */,
 				692A384518B94A700085986A /* TestIndexedPriorityQueue.cpp in Sources */,
+				693F00F418BC0C69000F31C7 /* random.cpp in Sources */,
 				692A384618B94B380085986A /* Host.cpp in Sources */,
 				692A384A18B94B4C0085986A /* strutils.cpp in Sources */,
 				692A385118B94BE80085986A /* vecutils.cpp in Sources */,
@@ -241,8 +253,10 @@
 			files = (
 				692A382618B949590085986A /* Database.cpp in Sources */,
 				692A381418B9468E0085986A /* main.cpp in Sources */,
+				693F00F718BCFC63000F31C7 /* Strain.cpp in Sources */,
 				692A382B18B949590085986A /* strutils.cpp in Sources */,
 				692A382A18B949590085986A /* Simulation.cpp in Sources */,
+				693F00F318BC0C69000F31C7 /* random.cpp in Sources */,
 				692A385018B94BE80085986A /* vecutils.cpp in Sources */,
 				692A382918B949590085986A /* IndexedPriorityQueue.cpp in Sources */,
 				692A382718B949590085986A /* EventSampler.cpp in Sources */,
@@ -373,6 +387,7 @@
 				692A383D18B94A640085986A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		693B771418B94655009D10D4 /* Build configuration list for PBXProject "malariamodel" */ = {
 			isa = XCConfigurationList;

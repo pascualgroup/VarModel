@@ -12,17 +12,17 @@ public:
 	uint32_t initialPopulationSize;
 	
 	// Number of var genes in global pool
-	uint32_t nVarGenes;
+	uint32_t genePoolSize;
 	
-	// Simulation time
+	// Simulation end time
 	double tEnd;
 	
-	// Per capita biting rate (rate of paired bites)
+	// Per-capita biting rate (rate of paired bites)
 	double bitingRate;
 	
-	// Per-capita birth and death rates
-	double birthRate;
-	double deathRate;
+	// Lifetime gamma-distribution parameters
+	double lifetimeMean;
+	double lifetimeShape;
 	
 	SimParameters(std::istream & paramStream, Database & db)
 		: Parameters(paramStream, db, "parameters")
@@ -30,12 +30,12 @@ public:
 		LOAD_VALUE(randomSeed);
 		
 		LOAD_VALUE(initialPopulationSize);
-		LOAD_VALUE(nVarGenes);
+		LOAD_VALUE(genePoolSize);
 		LOAD_VALUE(tEnd);
 		
 		LOAD_VALUE(bitingRate);
-		LOAD_VALUE(birthRate);
-		LOAD_VALUE(deathRate);
+		LOAD_VALUE(lifetimeMean);
+		LOAD_VALUE(lifetimeShape);
 	}
 };
 

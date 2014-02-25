@@ -5,10 +5,10 @@
 	
 	"initialPopulationSize" : 100,
 	
-	"nVarGenes" : 1000,
+	"genePoolSize" : 1000,
 	
-	"birthRate" : 0.01,
-	"deathRate" : 0.01,
+	"bitingRate" : 0.01,
 	
-	"bitingRate" : 0.01
+	"lifetimeMean" : 1000,
+	"lifetimeShape" : 1
 }
