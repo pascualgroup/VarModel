@@ -46,8 +46,6 @@ public:
 
 class Simulation
 {
-friend class BirthEvent;
-friend class DeathEvent;
 friend class BitingEvent;
 friend class IntroductionEvent;
 public:
