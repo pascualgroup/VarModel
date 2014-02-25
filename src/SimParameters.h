@@ -20,6 +20,9 @@ public:
 	// Per-capita biting rate (rate of paired bites)
 	double bitingRate;
 	
+	// Per-capita introduction rate
+	double introductionRate;
+	
 	// Lifetime gamma-distribution parameters
 	double lifetimeMean;
 	double lifetimeShape;

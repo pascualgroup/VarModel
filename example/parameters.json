@@ -7,6 +7,7 @@
 	
 	"genePoolSize" : 1000,
 	
+	"introductionRate" : 0.01,
 	"bitingRate" : 0.01,
 	
 	"lifetimeMean" : 1000,

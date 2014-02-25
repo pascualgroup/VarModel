@@ -11,7 +11,7 @@ Simulation::Simulation(SimParameters & params, Database & db)
 	dbPtr(&db),
 	rng(p->randomSeed),
 	bitingEvent(this),
-	immigrationEvent(this),
+	introductionEvent(this),
 	nextHostId(0)
 {
 	// Create hosts
@@ -23,7 +23,7 @@ Simulation::Simulation(SimParameters & params, Database & db)
 	
 	vector<Event *> events;
 	events.push_back((Event *)&bitingEvent);
-	events.push_back((Event *)&immigrationEvent);
+	events.push_back((Event *)&introductionEvent);
 	
 	samplerPtr = unique_ptr<EventSampler>(new EventSampler(events, rng));
 }
@@ -72,17 +72,17 @@ std::vector<Event *> BitingEvent::performEvent(double time)
 
 /*** IMMIGRATION EVENT ***/
 
-string ImmigrationEvent::toJsonString()
+string IntroductionEvent::toJsonString()
 {
-	return "{\"name\" : \"immigration\"}";
+	return "{\"name\" : \"introduction\"}";
 }
 
-double ImmigrationEvent::getRate()
+double IntroductionEvent::getRate()
 {
-	return 0.0;
+	return sim->hosts.size() * sim->p->introductionRate;
 }
 
-std::vector<Event *> ImmigrationEvent::performEvent(double time)
+std::vector<Event *> IntroductionEvent::performEvent(double time)
 {
 	return vector<Event *>(0);
 }

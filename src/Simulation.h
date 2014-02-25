@@ -34,10 +34,10 @@ public:
 	virtual std::vector<Event *> performEvent(double time);
 };
 
-class ImmigrationEvent : public SimulationEvent
+class IntroductionEvent : public SimulationEvent
 {
 public:
-	ImmigrationEvent(Simulation * sim) : SimulationEvent(sim) {}
+	IntroductionEvent(Simulation * sim) : SimulationEvent(sim) {}
 	
 	virtual std::string toJsonString();
 	virtual double getRate();
@@ -49,7 +49,7 @@ class Simulation
 friend class BirthEvent;
 friend class DeathEvent;
 friend class BitingEvent;
-friend class ImmigrationEvent;
+friend class IntroductionEvent;
 public:
 	Simulation(SimParameters & params, Database & db);
 	void run();
@@ -61,7 +61,7 @@ private:
 	std::vector<std::unique_ptr<Host>> hosts;
 	
 	BitingEvent bitingEvent;
-	ImmigrationEvent immigrationEvent;
+	IntroductionEvent introductionEvent;
 	
 	uint64_t nextHostId;
 	
