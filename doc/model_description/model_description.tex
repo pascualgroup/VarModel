@@ -102,6 +102,22 @@ Main function, which does the following:
 
 \subsection{\texttt{Simulation\{.h, .cpp\}}}
 
+Defines main \texttt{Simulation} class. Main simulation loop is in \texttt{Simulation::run()}, which asks a next-reaction-method sampler to repeatedly sample the next event.
+
+The activity of events will be implemented in auxiliary classes \texttt{BitingEvent} and \texttt{IntroductionEvent}.
+
+\subsection{\texttt{Host\{.h, .cpp\}}}
+
+Representation of host state.
+
+\subsection{\texttt{Strain\{.h, .cpp\}}}
+
+Representation of strains.
+
+\subsection{Other files}
+
+All other files are general-purpose tools for parameter loading, event-based sampling, database management, and other utility functions.
+
 \section{List of all model parameters}
 
 TODO
