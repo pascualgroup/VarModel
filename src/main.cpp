@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "Database.h"
+//#include "Database.h"
 #include "SimParameters.h"
 #include "Simulation.h"
 
@@ -19,10 +19,13 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	Database db(true, "db.sqlite");
+//	Database db(true, "db.sqlite");
 	
 	ifstream paramsStream(argv[1]);
-	SimParameters params(paramsStream, db);
+	ptree paramsPtree;
+	read_json(paramsStream, paramsPtree);
+	SimParameters params;
+	params.loadFromPtree(paramsPtree);
 	
 	// Generate random seed if set to 0
 	if(params.randomSeed == 0) {
@@ -31,6 +34,6 @@ int main(int argc, char **argv) {
 		params.randomSeed = ud(rd);
 	}
 	
-	unique_ptr<Simulation> simulation(new Simulation(params, db));
-	simulation->run();
+//	unique_ptr<Simulation> simulation(new Simulation(params, db));
+//	simulation->run();
 }

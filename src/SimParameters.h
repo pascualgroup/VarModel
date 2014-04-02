@@ -1,9 +1,13 @@
 #ifndef __malariamodel__SimParameters__
 #define __malariamodel__SimParameters__
 
-#include "Parameters.h"
+#define DEFINE(x) define(#x, x)
 
-class SimParameters : Parameters
+#include "PtreeObject.hpp"
+
+using namespace zppdata;
+
+class SimParameters : public PtreeObject
 {
 public:
 	uint32_t randomSeed;
@@ -27,18 +31,15 @@ public:
 	double lifetimeMean;
 	double lifetimeShape;
 	
-	SimParameters(std::istream & paramStream, Database & db)
-		: Parameters(paramStream, db, "parameters")
+	SimParameters()
 	{
-		LOAD_VALUE(randomSeed);
-		
-		LOAD_VALUE(initialPopulationSize);
-		LOAD_VALUE(genePoolSize);
-		LOAD_VALUE(tEnd);
-		
-		LOAD_VALUE(bitingRate);
-		LOAD_VALUE(lifetimeMean);
-		LOAD_VALUE(lifetimeShape);
+		DEFINE(randomSeed);
+		DEFINE(initialPopulationSize);
+		DEFINE(genePoolSize);
+		DEFINE(tEnd);
+		DEFINE(bitingRate);
+		DEFINE(lifetimeMean);
+		DEFINE(lifetimeShape);
 	}
 };
 

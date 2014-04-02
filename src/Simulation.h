@@ -5,65 +5,57 @@
 
 #include <boost/array.hpp>
 
-#include "Database.h"
 #include "random.h"
 #include "strutils.h"
 #include "SimParameters.h"
 #include "Host.h"
 
-#include "EventSampler.h"
+//#include "EventSampler.h"
 
-class Simulation;
+/*class Simulation;
 
-class SimulationEvent : public Event
+class SimulationEvent : public RateEvent
 {
 public:
-	SimulationEvent(Simulation * sim) : sim(sim) {}
-	virtual std::string toJsonString() = 0;
+	SimulationEvent(Simulation * simPtr, double rate, double initTime, rng_t & rng);
 protected:
-	Simulation * sim;
+	Simulation * simPtr;
 };
 
 class BitingEvent : public SimulationEvent
 {
 public:
-	BitingEvent(Simulation * sim) : SimulationEvent(sim) {}
-	
-	virtual std::string toJsonString();
-	virtual double getRate();
-	virtual std::vector<Event *> performEvent(double time);
+	BitingEvent(Simulation * simPtr);
+	virtual void performEvent(EventSampler & sampler);
 };
 
 class IntroductionEvent : public SimulationEvent
 {
 public:
-	IntroductionEvent(Simulation * sim) : SimulationEvent(sim) {}
-	
-	virtual std::string toJsonString();
-	virtual double getRate();
-	virtual std::vector<Event *> performEvent(double time);
+	IntroductionEvent(Simulation * sim);
+	virtual void performEvent(EventSampler & sampler);
 };
 
 class Simulation
 {
-friend class BitingEvent;
-friend class IntroductionEvent;
+//friend class BitingEvent;
+//friend class IntroductionEvent;
 public:
 	Simulation(SimParameters & params, Database & db);
 	void run();
 private:
 	SimParameters * p;
-	Database * dbPtr;
+//	Database * dbPtr;
 	rng_t rng;
 	
 	std::vector<std::unique_ptr<Host>> hosts;
 	
-	BitingEvent bitingEvent;
-	IntroductionEvent introductionEvent;
+//	BitingEvent bitingEvent;
+//	IntroductionEvent introductionEvent;
 	
 	uint64_t nextHostId;
 	
 	std::unique_ptr<EventSampler> samplerPtr;
-};
+};*/
 
 #endif /* defined(__malariamodel__Simulation__) */
