@@ -1,7 +1,8 @@
 #include "Simulation.h"
-#include "vecutils.h"
+#include "zppsim_util.hpp"
 
 using namespace std;
+using namespace zppsim;
 
 /*** SIMULATION INITIALIZATION ***/
 

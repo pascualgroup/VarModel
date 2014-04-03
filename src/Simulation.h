@@ -5,8 +5,8 @@
 
 #include <boost/array.hpp>
 
-#include "random.h"
-#include "strutils.h"
+#include "zppsim_random.hpp"
+#include "zppdata_util.hpp"
 #include "SimParameters.h"
 #include "Host.h"
 
