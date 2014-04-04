@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-//#include "Database.h"
+#include "Database.hpp"
 #include "SimParameters.h"
 #include "Simulation.h"
 
@@ -11,6 +11,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace zppdata;
 using namespace boost::property_tree;
 
 int main(int argc, char **argv) {
@@ -18,8 +19,6 @@ int main(int argc, char **argv) {
 		cerr << "Usage: " << argv[0] << " <params-filename>" << endl;
 		return 1;
 	}
-	
-//	Database db(true, "db.sqlite");
 	
 	ifstream paramsStream(argv[1]);
 	ptree paramsPtree;
@@ -34,6 +33,10 @@ int main(int argc, char **argv) {
 		params.randomSeed = ud(rd);
 	}
 	
-//	unique_ptr<Simulation> simulation(new Simulation(params, db));
-//	simulation->run();
+	cerr << "Loaded parameters:" << endl;
+	write_json(cerr, params.dumpToPtree());
+	
+	Database db;
+	unique_ptr<Simulation> simPtr(new Simulation(params, db));
+	simPtr->run();
 }

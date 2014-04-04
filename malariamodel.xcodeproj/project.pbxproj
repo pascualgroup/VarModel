@@ -108,13 +108,13 @@
 		691F743C18EDCB05001A1DE4 /* zppsim */ = {
 			isa = PBXGroup;
 			children = (
-				691F743D18EDCB12001A1DE4 /* EventQueue.cpp */,
 				691F743E18EDCB12001A1DE4 /* EventQueue.hpp */,
+				691F743D18EDCB12001A1DE4 /* EventQueue.cpp */,
 				691F743F18EDCB12001A1DE4 /* IndexedPriorityQueue.hpp */,
-				691F744018EDCB12001A1DE4 /* zppsim_random.cpp */,
 				691F744118EDCB12001A1DE4 /* zppsim_random.hpp */,
-				691F744218EDCB12001A1DE4 /* zppsim_util.cpp */,
+				691F744018EDCB12001A1DE4 /* zppsim_random.cpp */,
 				691F744318EDCB12001A1DE4 /* zppsim_util.hpp */,
+				691F744218EDCB12001A1DE4 /* zppsim_util.cpp */,
 			);
 			name = zppsim;
 			sourceTree = "<group>";
@@ -122,8 +122,8 @@
 		692A381218B9468E0085986A /* src */ = {
 			isa = PBXGroup;
 			children = (
-				692A381E18B949590085986A /* SimParameters.h */,
 				692A381318B9468E0085986A /* main.cpp */,
+				692A381E18B949590085986A /* SimParameters.h */,
 				692A382018B949590085986A /* Simulation.h */,
 				692A381F18B949590085986A /* Simulation.cpp */,
 				692A381A18B949590085986A /* Host.h */,
