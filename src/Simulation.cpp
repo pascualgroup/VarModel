@@ -7,40 +7,22 @@ using namespace zppsim;
 
 Simulation::Simulation(SimParameters & params, Database & db)
 :
-	p(&params),
+	parPtr(&params),
 	dbPtr(&db),
-	rng(p->randomSeed),
-	hosts(p->nPopulations),
-	hostToDie(nullptr)
+	rng(parPtr->randomSeed)
 {
-	// Create hosts
-	for(uint32_t popId = 0; popId < p->nPopulations; popId++) {
-		hosts[popId] = vector<unique_ptr<Host>>(p->populationSize[popId]);
-		for(uint32_t i = 0; i < p->populationSize[popId]; i++) {
-			uint64_t hostId = nextHostId++;
-			hosts[popId][i] = unique_ptr<Host>(new Host(hostId, drawHostLifetime()));
-			hostIndexMap[hostId] = std::make_pair(popId, i);
-		}
+	// Create populations
+	popPtrs.reserve(parPtr->populations.size());
+	for(size_t popId = 0; popId < parPtr->populations.size(); popId++) {
+		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
 	// Vector of initial events to populate event queue with
 	vector<Event *> initEvents;
-	
-	// Biting and introduction events
-	for(uint32_t popId = 0; popId < p->nPopulations; popId++) {
-		bitingEvents.emplace_back(new BitingEvent(this, popId, rng));
-		initEvents.push_back((Event *)bitingEvents[popId].get());
-		
-		introductionEvents.emplace_back(new IntroductionEvent(this, popId, rng));
-		initEvents.push_back((Event *)introductionEvents[popId].get());
+	for(auto & popPtr : popPtrs) {
+		popPtr->pushBackEvents(initEvents);
 	}
-	
-	// Death events
-	for(uint32_t popId = 0; popId < p->nPopulations; popId++) {
-		for(uint32_t i = 0; i < p->populationSize[popId]; i++) {
-			initEvents.push_back((Event *)hosts[popId][i]->deathEvent.get());
-		}
-	}
+	cerr << "# events: " << initEvents.size() << '\n';
 	
 	// Initialize event queue with list of initial events
 	queuePtr = unique_ptr<EventQueue>(new EventQueue(rng, initEvents, this));
@@ -49,7 +31,7 @@ Simulation::Simulation(SimParameters & params, Database & db)
 void Simulation::run()
 {
 	cout << "Starting run..." << '\n';
-	runUntil(p->tEnd);
+	runUntil(parPtr->tEnd);
 	cout << "Total event count: " << queuePtr->getEventCount() << endl;
 }
 
@@ -67,7 +49,7 @@ void Simulation::runOneEvent()
 	queuePtr->performNextEvent(event, dt);
 	double time = queuePtr->getTime();
 	
-	// Need to handle death outside event queue to avoid premature deletion
+	/*// Need to handle death outside event queue to avoid premature deletion
 	// Shared pointers would avoid this, but this is the only place where they're needed
 	// so the overhead was deemed not worth it.
 	if(hostToDie != nullptr) {
@@ -89,44 +71,48 @@ void Simulation::runOneEvent()
 		hostToDie = nullptr;
 		
 		// TODO: when no longer keeping population size, need to adjust biting & introduction rate here.
-	}
+	}*/
 }
 
-uint64_t Simulation::getNextHostId()
+double Simulation::getTime()
+{
+	return queuePtr->getTime();
+}
+
+/*uint64_t Simulation::getNextHostId()
 {
 	return nextHostId++;
-}
+}*/
 
 double Simulation::drawHostLifetime()
 {
-	uniform_real_distribution<double> ud(0.0, 20.0);
-	return ud(rng);
+	return parPtr->hostLifetimeDistribution.draw(rng);
 }
 
-double Simulation::totalBitingRate(uint32_t popId)
+/*double Simulation::totalBitingRate(uint32_t popId)
 {
-	return hosts[popId].size() * p->bitingRate[popId];
+	return hosts[popId].size() * parPtr->bitingRate[popId];
 }
 
 double Simulation::totalIntroductionRate(uint32_t popId)
 {
-	return hosts[popId].size() * p->introductionRate[popId];
-}
+	return hosts[popId].size() * parPtr->introductionRate[popId];
+}*/
 
-void Simulation::bite(uint32_t dstPopId)
+/*void Simulation::bite(uint32_t dstPopId)
 {
 	cerr << "Biting " << dstPopId << " at " << queuePtr->getTime() << endl;
 	
 	// Choose source population ID
 	uint32_t srcPopId;
-	if(p->nPopulations == 1) {
+	if(parPtr->nPopulations == 1) {
 		assert(dstPopId == 0);
 		srcPopId = dstPopId;
 	}
 	else {
 		vector<double> popWeights;
-		for(uint32_t j = 0; j < p->nPopulations; j++) {
-			double weight = p->contactWeight[dstPopId][j];
+		for(uint32_t j = 0; j < parPtr->nPopulations; j++) {
+			double weight = parPtr->contactWeight[dstPopId][j];
 			if(j == dstPopId) {
 				popWeights.push_back((hosts[j].size() - 1) * weight);
 			}
@@ -161,18 +147,12 @@ void Simulation::bite(uint32_t dstPopId)
 void Simulation::introduce(uint32_t popId)
 {
 	cerr << "Introducing " << popId << " at " << queuePtr->getTime() << endl;
-}
-
-void Simulation::markForDeath(Host & host)
-{
-	cerr << "Host " << host.id << " marked for death" << endl;
-	hostToDie = &host;
-}
+}*/
 
 
 /*** BITING EVENTS ***/
 
-BitingEvent::BitingEvent(Simulation * simPtr, uint32_t popId, rng_t & rng) :
+/*BitingEvent::BitingEvent(Simulation * simPtr, uint32_t popId, rng_t & rng) :
 	RateEvent(simPtr->totalBitingRate(popId), 0.0, rng),
 	simPtr(simPtr), popId(popId)
 {
@@ -181,11 +161,11 @@ BitingEvent::BitingEvent(Simulation * simPtr, uint32_t popId, rng_t & rng) :
 void BitingEvent::performEvent(zppsim::EventQueue & queue)
 {
 	simPtr->bite(popId);
-}
+}*/
 
 /*** INTRODUCTION EVENTS ***/
 
-IntroductionEvent::IntroductionEvent(Simulation * simPtr, uint32_t popId, rng_t & rng) :
+/*IntroductionEvent::IntroductionEvent(Simulation * simPtr, uint32_t popId, rng_t & rng) :
 	RateEvent(simPtr->totalIntroductionRate(popId), 0.0, rng),
 	simPtr(simPtr), popId(popId)
 {
@@ -195,3 +175,4 @@ void IntroductionEvent::performEvent(zppsim::EventQueue & queue)
 {
 	simPtr->introduce(popId);
 }
+*/

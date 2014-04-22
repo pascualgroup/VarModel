@@ -27,6 +27,12 @@
 		692A385218B94D4C0085986A /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 692A382F18B94A060085986A /* libsqlite3.0.dylib */; };
 		693F00F718BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
 		693F00F818BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
+		694E202618EF70AD0000D563 /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
+		694E202718EF70AD0000D563 /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
+		694E202A18EF7C0A0000D563 /* TestGene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202818EF7C0A0000D563 /* TestGene.cpp */; };
+		694E202D18EF83550000D563 /* TestStrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202B18EF83550000D563 /* TestStrain.cpp */; };
+		69BEE5CA1905A30D00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
+		69BEE5CB1905A30F00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
 		69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */; };
 		69C4AD7018EC755D00AEB45B /* PtreeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */; };
 		69C4AD7118EC755D00AEB45B /* zppdata_ptree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */; };
@@ -78,6 +84,12 @@
 		693B771918B94655009D10D4 /* malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
 		693F00F518BCFC63000F31C7 /* Strain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Strain.cpp; sourceTree = "<group>"; };
 		693F00F618BCFC63000F31C7 /* Strain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Strain.h; sourceTree = "<group>"; };
+		694E202418EF70AD0000D563 /* Gene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Gene.cpp; sourceTree = "<group>"; };
+		694E202518EF70AD0000D563 /* Gene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
+		694E202818EF7C0A0000D563 /* TestGene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestGene.cpp; sourceTree = "<group>"; };
+		694E202B18EF83550000D563 /* TestStrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestStrain.cpp; sourceTree = "<group>"; };
+		69BEE5C81905A30D00E39AA1 /* Population.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Population.cpp; sourceTree = "<group>"; };
+		69BEE5C91905A30D00E39AA1 /* Population.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Population.h; sourceTree = "<group>"; };
 		69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PtreeObject.cpp; path = zppdata/src/PtreeObject.cpp; sourceTree = "<group>"; };
 		69C4AD6C18EC755D00AEB45B /* PtreeObject.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = PtreeObject.hpp; path = zppdata/src/PtreeObject.hpp; sourceTree = "<group>"; };
 		69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zppdata_ptree.cpp; path = zppdata/src/zppdata_ptree.cpp; sourceTree = "<group>"; };
@@ -126,10 +138,14 @@
 				692A381E18B949590085986A /* SimParameters.h */,
 				692A382018B949590085986A /* Simulation.h */,
 				692A381F18B949590085986A /* Simulation.cpp */,
+				69BEE5C91905A30D00E39AA1 /* Population.h */,
+				69BEE5C81905A30D00E39AA1 /* Population.cpp */,
 				692A381A18B949590085986A /* Host.h */,
 				692A381918B949590085986A /* Host.cpp */,
 				693F00F618BCFC63000F31C7 /* Strain.h */,
 				693F00F518BCFC63000F31C7 /* Strain.cpp */,
+				694E202518EF70AD0000D563 /* Gene.h */,
+				694E202418EF70AD0000D563 /* Gene.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -139,6 +155,8 @@
 			children = (
 				69C4AD7318EC77D300AEB45B /* catch.hpp */,
 				692A384018B94A700085986A /* test.cpp */,
+				694E202818EF7C0A0000D563 /* TestGene.cpp */,
+				694E202B18EF83550000D563 /* TestStrain.cpp */,
 			);
 			path = test;
 			sourceTree = "<group>";
@@ -248,8 +266,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69BEE5CB1905A30F00E39AA1 /* Population.cpp in Sources */,
+				694E202718EF70AD0000D563 /* Gene.cpp in Sources */,
+				694E202A18EF7C0A0000D563 /* TestGene.cpp in Sources */,
 				691F744518EDCB12001A1DE4 /* EventQueue.cpp in Sources */,
 				691F744918EDCB12001A1DE4 /* zppsim_util.cpp in Sources */,
+				694E202D18EF83550000D563 /* TestStrain.cpp in Sources */,
 				692A384318B94A700085986A /* test.cpp in Sources */,
 				691F741718EDC9DE001A1DE4 /* Database.cpp in Sources */,
 				691F744718EDCB12001A1DE4 /* zppsim_random.cpp in Sources */,
@@ -266,6 +288,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				694E202618EF70AD0000D563 /* Gene.cpp in Sources */,
+				69BEE5CA1905A30D00E39AA1 /* Population.cpp in Sources */,
 				691F744418EDCB12001A1DE4 /* EventQueue.cpp in Sources */,
 				691F744818EDCB12001A1DE4 /* zppsim_util.cpp in Sources */,
 				69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */,

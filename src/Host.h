@@ -3,11 +3,12 @@
 
 #include <unordered_set>
 #include "EventQueue.hpp"
+#include "zppsim_util.hpp"
 
 class Host;
-class Simulation;
+class Population;
 
-class DeathEvent : public zppsim::OneTimeEvent
+class DeathEvent : public zppsim::Event
 {
 public:
 	DeathEvent(Host * hostPtr);
@@ -18,15 +19,19 @@ private:
 
 class Host
 {
-friend class Simulation;
+friend class Population;
+friend class DeathEvent;
 public:
-	Host(uint64_t id, double deathTime);
-	uint64_t const id;
-	double const deathTime;
+	Host(Population * popPtr, size_t id, double deathTime);
 	
-	void die(Simulation & sim);
+	void die(zppsim::EventQueue & queue);
 	void transmitTo(Host & dstHost);
+	
+	void pushBackEvents(std::vector<zppsim::Event *> & eventVec);
 private:
+	Population * popPtr;
+	size_t id;
+	double deathTime;
 	
 	// Hash set of genes that this host has immunity to
 	std::unordered_set<uint32_t> immunity;
