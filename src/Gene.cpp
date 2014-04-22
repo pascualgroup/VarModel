@@ -35,17 +35,7 @@ size_t Gene::geneCount()
 	return genes.size();
 }*/
 
-Gene::Gene() :
-	transmissibility(numeric_limits<double>::signaling_NaN()),
-	meanInfectionDuration(numeric_limits<double>::signaling_NaN()),
-	meanImmunityDuration(numeric_limits<double>::signaling_NaN())
-{
-}
-
-Gene::Gene(double transmissibility, double meanInfectionDuration, double meanImmunityDuration) :
-	transmissibility(transmissibility),
-	meanInfectionDuration(meanInfectionDuration),
-	meanImmunityDuration(meanImmunityDuration)
+Gene::Gene()
 {
 }
 

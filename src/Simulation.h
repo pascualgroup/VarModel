@@ -5,6 +5,8 @@
 #include "SimParameters.h"
 #include "Host.h"
 #include "Population.h"
+#include "Strain.h"
+#include "Gene.h"
 
 #include "Database.hpp"
 #include "zppsim_random.hpp"
@@ -14,32 +16,6 @@
 #include "EventQueue.hpp"
 
 class Simulation;
-
-/*class BitingEvent : public zppsim::RateEvent
-{
-public:
-	BitingEvent(Simulation * simPtr, uint32_t popId, zppsim::rng_t & rng);
-	virtual void performEvent(zppsim::EventQueue & queue);
-	
-private:
-	Simulation * simPtr;
-	SimParameters * p;
-	
-	uint32_t popId;
-};
-
-class IntroductionEvent : public zppsim::RateEvent
-{
-public:
-	IntroductionEvent(Simulation * simPtr, uint32_t popId, zppsim::rng_t & rng);
-	virtual void performEvent(zppsim::EventQueue & queue);
-	
-private:
-	Simulation * simPtr;
-	SimParameters * p;
-	
-	uint32_t popId;
-};*/
 
 class Simulation
 {
@@ -54,15 +30,7 @@ public:
 	void runOneEvent();
 	
 	double getTime();
-	
-//	uint64_t getNextHostId();
 	double drawHostLifetime();
-	
-//	double totalBitingRate(uint32_t popId);
-//	double totalIntroductionRate(uint32_t popId);
-	
-//	void bite(uint32_t popId);
-//	void introduce(uint32_t popId);
 	
 	bool verifyState();
 private:
@@ -74,8 +42,14 @@ private:
 	
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	
-//	std::vector<std::unique_ptr<BitingEvent>> bitingEvents;
-//	std::vector<std::unique_ptr<IntroductionEvent>> introductionEvents;
+	// Strain tracking: one strain object for each unique strain
+	std::vector<std::weak_ptr<Strain>> strains;
+	std::unordered_map<Strain *, size_t> strainPtrToIndexMap;
+	zppsim::unordered_map_bh<std::vector<Gene *>, size_t> geneVecToStrainIndexMap;
+	
+	// Gene tracking: right now genes comprise a fixed pool, so no complicated
+	// tracking to perform
+	std::vector<GenePtr> genes;
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

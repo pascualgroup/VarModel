@@ -34,7 +34,7 @@ private:
 	double deathTime;
 	
 	// Hash set of genes that this host has immunity to
-	std::unordered_set<uint32_t> immunity;
+	std::unordered_set<GenePtrW> immunity;
 	
 	std::unique_ptr<DeathEvent> deathEvent;
 };

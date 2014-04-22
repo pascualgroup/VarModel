@@ -16,24 +16,12 @@
 
 class Gene;
 typedef std::shared_ptr<Gene> GenePtr;
+typedef std::weak_ptr<Gene> GenePtrW;
 
 class Gene
 {
 public:
 	Gene();
-	Gene(double transmissibility, double meanInfectionDuration, double meanImmunityDuration);
-	
-	double const transmissibility;
-	double const meanInfectionDuration;
-	double const meanImmunityDuration;
-	
-//	static GenePtr makeGene(double transmissibility, double meanInfectionDuration, double meanImmunityDuration);
-//	static GenePtr getRandomGene(zppsim::rng_t & rng);
-//	static size_t geneCount();
-	~Gene();
-private:
-	static std::unordered_map<Gene *, size_t> ptrToIndexMap;
-	static std::vector<std::weak_ptr<Gene>> genes;
 };
 
 #endif /* defined(__malariamodel__Gene__) */
