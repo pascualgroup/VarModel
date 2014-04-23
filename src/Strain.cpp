@@ -10,9 +10,14 @@ using namespace zppsim;
 //std::vector<std::weak_ptr<Strain>> Strain::strains;
 //zppsim::unordered_map_bh<std::vector<GenePtr>, size_t> Strain::geneVecToIndexMap;
 
-Strain::Strain(std::vector<GenePtr> const & genes):
+Strain::Strain(std::vector<GenePtr> const & genes) :
 	genes(genes)
 {
+}
+
+size_t Strain::size()
+{
+	return genes.size();
 }
 
 /*StrainPtr makeRandomStrain(size_t nGenes, zppsim::rng_t rng)

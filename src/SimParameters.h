@@ -14,12 +14,16 @@ class PopulationParameters : public PtreeObject
 {
 public:
 	size_t size;
+	size_t nInitialInfections;
 	double bitingRate;
+	std::vector<double> contactWeight;
 	
 	PopulationParameters()
 	{
 		DEFINE(size);
+		DEFINE(nInitialInfections);
 		DEFINE(bitingRate);
+		DEFINE(contactWeight);
 	}
 };
 
@@ -73,6 +77,9 @@ public:
 	// Number of var genes in global pool
 	size_t genePoolSize;
 	
+	// Number of genes in a strain
+	size_t strainSize;
+	
 	// Relative connectivity between populations,
 	// so that contactWeights[i] is a vector that determines
 	// the relative probability that individuals
@@ -81,7 +88,7 @@ public:
 	// will be proportional to populationSize[j] * contactWeight[i][j]
 	// This matrix need not be symmetrical, although it probably
 	// makes sense if it is.
-	std::vector<std::vector<double>> contactWeight = {{1.0}};
+//	std::vector<std::vector<double>> contactWeight = {{1.0}};
 	
 	// Per-capita introduction rate for each population
 	std::vector<double> introductionRate;
@@ -95,8 +102,8 @@ public:
 		DEFINE(populations);
 		DEFINE(hostLifetimeDistribution);
 		DEFINE(genePoolSize);
+		DEFINE(strainSize);
 		
-		DEFINE(contactWeight);
 		DEFINE(introductionRate);
 	}
 };

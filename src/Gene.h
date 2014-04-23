@@ -21,7 +21,8 @@ typedef std::weak_ptr<Gene> GenePtrW;
 class Gene
 {
 public:
-	Gene();
+	Gene(size_t id);
+	size_t const id;
 };
 
 #endif /* defined(__malariamodel__Gene__) */

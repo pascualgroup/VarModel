@@ -26,24 +26,74 @@ Population::Population(Simulation * simPtr, size_t id) :
 	
 	// Create biting event
 	bitingEvent = unique_ptr<BitingEvent>(new BitingEvent(this, simPtr->rng));
+	simPtr->addEvent(bitingEvent.get());
+	
+	// Create initial infections
+	for(size_t i = 0; i < parPtr->nInitialInfections; i++) {
+		size_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
+		StrainPtr strainPtr = simPtr->generateRandomStrain();
+		
+		hosts[hostId]->receiveInfection(strainPtr);
+	}
 }
 
-void Population::pushBackEvents(std::vector<Event *> & eventVec)
+/*void Population::pushBackEvents(std::vector<Event *> & eventVec)
 {
 	eventVec.push_back(bitingEvent.get());
 	for(auto & hostPtr : hosts) {
 		hostPtr->pushBackEvents(eventVec);
 	}
-}
+}*/
 
 double Population::bitingRate()
 {
 	return parPtr->bitingRate * hosts.size();
 }
 
+size_t Population::size()
+{
+	return hosts.size();
+}
+
+Host * Population::getHost(size_t hostId)
+{
+	return hosts[hostId].get();
+}
+
+double Population::getTime()
+{
+	return simPtr->getTime();
+}
+
+void Population::addEvent(zppsim::Event * event)
+{
+	simPtr->addEvent(event);
+}
+	
+void Population::removeEvent(zppsim::Event * event)
+{
+	simPtr->removeEvent(event);
+}
+
+void Population::setEventTime(zppsim::Event * event, double time)
+{
+	simPtr->setEventTime(event, time);
+}
+
 void Population::performBitingEvent()
 {
 	cerr << simPtr->getTime() << ": biting event pop " << id << '\n';
+	
+	// Choose random host to get bitten
+	size_t dstHostId = drawUniformIndex(simPtr->rng, hosts.size());
+	Host * dstHostPtr = getHost(dstHostId);
+	
+	// Choose source host
+	Host * srcHostPtr = simPtr->drawSourceHost(id, dstHostId);
+	assert(srcHostPtr != dstHostPtr);
+	
+	cerr << "dst host: " << dstHostId << '\n';
+	cerr << "src pop, host: " << srcHostPtr->popPtr->id << ", " << srcHostPtr->id << '\n';
 }
 
 /*** BITING EVENT ***/

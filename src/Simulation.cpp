@@ -11,10 +11,13 @@ Simulation::Simulation(SimParameters & params, Database & db)
 	dbPtr(&db),
 	rng(parPtr->randomSeed)
 {
+	// Initialize empty event queue
+	queuePtr = unique_ptr<EventQueue>(new EventQueue(rng));
+	
 	// Create gene pool
 	genes.reserve(params.genePoolSize);
 	for(size_t i = 0; i < params.genePoolSize; i++) {
-		genes.emplace_back(new Gene());
+		genes.emplace_back(new Gene(i));
 	}
 	
 	// Create populations
@@ -24,14 +27,11 @@ Simulation::Simulation(SimParameters & params, Database & db)
 	}
 	
 	// Vector of initial events to populate event queue with
-	vector<Event *> initEvents;
-	for(auto & popPtr : popPtrs) {
-		popPtr->pushBackEvents(initEvents);
-	}
-	cerr << "# events: " << initEvents.size() << '\n';
-	
-	// Initialize event queue with list of initial events
-	queuePtr = unique_ptr<EventQueue>(new EventQueue(rng, initEvents, this));
+//	vector<Event *> initEvents;
+//	for(auto & popPtr : popPtrs) {
+//		popPtr->pushBackEvents(initEvents);
+//	}
+	cerr << "# events: " << queuePtr->size() << '\n';
 }
 
 void Simulation::run()
@@ -53,7 +53,6 @@ void Simulation::runOneEvent()
 	Event * event;
 	double dt;
 	queuePtr->performNextEvent(event, dt);
-	double time = queuePtr->getTime();
 }
 
 double Simulation::getTime()
@@ -66,47 +65,78 @@ double Simulation::drawHostLifetime()
 	return parPtr->hostLifetimeDistribution.draw(rng);
 }
 
-/*void Simulation::bite(uint32_t dstPopId)
+Host * Simulation::drawSourceHost(size_t dstPopId, size_t dstHostId)
 {
-	cerr << "Biting " << dstPopId << " at " << queuePtr->getTime() << endl;
+	size_t srcPopId;
+	size_t nPops = popPtrs.size();
 	
-	// Choose source population ID
-	uint32_t srcPopId;
-	if(parPtr->nPopulations == 1) {
-		assert(dstPopId == 0);
-		srcPopId = dstPopId;
+	if(nPops == 1) {
+		srcPopId = 0;
 	}
 	else {
-		vector<double> popWeights;
-		for(uint32_t j = 0; j < parPtr->nPopulations; j++) {
-			double weight = parPtr->contactWeight[dstPopId][j];
-			if(j == dstPopId) {
-				popWeights.push_back((hosts[j].size() - 1) * weight);
+		std::vector<double> weights(nPops);
+		for(size_t i = 0; i < nPops; i++) {
+			size_t popSize = popPtrs[i]->size();
+			if(i == dstPopId) {
+				popSize -= 1;
 			}
-			else {
-				popWeights.push_back(hosts[j].size() * weight);
-			}
-			cerr << "weight for pop " << j << " = " << popWeights[j] << endl;
+			weights[i] = parPtr->populations[dstPopId].contactWeight[i] * popSize;
 		}
-		
-		srcPopId = (uint32_t)sampleDiscreteLinearSearch(rng, popWeights);
-		cerr << "srcPopId: " << srcPopId << endl;
+		srcPopId = sampleDiscreteLinearSearch(rng, weights);
 	}
 	
-	// Choose hosts
-	size_t dstHostIndex = drawUniformIndex(rng, hosts[dstPopId].size());
-	size_t srcHostIndex;
+	size_t srcHostId;
 	if(srcPopId == dstPopId) {
-		srcHostIndex = drawUniformIndexExcept(rng, hosts[dstPopId].size(), dstHostIndex);
+		srcHostId = drawUniformIndexExcept(
+			rng, popPtrs[srcPopId]->size(), dstHostId
+		);
+		assert(srcHostId != dstHostId);
 	}
 	else {
-		srcHostIndex = drawUniformIndex(rng, hosts[srcPopId].size());
+		srcHostId = drawUniformIndex(rng, popPtrs[srcPopId]->size());
 	}
-	if(srcHostIndex == dstHostIndex) {
-		assert(srcPopId != dstPopId);
+	return popPtrs[srcPopId]->getHost(srcHostId);
+}
+
+void Simulation::addEvent(Event * event)
+{
+	queuePtr->addEvent(event);
+}
+
+void Simulation::removeEvent(Event * event)
+{
+	queuePtr->removeEvent(event);
+}
+
+void Simulation::setEventTime(zppsim::Event * event, double time)
+{
+	event->setTime(*queuePtr, time);
+}
+
+StrainPtr Simulation::generateRandomStrain()
+{
+	size_t strainSize = parPtr->strainSize;
+	
+	std::vector<GenePtr> strainGenes(strainSize);
+	for(size_t i = 0; i < strainSize; i++) {
+		size_t geneIndex = drawUniformIndex(rng, strainSize);
+		strainGenes[i] = genes[geneIndex];
 	}
 	
-	hosts[srcPopId][srcHostIndex]->transmitTo(*hosts[dstPopId][dstHostIndex]);
-	
-	cerr << "srcHostIndex, dstHostIndex = " << srcHostIndex << ", " << dstHostIndex << endl;
-}*/
+	return getStrain(strainGenes);
+}
+
+StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
+{
+	StrainPtr strainPtr;
+	auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
+	if(strainItr == geneVecToStrainIndexMap.end()) {
+		strains.emplace_back(new Strain(strainGenes));
+		strainPtr = strains.back();
+		geneVecToStrainIndexMap[strainGenes] = strains.size() - 1;
+	}
+	else {
+		strainPtr = strains[strainItr->second];
+	}
+	return strainPtr;
+}

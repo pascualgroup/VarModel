@@ -32,6 +32,15 @@ public:
 	double getTime();
 	double drawHostLifetime();
 	
+	Host * drawSourceHost(size_t dstPopId, size_t dstHostId);
+	
+	void addEvent(Event * event);
+	void removeEvent(Event * event);
+	void setEventTime(zppsim::Event * event, double time);
+	
+	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
+	StrainPtr generateRandomStrain();
+	
 	bool verifyState();
 private:
 	SimParameters * parPtr;
@@ -43,9 +52,9 @@ private:
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	
 	// Strain tracking: one strain object for each unique strain
-	std::vector<std::weak_ptr<Strain>> strains;
-	std::unordered_map<Strain *, size_t> strainPtrToIndexMap;
-	zppsim::unordered_map_bh<std::vector<Gene *>, size_t> geneVecToStrainIndexMap;
+	std::vector<StrainPtr> strains;
+	std::unordered_map<StrainPtr, size_t> strainPtrToIndexMap;
+	zppsim::unordered_map_bh<std::vector<GenePtr>, size_t> geneVecToStrainIndexMap;
 	
 	// Gene tracking: right now genes comprise a fixed pool, so no complicated
 	// tracking to perform

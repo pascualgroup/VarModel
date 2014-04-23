@@ -35,7 +35,8 @@ size_t Gene::geneCount()
 	return genes.size();
 }*/
 
-Gene::Gene()
+Gene::Gene(size_t id) :
+	id(id)
 {
 }
 

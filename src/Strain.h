@@ -16,6 +16,7 @@ class Strain
 {
 public:
 	Strain(std::vector<GenePtr> const & genes);
+	size_t size();
 private:
 	std::vector<GenePtr> genes;
 };

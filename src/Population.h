@@ -36,20 +36,26 @@ public:
 	size_t const id;
 	
 	Population(Simulation * simPtr, size_t id);
-	void pushBackEvents(std::vector<zppsim::Event *> & eventVec);
+//	void pushBackEvents(std::vector<zppsim::Event *> & eventVec);
 	
 	double bitingRate();
+	size_t size();
+	Host * getHost(size_t hostId);
+	
+	double getTime();
+	void addEvent(zppsim::Event * event);
+	void removeEvent(zppsim::Event * event);
+	void setEventTime(zppsim::Event * event, double time);
 	
 	void performBitingEvent();
 private:
 	Simulation * simPtr;
 	PopulationParameters * parPtr;
-	
 	size_t nextHostId;
-	
 	std::vector<std::unique_ptr<Host>> hosts;
-	
 	std::unique_ptr<BitingEvent> bitingEvent;
+	
+	size_t drawSourcePopulation();
 };
 
 #endif /* defined(__malariamodel__Population__) */
