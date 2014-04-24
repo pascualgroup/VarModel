@@ -36,7 +36,6 @@ public:
 	size_t const id;
 	
 	Population(Simulation * simPtr, size_t id);
-//	void pushBackEvents(std::vector<zppsim::Event *> & eventVec);
 	
 	double bitingRate();
 	size_t size();
@@ -50,6 +49,8 @@ public:
 	void performBitingEvent();
 private:
 	Simulation * simPtr;
+	rng_t * rngPtr;
+	double pRecombination;
 	PopulationParameters * parPtr;
 	size_t nextHostId;
 	std::vector<std::unique_ptr<Host>> hosts;

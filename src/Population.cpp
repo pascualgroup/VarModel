@@ -15,7 +15,9 @@ using namespace std;
 using namespace zppsim;
 
 Population::Population(Simulation * simPtr, size_t id) :
-	id(id), simPtr(simPtr), parPtr(&(simPtr->parPtr->populations[id])),
+	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
+	pRecombination(simPtr->parPtr->pRecombination),
+	parPtr(&(simPtr->parPtr->populations[id])),
 	nextHostId(0)
 {
 	// Create hosts
@@ -36,14 +38,6 @@ Population::Population(Simulation * simPtr, size_t id) :
 		hosts[hostId]->receiveInfection(strainPtr);
 	}
 }
-
-/*void Population::pushBackEvents(std::vector<Event *> & eventVec)
-{
-	eventVec.push_back(bitingEvent.get());
-	for(auto & hostPtr : hosts) {
-		hostPtr->pushBackEvents(eventVec);
-	}
-}*/
 
 double Population::bitingRate()
 {
@@ -94,6 +88,8 @@ void Population::performBitingEvent()
 	
 	cerr << "dst host: " << dstHostId << '\n';
 	cerr << "src pop, host: " << srcHostPtr->popPtr->id << ", " << srcHostPtr->id << '\n';
+	
+	srcHostPtr->transmitTo(*dstHostPtr, *rngPtr, pRecombination);
 }
 
 /*** BITING EVENT ***/

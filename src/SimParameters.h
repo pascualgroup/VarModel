@@ -17,6 +17,7 @@ public:
 	size_t nInitialInfections;
 	double bitingRate;
 	std::vector<double> contactWeight;
+	double introductionRate;
 	
 	PopulationParameters()
 	{
@@ -24,6 +25,7 @@ public:
 		DEFINE(nInitialInfections);
 		DEFINE(bitingRate);
 		DEFINE(contactWeight);
+		DEFINE(introductionRate);
 	}
 };
 
@@ -90,8 +92,9 @@ public:
 	// makes sense if it is.
 //	std::vector<std::vector<double>> contactWeight = {{1.0}};
 	
-	// Per-capita introduction rate for each population
-	std::vector<double> introductionRate;
+	// Probability that a pair of strains will recombine
+	// to form daughter strain
+	double pRecombination;
 	
 	SimParameters()
 	{
@@ -103,8 +106,7 @@ public:
 		DEFINE(hostLifetimeDistribution);
 		DEFINE(genePoolSize);
 		DEFINE(strainSize);
-		
-		DEFINE(introductionRate);
+		DEFINE(pRecombination);
 	}
 };
 

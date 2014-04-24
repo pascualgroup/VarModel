@@ -51,12 +51,10 @@ public:
 	Host(Population * popPtr, size_t id, double deathTime);
 	
 	void die(zppsim::EventQueue & queue);
-	void transmitTo(Host & dstHost);
+	void transmitTo(Host & dstHost, zppsim::rng_t & rng, double pRecombination);
 	
 	void receiveInfection(StrainPtr & strain);
 	void performTransition(std::list<Infection>::iterator infectionItr);
-	
-//	void pushBackEvents(std::vector<zppsim::Event *> & eventVec);
 private:
 	Population * popPtr;
 	size_t id;

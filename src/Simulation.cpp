@@ -5,15 +5,12 @@ using namespace std;
 using namespace zppdata;
 using namespace zppsim;
 
-Simulation::Simulation(SimParameters & params, Database & db)
-:
+Simulation::Simulation(SimParameters & params, Database & db) :
 	parPtr(&params),
 	dbPtr(&db),
-	rng(parPtr->randomSeed)
+	rng(parPtr->randomSeed),
+	queuePtr(new EventQueue(rng))
 {
-	// Initialize empty event queue
-	queuePtr = unique_ptr<EventQueue>(new EventQueue(rng));
-	
 	// Create gene pool
 	genes.reserve(params.genePoolSize);
 	for(size_t i = 0; i < params.genePoolSize; i++) {
@@ -26,11 +23,6 @@ Simulation::Simulation(SimParameters & params, Database & db)
 		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
-	// Vector of initial events to populate event queue with
-//	vector<Event *> initEvents;
-//	for(auto & popPtr : popPtrs) {
-//		popPtr->pushBackEvents(initEvents);
-//	}
 	cerr << "# events: " << queuePtr->size() << '\n';
 }
 
@@ -117,13 +109,34 @@ StrainPtr Simulation::generateRandomStrain()
 {
 	size_t strainSize = parPtr->strainSize;
 	
+	// Uniformly randomly draw genes from pool
 	std::vector<GenePtr> strainGenes(strainSize);
 	for(size_t i = 0; i < strainSize; i++) {
-		size_t geneIndex = drawUniformIndex(rng, strainSize);
+		size_t geneIndex = drawUniformIndex(rng, genes.size());
 		strainGenes[i] = genes[geneIndex];
 	}
 	
 	return getStrain(strainGenes);
+}
+
+StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s2)
+{
+	assert(s1->size() == s2->size());
+	
+	// Draw random subset of two strains
+	vector<GenePtr> allGenes;
+	allGenes.reserve(s1->size() + s2->size());
+	copy(s1->genes.begin(), s1->genes.end(), std::back_inserter(allGenes));
+	copy(s2->genes.begin(), s2->genes.end(), std::back_inserter(allGenes));
+	assert(allGenes.size() == s1->size() + s2->size());
+	
+	vector<size_t> daughterIndices = drawUniformIndices(rng, allGenes.size(), s1->size(), false);
+	vector<GenePtr> daughterGenes(daughterIndices.size());
+	for(size_t i = 0; i < daughterIndices.size(); i++) {
+		daughterGenes[i] = allGenes[daughterIndices[i]];
+	}
+	
+	return getStrain(daughterGenes);
 }
 
 StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)

@@ -40,6 +40,7 @@ public:
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
+	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
 	bool verifyState();
 private:

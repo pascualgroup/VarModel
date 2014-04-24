@@ -24,11 +24,39 @@ void Host::die(zppsim::EventQueue & queue)
 	cerr << "new id: " << id << '\n';
 	cerr << "new death time: " << deathTime << '\n';
 	
+	// TODO: clear current infection and immunity
+	
 	deathEvent->setTime(queue, deathTime);
 }
 
-void Host::transmitTo(Host & dstHost)
+void Host::transmitTo(Host & dstHost, rng_t & rng, double pRecombination)
 {
+	if(infections.size() == 0) {
+		cerr << "No infections to transmit" << endl;
+		return;
+	}
+	
+	// Get all current infections
+	vector<StrainPtr> strains;
+	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
+		strains.push_back(infItr->strainPtr);
+	}
+	
+	// Make daughter strains for subset of current infections
+	if(strains.size() > 1) {
+		cerr << "Multiple infections" << '\n';
+		vector<pair<size_t, size_t>> indexPairs = drawMultipleBernoulliIndexPairs(
+			rng, strains.size(), pRecombination, false, true
+		);
+		for(auto & indexPair : indexPairs) {
+			cerr << "Drew recombination pair " << indexPair.first << ", " << indexPair.second << '\n';
+			
+			strains.push_back(popPtr->simPtr->recombineStrains(
+				strains[indexPair.first],
+				strains[indexPair.second]
+			));
+		}
+	}
 }
 
 void Host::receiveInfection(StrainPtr & strainPtr)
@@ -102,11 +130,6 @@ void Host::performTransition(std::list<Infection>::iterator infectionItr)
 		);
 	}
 }
-
-//void Host::pushBackEvents(std::vector<zppsim::Event *> & eventVec)
-//{
-//	eventVec.push_back(deathEvent.get());
-//}
 
 double Host::calculateTransitionDelay(size_t fromStage)
 {
