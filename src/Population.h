@@ -22,7 +22,7 @@ class SimParameters;
 class BitingEvent : public zppsim::RateEvent
 {
 public:
-	BitingEvent(Population * popPtr, zppsim::rng_t & rng);
+	BitingEvent(Population * popPtr, double rate, zppsim::rng_t & rng);
 	virtual void performEvent(zppsim::EventQueue & queue);
 	
 private:
@@ -31,6 +31,7 @@ private:
 
 class Population
 {
+friend class Simulation;
 friend class Host;
 public:
 	size_t const id;
@@ -42,15 +43,21 @@ public:
 	Host * getHost(size_t hostId);
 	
 	double getTime();
+	double getBitingRate();
+	
 	void addEvent(zppsim::Event * event);
 	void removeEvent(zppsim::Event * event);
 	void setEventTime(zppsim::Event * event, double time);
+	void setEventRate(zppsim::RateEvent * event, double rate);
 	
 	void performBitingEvent();
+	
+	double getDistance(Population * popPtr);
+	
+	void updateRates();
 private:
 	Simulation * simPtr;
 	rng_t * rngPtr;
-	double pRecombination;
 	PopulationParameters * parPtr;
 	size_t nextHostId;
 	std::vector<std::unique_ptr<Host>> hosts;

@@ -23,10 +23,14 @@ public:
 	Host * hostPtr;
 };
 
-class TransitionEvent : public zppsim::Event
+class InitialDelayEvent : public zppsim::OneTimeEvent
+{
+};
+
+class TransitionEvent : public zppsim::RateEvent
 {
 public:
-	TransitionEvent(std::list<Infection>::iterator infectionItr, double time);
+	TransitionEvent(std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng);
 	virtual void performEvent(zppsim::EventQueue & queue);
 	
 	std::list<Infection>::iterator infectionItr;

@@ -16,7 +16,6 @@ using namespace zppsim;
 
 Population::Population(Simulation * simPtr, size_t id) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
-	pRecombination(simPtr->parPtr->pRecombination),
 	parPtr(&(simPtr->parPtr->populations[id])),
 	nextHostId(0)
 {
@@ -27,8 +26,10 @@ Population::Population(Simulation * simPtr, size_t id) :
 	}
 	
 	// Create biting event
-	bitingEvent = unique_ptr<BitingEvent>(new BitingEvent(this, simPtr->rng));
-	simPtr->addEvent(bitingEvent.get());
+	bitingEvent = unique_ptr<BitingEvent>(
+		new BitingEvent(this, getBitingRate(), simPtr->rng)
+	);
+	addEvent(bitingEvent.get());
 	
 	// Create initial infections
 	for(size_t i = 0; i < parPtr->nInitialInfections; i++) {
@@ -37,11 +38,6 @@ Population::Population(Simulation * simPtr, size_t id) :
 		
 		hosts[hostId]->receiveInfection(strainPtr);
 	}
-}
-
-double Population::bitingRate()
-{
-	return parPtr->bitingRate * hosts.size();
 }
 
 size_t Population::size()
@@ -59,6 +55,12 @@ double Population::getTime()
 	return simPtr->getTime();
 }
 
+double Population::getBitingRate()
+{
+	BitingRate brObj = parPtr->bitingRate;
+	return brObj.mean + brObj.amplitude * simPtr->getSeasonality();
+}
+
 void Population::addEvent(zppsim::Event * event)
 {
 	simPtr->addEvent(event);
@@ -74,28 +76,51 @@ void Population::setEventTime(zppsim::Event * event, double time)
 	simPtr->setEventTime(event, time);
 }
 
+void Population::setEventRate(zppsim::RateEvent * event, double rate)
+{
+	simPtr->setEventRate(event, rate);
+}
+
 void Population::performBitingEvent()
 {
-	cerr << simPtr->getTime() << ": biting event pop " << id << '\n';
+	cerr << simPtr->getTime() << ": biting event, src pop " << id << '\n';
 	
-	// Choose random host to get bitten
-	size_t dstHostId = drawUniformIndex(simPtr->rng, hosts.size());
-	Host * dstHostPtr = getHost(dstHostId);
+	size_t srcHostIndex = drawUniformIndex(*rngPtr, hosts.size());
+	Host * srcHostPtr = hosts[srcHostIndex].get();
+	cerr << "src host: " << srcHostPtr->id << '\n';
 	
-	// Choose source host
-	Host * srcHostPtr = simPtr->drawSourceHost(id, dstHostId);
-	assert(srcHostPtr != dstHostPtr);
+	Host * dstHostPtr = simPtr->drawDestinationHost(id);
+	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
 	
-	cerr << "dst host: " << dstHostId << '\n';
-	cerr << "src pop, host: " << srcHostPtr->popPtr->id << ", " << srcHostPtr->id << '\n';
+	srcHostPtr->transmitTo(*dstHostPtr, *rngPtr, simPtr->parPtr->pRecombination);
+}
+
+double Population::getDistance(Population * popPtr)
+{
+	if(popPtr == this) {
+		return parPtr->selfDistance;
+	}
 	
-	srcHostPtr->transmitTo(*dstHostPtr, *rngPtr, pRecombination);
+	double x1 = parPtr->x;
+	double y1 = parPtr->y;
+	double x2 = popPtr->parPtr->x;
+	double y2 = popPtr->parPtr->y;
+	
+	double xDiff = x1 - x2;
+	double yDiff = y1 - y2;
+	
+	return sqrt(xDiff*xDiff + yDiff*yDiff);
+}
+
+void Population::updateRates()
+{
+	setEventRate(bitingEvent.get(), getBitingRate());
 }
 
 /*** BITING EVENT ***/
 
-BitingEvent::BitingEvent(Population * popPtr, zppsim::rng_t & rng) :
-	RateEvent(popPtr->bitingRate(), 0.0, rng),
+BitingEvent::BitingEvent(Population * popPtr, double rate, zppsim::rng_t & rng) :
+	RateEvent(rate, 0.0, rng),
 	popPtr(popPtr)
 {
 }

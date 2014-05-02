@@ -17,6 +17,15 @@
 
 class Simulation;
 
+class RateUpdateEvent : public zppsim::PeriodicEvent
+{
+public:
+	RateUpdateEvent(Simulation * simPtr, double initialTime, double period);
+	virtual void performEvent(zppsim::EventQueue & queue);
+private:
+	Simulation * simPtr;
+};
+
 class Simulation
 {
 friend class Population;
@@ -32,15 +41,21 @@ public:
 	double getTime();
 	double drawHostLifetime();
 	
-	Host * drawSourceHost(size_t dstPopId, size_t dstHostId);
-	
 	void addEvent(Event * event);
 	void removeEvent(Event * event);
 	void setEventTime(zppsim::Event * event, double time);
+	void setEventRate(zppsim::RateEvent * event, double rate);
+	
+	double getSeasonality();
+	double distanceWeightFunction(double d);
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
+	
+	Host * drawDestinationHost(size_t srcPopId);
+	
+	void updateRates();
 	
 	bool verifyState();
 private:
@@ -49,6 +64,7 @@ private:
 	zppsim::rng_t rng;
 	
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
+	RateUpdateEvent rateUpdateEvent;
 	
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	

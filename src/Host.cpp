@@ -24,7 +24,12 @@ void Host::die(zppsim::EventQueue & queue)
 	cerr << "new id: " << id << '\n';
 	cerr << "new death time: " << deathTime << '\n';
 	
-	// TODO: clear current infection and immunity
+	// Remove infections and immune history
+	for(auto & infection : infections) {
+		queue.removeEvent(infection.nextTransition.get());
+	}
+	infections.clear();
+	immunity.clear();
 	
 	deathEvent->setTime(queue, deathTime);
 }
@@ -66,7 +71,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	// If there's no infection delay, set initial stage to 0;
 	// otherwise set initial stage to INFECTION_STAGE_NULL
 	// (infection not yet started)
-	double initialDelayTime = calculateTransitionDelay(INFECTION_STAGE_NULL);
+	/*double initialDelayTime = calculateTransitionDelay(INFECTION_STAGE_NULL);
 	size_t initialStage;
 	if(initialDelayTime == 0.0) {
 		initialDelayTime = calculateTransitionDelay(0);
@@ -93,7 +98,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	infectionItr->nextTransition = unique_ptr<TransitionEvent>(new TransitionEvent(infectionItr, popPtr->getTime() + initialDelayTime));
 	assert(infectionItr->nextTransition->infectionItr != infections.end());
 	assert(infectionItr->nextTransition->getTime() > 0.0);
-	popPtr->addEvent(infectionItr->nextTransition.get());
+	popPtr->addEvent(infectionItr->nextTransition.get());*/
 }
 
 void Host::performTransition(std::list<Infection>::iterator infectionItr)
@@ -156,8 +161,8 @@ void DeathEvent::performEvent(zppsim::EventQueue & queue)
 	hostPtr->die(queue);
 }
 
-TransitionEvent::TransitionEvent(std::list<Infection>::iterator infectionItr, double time) :
-	Event(time), infectionItr(infectionItr)
+TransitionEvent::TransitionEvent(std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng) :
+	RateEvent(rate, time, rng), infectionItr(infectionItr)
 {
 }
 

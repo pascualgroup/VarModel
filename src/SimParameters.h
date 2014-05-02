@@ -1,7 +1,7 @@
 #ifndef __malariamodel__SimParameters__
 #define __malariamodel__SimParameters__
 
-#define DEFINE(x) define(#x, x)
+#define DEFINE_PARAM(x) define(#x, x)
 
 #include "PtreeObject.hpp"
 #include "zppsim_random.hpp"
@@ -10,23 +10,50 @@
 using namespace zppdata;
 using namespace zppsim;
 
+class BitingRate : public PtreeObject
+{
+public:
+	double mean;
+	double amplitude;
+	
+	BitingRate()
+	{
+		DEFINE_PARAM(mean);
+		DEFINE_PARAM(amplitude);
+	}
+};
+
 class PopulationParameters : public PtreeObject
 {
 public:
 	size_t size;
 	size_t nInitialInfections;
-	double bitingRate;
-	std::vector<double> contactWeight;
+	BitingRate bitingRate;
 	double introductionRate;
+	
+	// Location of population in 2D
+	double x;
+	double y;
+	
+	// "Distance" to self for use in contact-weight calculations
+	double selfDistance;
 	
 	PopulationParameters()
 	{
-		DEFINE(size);
-		DEFINE(nInitialInfections);
-		DEFINE(bitingRate);
-		DEFINE(contactWeight);
-		DEFINE(introductionRate);
+		DEFINE_PARAM(size);
+		DEFINE_PARAM(nInitialInfections);
+		DEFINE_PARAM(bitingRate);
+		DEFINE_PARAM(introductionRate);
+		DEFINE_PARAM(x);
+		DEFINE_PARAM(y);
+		DEFINE_PARAM(selfDistance);
 	}
+};
+
+class DistanceFunction : public PtreeObject
+{
+public:
+	double alpha;
 };
 
 class DiscreteDistribution : public PtreeObject
@@ -42,8 +69,8 @@ public:
 		discDist(nullptr),
 		realDist(nullptr)
 	{
-		DEFINE(dt);
-		DEFINE(pdf);
+		DEFINE_PARAM(dt);
+		DEFINE_PARAM(pdf);
 	}
 	
 	double draw(rng_t & rng)
@@ -67,46 +94,51 @@ public:
 	
 	uint32_t randomSeed = 0;
 	
+	// Simulation year time scale (used for seasonality period, by default in days)
+	double tYear = 365.0;
+	
 	// Simulation end time
 	double tEnd;
 	
-	// Vector of population parameters
-	std::vector<PopulationParameters> populations;
-	
-	// Host-lifetime distribution
-	DiscreteDistribution hostLifetimeDistribution;
+	// How often to update the seasonal rates
+	double seasonalUpdateEvery;
 	
 	// Number of var genes in global pool
 	size_t genePoolSize;
 	
 	// Number of genes in a strain
-	size_t strainSize;
-	
-	// Relative connectivity between populations,
-	// so that contactWeights[i] is a vector that determines
-	// the relative probability that individuals
-	// in different populations will be the source of a bite;
-	// the probability of choosing a source in population j
-	// will be proportional to populationSize[j] * contactWeight[i][j]
-	// This matrix need not be symmetrical, although it probably
-	// makes sense if it is.
-//	std::vector<std::vector<double>> contactWeight = {{1.0}};
+	size_t genesPerStrain;
 	
 	// Probability that a pair of strains will recombine
 	// to form daughter strain
 	double pRecombination;
 	
+	// Parameters controlling distance function
+	DistanceFunction distanceFunction;
+	
+	// Host-lifetime distribution, specified as a discrete PDF,
+	// with uniform density within each discrete chunk
+	DiscreteDistribution hostLifetimeDistribution;
+	
+	// Vector of population parameters
+	std::vector<PopulationParameters> populations;
+	
 	SimParameters()
 	{
-		DEFINE(dbFilename);
-		DEFINE(randomSeed);
-		DEFINE(tEnd);
+		DEFINE_PARAM(dbFilename);
+		DEFINE_PARAM(randomSeed);
 		
-		DEFINE(populations);
-		DEFINE(hostLifetimeDistribution);
-		DEFINE(genePoolSize);
-		DEFINE(strainSize);
-		DEFINE(pRecombination);
+		DEFINE_PARAM(tYear);
+		DEFINE_PARAM(tEnd);
+		DEFINE_PARAM(seasonalUpdateEvery);
+		
+		DEFINE_PARAM(genePoolSize);
+		DEFINE_PARAM(genesPerStrain);
+		DEFINE_PARAM(pRecombination);
+		
+		DEFINE_PARAM(hostLifetimeDistribution);
+		
+		DEFINE_PARAM(populations);
 	}
 };
 

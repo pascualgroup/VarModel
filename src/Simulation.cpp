@@ -9,8 +9,11 @@ Simulation::Simulation(SimParameters & params, Database & db) :
 	parPtr(&params),
 	dbPtr(&db),
 	rng(parPtr->randomSeed),
-	queuePtr(new EventQueue(rng))
+	queuePtr(new EventQueue(rng)),
+	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery)
 {
+	queuePtr->addEvent(&rateUpdateEvent);
+	
 	// Create gene pool
 	genes.reserve(params.genePoolSize);
 	for(size_t i = 0; i < params.genePoolSize; i++) {
@@ -57,39 +60,6 @@ double Simulation::drawHostLifetime()
 	return parPtr->hostLifetimeDistribution.draw(rng);
 }
 
-Host * Simulation::drawSourceHost(size_t dstPopId, size_t dstHostId)
-{
-	size_t srcPopId;
-	size_t nPops = popPtrs.size();
-	
-	if(nPops == 1) {
-		srcPopId = 0;
-	}
-	else {
-		std::vector<double> weights(nPops);
-		for(size_t i = 0; i < nPops; i++) {
-			size_t popSize = popPtrs[i]->size();
-			if(i == dstPopId) {
-				popSize -= 1;
-			}
-			weights[i] = parPtr->populations[dstPopId].contactWeight[i] * popSize;
-		}
-		srcPopId = sampleDiscreteLinearSearch(rng, weights);
-	}
-	
-	size_t srcHostId;
-	if(srcPopId == dstPopId) {
-		srcHostId = drawUniformIndexExcept(
-			rng, popPtrs[srcPopId]->size(), dstHostId
-		);
-		assert(srcHostId != dstHostId);
-	}
-	else {
-		srcHostId = drawUniformIndex(rng, popPtrs[srcPopId]->size());
-	}
-	return popPtrs[srcPopId]->getHost(srcHostId);
-}
-
 void Simulation::addEvent(Event * event)
 {
 	queuePtr->addEvent(event);
@@ -105,13 +75,50 @@ void Simulation::setEventTime(zppsim::Event * event, double time)
 	event->setTime(*queuePtr, time);
 }
 
+void Simulation::setEventRate(zppsim::RateEvent * event, double rate)
+{
+	event->setRate(*queuePtr, rate);
+}
+
+double Simulation::getSeasonality()
+{
+	return sin(2 * M_PI * getTime() / parPtr->tYear);
+}
+
+
+
+double Simulation::distanceWeightFunction(double d)
+{
+	assert(d > 0.0);
+	return pow(d, -parPtr->distanceFunction.alpha);
+}
+
+Host * Simulation::drawDestinationHost(size_t srcPopId)
+{
+	Population * srcPopPtr = popPtrs[srcPopId].get();
+	
+	vector<double> weights;
+	for(auto & popPtr : popPtrs) {
+		double dist = srcPopPtr->getDistance(popPtr.get());
+		weights.push_back(
+			distanceWeightFunction(dist)
+			* popPtr->getBitingRate()
+			* popPtr->size()
+		);
+	}
+	size_t dstPopId = sampleDiscreteLinearSearch(rng, weights);
+	Population * dstPopPtr = popPtrs[dstPopId].get();
+	size_t dstHostIndex = drawUniformIndex(rng, dstPopPtr->size());
+	return dstPopPtr->getHost(dstHostIndex);
+}
+
 StrainPtr Simulation::generateRandomStrain()
 {
-	size_t strainSize = parPtr->strainSize;
+	size_t genesPerStrain = parPtr->genesPerStrain;
 	
 	// Uniformly randomly draw genes from pool
-	std::vector<GenePtr> strainGenes(strainSize);
-	for(size_t i = 0; i < strainSize; i++) {
+	std::vector<GenePtr> strainGenes(genesPerStrain);
+	for(size_t i = 0; i < genesPerStrain; i++) {
 		size_t geneIndex = drawUniformIndex(rng, genes.size());
 		strainGenes[i] = genes[geneIndex];
 	}
@@ -139,6 +146,14 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 	return getStrain(daughterGenes);
 }
 
+void Simulation::updateRates()
+{
+	cerr << getTime() << ": updating rates" << '\n';
+	for(auto & popPtr : popPtrs) {
+		popPtr->updateRates();
+	}
+}
+
 StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 {
 	StrainPtr strainPtr;
@@ -152,4 +167,14 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 		strainPtr = strains[strainItr->second];
 	}
 	return strainPtr;
+}
+
+RateUpdateEvent::RateUpdateEvent(Simulation * simPtr, double initialTime, double period) :
+	PeriodicEvent(initialTime, period), simPtr(simPtr)
+{
+}
+
+void RateUpdateEvent::performEvent(zppsim::EventQueue & queue)
+{
+	simPtr->updateRates();
 }
