@@ -8,7 +8,7 @@
 #include "Gene.h"
 #include "zppsim_util.hpp"
 
-#define INFECTION_STAGE_NULL (std::numeric_limits<size_t>::max())
+#define LIVER_STAGE (std::numeric_limits<size_t>::max())
 
 class Host;
 class Population;
@@ -23,28 +23,52 @@ public:
 	Host * hostPtr;
 };
 
-class InitialDelayEvent : public zppsim::OneTimeEvent
-{
-};
-
-class TransitionEvent : public zppsim::RateEvent
+class InfectionProcessEvent : public zppsim::RateEvent
 {
 public:
-	TransitionEvent(std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng);
-	virtual void performEvent(zppsim::EventQueue & queue);
+	InfectionProcessEvent(std::list<Infection>::iterator infectionItr, double time);
+	InfectionProcessEvent(std::list<Infection>::iterator infectionItr,
+		double rate, double time, zppsim::rng_t & rng);
 	
 	std::list<Infection>::iterator infectionItr;
+};
+
+
+class TransitionEvent : public InfectionProcessEvent
+{
+public:
+	TransitionEvent(std::list<Infection>::iterator infectionItr, double time);
+	TransitionEvent(std::list<Infection>::iterator infectionItr,
+		double rate, double initTime, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
+};
+
+class ClearanceEvent : public InfectionProcessEvent
+{
+public:
+	ClearanceEvent(std::list<Infection>::iterator infectionItr,
+		double rate, double initTime, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
 };
 
 class Infection
 {
 public:
-	Infection(Host * hostPtr, StrainPtr & strainPtr, size_t initialStage);
+	Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex);
 	
 	Host * hostPtr;
 	StrainPtr strainPtr;
-	size_t stage;
-	std::unique_ptr<TransitionEvent> nextTransition;
+	
+	size_t id;
+	size_t currentGeneIndex;
+	bool active;
+	
+	std::unique_ptr<TransitionEvent> transitionEvent;
+	std::unique_ptr<ClearanceEvent> clearanceEvent;
+	
+	double activationRate(size_t geneIndex);
+	double deactivationRate(size_t geneIndex);
+	double clearanceRate();
 };
 
 class Host
@@ -54,15 +78,19 @@ friend class DeathEvent;
 public:
 	Host(Population * popPtr, size_t id, double deathTime);
 	
-	void die(zppsim::EventQueue & queue);
+	void die();
 	void transmitTo(Host & dstHost, zppsim::rng_t & rng, double pRecombination);
 	
 	void receiveInfection(StrainPtr & strain);
+	
 	void performTransition(std::list<Infection>::iterator infectionItr);
+	void clearInfection(std::list<Infection>::iterator infectionItr);
 private:
 	Population * popPtr;
 	size_t id;
 	double deathTime;
+	
+	size_t nextInfectionId;
 	
 	// Linked list of current infections
 	std::list<Infection> infections;
@@ -71,8 +99,6 @@ private:
 	zppsim::unordered_set_bh<GenePtr> immunity;
 	
 	std::unique_ptr<DeathEvent> deathEvent;
-	
-	double calculateTransitionDelay(size_t fromStage);
 };
 
 #endif

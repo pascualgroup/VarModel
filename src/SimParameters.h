@@ -113,6 +113,9 @@ public:
 	// to form daughter strain
 	double pRecombination;
 	
+	// Length of liver stage
+	double tLiverStage;
+	
 	// Parameters controlling distance function
 	DistanceFunction distanceFunction;
 	
@@ -135,6 +138,7 @@ public:
 		DEFINE_PARAM(genePoolSize);
 		DEFINE_PARAM(genesPerStrain);
 		DEFINE_PARAM(pRecombination);
+		DEFINE_PARAM(tLiverStage);
 		
 		DEFINE_PARAM(hostLifetimeDistribution);
 		

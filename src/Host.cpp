@@ -6,17 +6,18 @@
 using namespace std;
 using namespace zppsim;
 
-Host::Host(Population * popPtr, size_t id, double deathTime)
-	: popPtr(popPtr), id(id), deathTime(deathTime), deathEvent(new DeathEvent(this))
+Host::Host(Population * popPtr, size_t id, double deathTime) :
+	popPtr(popPtr), id(id), deathTime(deathTime), nextInfectionId(0),
+	deathEvent(new DeathEvent(this))
 {
 	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
 	popPtr->addEvent(deathEvent.get());
 }
 
-void Host::die(zppsim::EventQueue & queue)
+void Host::die()
 {
-	cerr << queue.getTime() << ", death event: " << popPtr->id << ", " << id << '\n';
+	cerr << popPtr->getTime() << ", death event: " << popPtr->id << ", " << id << '\n';
 	
 	id = popPtr->nextHostId++;
 	deathTime = popPtr->simPtr->getTime() + popPtr->simPtr->drawHostLifetime();
@@ -26,12 +27,17 @@ void Host::die(zppsim::EventQueue & queue)
 	
 	// Remove infections and immune history
 	for(auto & infection : infections) {
-		queue.removeEvent(infection.nextTransition.get());
+		if(infection.transitionEvent != nullptr) {
+			popPtr->removeEvent(infection.transitionEvent.get());
+		}
+		if(infection.clearanceEvent != nullptr) {
+			popPtr->removeEvent(infection.clearanceEvent.get());
+		}
 	}
 	infections.clear();
 	immunity.clear();
 	
-	deathEvent->setTime(queue, deathTime);
+	popPtr->setEventTime(deathEvent.get(), deathTime);
 }
 
 void Host::transmitTo(Host & dstHost, rng_t & rng, double pRecombination)
@@ -62,93 +68,145 @@ void Host::transmitTo(Host & dstHost, rng_t & rng, double pRecombination)
 			));
 		}
 	}
+	
+	// TODO: actually transmit infections
 }
 
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
 	assert(strainPtr->size() > 0);
 	
-	// If there's no infection delay, set initial stage to 0;
-	// otherwise set initial stage to INFECTION_STAGE_NULL
-	// (infection not yet started)
-	/*double initialDelayTime = calculateTransitionDelay(INFECTION_STAGE_NULL);
-	size_t initialStage;
-	if(initialDelayTime == 0.0) {
-		initialDelayTime = calculateTransitionDelay(0);
-		initialStage = 0;
+	double time = popPtr->getTime();
+	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
+	size_t initialGeneIndex = tLiverStage == 0 ? 0 : LIVER_STAGE;
+	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex);
+	
+	// Either start in the liver stage and create a fixed-time transition event,
+	// or start in the preactivation stage for the first var gene with a rate-based
+	// transition event and a clearance event
+	list<Infection>::reverse_iterator reverseItr = infections.rbegin();
+	reverseItr++;
+	list<Infection>::iterator infectionItr = reverseItr.base();
+	if(initialGeneIndex == LIVER_STAGE) {
+		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
+			new TransitionEvent(infectionItr, time + tLiverStage)
+		);
+		popPtr->addEvent(infectionItr->transitionEvent.get());
+		// Zero-rate clearance event (placeholder)
+		infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
+			new ClearanceEvent(
+				infectionItr, 0.0, time, *(popPtr->rngPtr)
+			)
+		);
+		popPtr->addEvent(infectionItr->clearanceEvent.get());
 	}
 	else {
-		initialStage = INFECTION_STAGE_NULL;
+		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
+			new TransitionEvent(
+				infectionItr, infectionItr->activationRate(0), time, *(popPtr->rngPtr)
+			)
+		);
+		popPtr->addEvent(infectionItr->transitionEvent.get());
+		infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
+			new ClearanceEvent(
+				infectionItr, infectionItr->clearanceRate(), time, *(popPtr->rngPtr)
+			)
+		);
+		popPtr->addEvent(infectionItr->clearanceEvent.get());
 	}
 	
-	infections.emplace_back(
-		this,
-		strainPtr, initialStage
-	);
-	
-	assert(initialDelayTime > 0.0);
-	
-	// Create transition event with reference back to list iterator;
-	// add event to infection and add event to event queue
-	list<Infection>::reverse_iterator rItr = infections.rbegin();
-	rItr++;
-	list<Infection>::iterator infectionItr = rItr.base();
+	cerr << time << ": " << popPtr->id << ", " << id << ", " << infectionItr->id << " begun" << '\n';
+}
+
+void Host::clearInfection(std::list<Infection>::iterator infectionItr)
+{
 	assert(infectionItr != infections.end());
 	
-	infectionItr->nextTransition = unique_ptr<TransitionEvent>(new TransitionEvent(infectionItr, popPtr->getTime() + initialDelayTime));
-	assert(infectionItr->nextTransition->infectionItr != infections.end());
-	assert(infectionItr->nextTransition->getTime() > 0.0);
-	popPtr->addEvent(infectionItr->nextTransition.get());*/
+	double time = popPtr->getTime();
+	cerr << time << ": " << popPtr->id << ", " << id << ", " << infectionItr->id << " clearing" << '\n';
+	
+	// Remove any events
+	if(infectionItr->transitionEvent != nullptr) {
+		popPtr->removeEvent(infectionItr->transitionEvent.get());
+	}
+	if(infectionItr->clearanceEvent != nullptr) {
+		popPtr->removeEvent(infectionItr->clearanceEvent.get());
+	}
+	
+	// Remove infection
+	infections.erase(infectionItr);
 }
 
 void Host::performTransition(std::list<Infection>::iterator infectionItr)
 {
 	assert(infectionItr != infections.end());
 	
-	StrainPtr strainPtr = infectionItr->strainPtr;
 	double time = popPtr->getTime();
 	
-	// TODO: record immunity due to just-completed stage
-	
-	cerr << time << ": infection transition pop "
-		<< popPtr->id << ", host " << id << ", " << infectionItr->stage
-		<< '\n';
-	
-	// If infection is in the last stage, remove the transition event
-	// and remove the infection
-	if(infectionItr->stage == strainPtr->size() - 1) {
-		popPtr->removeEvent(infectionItr->nextTransition.get());
-		infections.erase(infectionItr);
+	size_t geneIndex = infectionItr->currentGeneIndex;
+	bool active = infectionItr->active;
+	if(geneIndex == infectionItr->strainPtr->size() - 1) {
+		clearInfection(infectionItr);
+		return;
 	}
-	// Otherwise transition to next stage
+	else if(geneIndex == LIVER_STAGE) {
+		infectionItr->currentGeneIndex = 0;
+		assert(!active);
+	}
 	else {
-		if(infectionItr->stage == INFECTION_STAGE_NULL) {
-			infectionItr->stage = 0;
+		if(active) {
+			infectionItr->currentGeneIndex++;
+			infectionItr->active = false;
 		}
 		else {
-			infectionItr->stage++;
+			infectionItr->active = true;
 		}
-		double delay = calculateTransitionDelay(infectionItr->stage);
-		popPtr->setEventTime(
-			infectionItr->nextTransition.get(),
-			time + delay
+	}
+	
+	// Update transition rate
+	if(infectionItr->active) {
+		popPtr->setEventRate(
+			infectionItr->transitionEvent.get(),
+			infectionItr->deactivationRate(infectionItr->currentGeneIndex)
 		);
 	}
-}
-
-double Host::calculateTransitionDelay(size_t fromStage)
-{
-	if(fromStage == INFECTION_STAGE_NULL) {
-		return 0.1;
-	}
 	else {
-		return 0.5;
+		popPtr->setEventRate(
+			infectionItr->transitionEvent.get(),
+			infectionItr->activationRate(infectionItr->currentGeneIndex)
+		);
 	}
+	
+	// Update clearance rate
+	popPtr->setEventRate(
+		infectionItr->clearanceEvent.get(),
+		infectionItr->clearanceRate()
+	);
+	
+	cerr << time << ": " << popPtr->id << ", " << id << ", " << infectionItr->id << " transitioned to " <<
+		infectionItr->currentGeneIndex << ", "
+		<< (infectionItr->active ? "active" : "not yet active") << '\n';
 }
 
-Infection::Infection(Host * hostPtr, StrainPtr & strainPtr, size_t initialStage) :
-	hostPtr(hostPtr), strainPtr(strainPtr), stage(initialStage)
+Infection::Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex) :
+	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
+	currentGeneIndex(initialGeneIndex), active(false)
 {
+}
+	
+double Infection::activationRate(size_t geneIndex)
+{
+	return 1.0;
+}
+
+double Infection::deactivationRate(size_t geneIndex)
+{
+	return 1.0;
+}
+
+double Infection::clearanceRate()
+{
+	return 0.1;
 }
 
 DeathEvent::DeathEvent(Host * hostPtr):
@@ -158,15 +216,51 @@ DeathEvent::DeathEvent(Host * hostPtr):
 
 void DeathEvent::performEvent(zppsim::EventQueue & queue)
 {
-	hostPtr->die(queue);
+	hostPtr->die();
 }
 
-TransitionEvent::TransitionEvent(std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng) :
+InfectionProcessEvent::InfectionProcessEvent(
+	std::list<Infection>::iterator infectionItr, double time
+) :
+	RateEvent(time), infectionItr(infectionItr)
+{
+}
+
+InfectionProcessEvent::InfectionProcessEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
 	RateEvent(rate, time, rng), infectionItr(infectionItr)
+{
+}
+
+TransitionEvent::TransitionEvent(
+	std::list<Infection>::iterator infectionItr, double time
+) :
+	InfectionProcessEvent(infectionItr, time)
+{
+}
+
+
+TransitionEvent::TransitionEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
+	InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
+ClearanceEvent::ClearanceEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
+	InfectionProcessEvent(infectionItr, rate, time, rng)
 {
 }
 
 void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
 	infectionItr->hostPtr->performTransition(infectionItr);
+}
+
+void ClearanceEvent::performEvent(zppsim::EventQueue &queue)
+{
+	infectionItr->hostPtr->clearInfection(infectionItr);
 }
