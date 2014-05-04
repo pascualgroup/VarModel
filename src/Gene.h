@@ -21,11 +21,11 @@ typedef std::weak_ptr<Gene> GenePtrW;
 class Gene
 {
 public:
-	Gene(size_t id);
 	size_t const id;
+	double const transmissibility;
+	double const immunityLossRate;
 	
-	double const transmissibility = 0.8;
-	double const immunityLossRate = 0.1;
+	Gene(size_t id, double transmissibility, double immunityLossRate);
 	
 	std::string toString();
 };

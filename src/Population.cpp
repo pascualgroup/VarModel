@@ -103,7 +103,8 @@ double Population::getTime()
 double Population::getBitingRate()
 {
 	BitingRate brObj = parPtr->bitingRate;
-	return brObj.mean + brObj.amplitude * simPtr->getSeasonality();
+	double perHostBitingRate = brObj.mean + brObj.amplitude * simPtr->getSeasonality();
+	return hosts.size() * perHostBitingRate;
 }
 
 double Population::getImmigrationRate()
@@ -133,21 +134,21 @@ void Population::setEventRate(zppsim::RateEvent * event, double rate)
 
 void Population::performBitingEvent()
 {
-	cerr << simPtr->getTime() << ": biting event, src pop " << id << '\n';
+//	cerr << simPtr->getTime() << ": biting event, src pop " << id << '\n';
 	
 	size_t srcHostIndex = drawUniformIndex(*rngPtr, hosts.size());
 	Host * srcHostPtr = hosts[srcHostIndex].get();
-	cerr << "src host: " << srcHostPtr->id << '\n';
+//	cerr << "src host: " << srcHostPtr->id << '\n';
 	
 	Host * dstHostPtr = simPtr->drawDestinationHost(id);
-	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
+//	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
 	
 	srcHostPtr->transmitTo(*dstHostPtr);
 }
 
 void Population::performImmigrationEvent()
 {
-	cerr << getTime() << ": immigration event, pop " << id << '\n';
+//	cerr << getTime() << ": immigration event, pop " << id << '\n';
 }
 
 double Population::getDistance(Population * popPtr)
@@ -175,6 +176,11 @@ void Population::updateRates()
 std::string Population::toString()
 {
 	return strprintf("p%u", id);
+}
+
+void Population::countTransmission()
+{
+	simPtr->countTransmission();
 }
 
 /*** BITING EVENT ***/

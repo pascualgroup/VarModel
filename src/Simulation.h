@@ -59,6 +59,8 @@ public:
 	
 	void updateRates();
 	
+	void countTransmission();
+	
 	bool verifyState();
 private:
 	SimParameters * parPtr;
@@ -78,6 +80,8 @@ private:
 	// Gene tracking: right now genes comprise a fixed pool, so no complicated
 	// tracking to perform
 	std::vector<GenePtr> genes;
+	
+	size_t transmissionCount;
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

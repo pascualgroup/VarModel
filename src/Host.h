@@ -7,6 +7,7 @@
 #include "Strain.h"
 #include "Gene.h"
 #include "zppsim_util.hpp"
+#include "SimParameters.h"
 
 #define LIVER_STAGE (std::numeric_limits<size_t>::max())
 
@@ -78,6 +79,7 @@ public:
 	std::unique_ptr<TransitionEvent> transitionEvent;
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
 	
+	bool isActive();
 	GenePtr getCurrentGene();
 	
 	void performTransition();
@@ -115,11 +117,18 @@ public:
 	
 	void updateInfectionRates();
 	
+	bool isImmune(GenePtr gene);
+	double getAge();
+	size_t infectionCount();
+	
 	void performTransition(std::list<Infection>::iterator infectionItr);
 	void clearInfection(std::list<Infection>::iterator infectionItr);
 	
 	double getTime();
 	zppsim::rng_t * getRngPtr();
+	
+	SimParameters * getSimulationParametersPtr();
+	PopulationParameters * getPopulationParametersPtr();
 	
 	void addEvent(zppsim::Event * event);
 	void removeEvent(zppsim::Event * event);

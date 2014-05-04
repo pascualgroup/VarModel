@@ -5,24 +5,33 @@ using namespace std;
 using namespace zppdata;
 using namespace zppsim;
 
-Simulation::Simulation(SimParameters & params, Database & db) :
-	parPtr(&params),
+float elapsed(clock_t clockStart, clock_t clockEnd) {
+	return float(clockEnd - clockStart) / CLOCKS_PER_SEC;
+}
+
+Simulation::Simulation(SimParameters & par, Database & db) :
+	parPtr(&par),
 	dbPtr(&db),
 	rng(parPtr->randomSeed),
 	queuePtr(new EventQueue(rng)),
-	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery)
+	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
+	transmissionCount(0)
 {
 	queuePtr->addEvent(&rateUpdateEvent);
 	
 	// Create gene pool
-	genes.reserve(params.genePoolSize);
-	for(size_t i = 0; i < params.genePoolSize; i++) {
-		genes.emplace_back(new Gene(i));
+	genes.reserve(par.genePoolSize);
+	for(size_t i = 0; i < par.genePoolSize; i++) {
+		genes.emplace_back(new Gene(
+			i,
+			par.genes.transmissibility,
+			par.genes.immunityLossRate
+		));
 	}
 	
 	// Create populations
-	popPtrs.reserve(params.populations.size());
-	for(size_t popId = 0; popId < params.populations.size(); popId++) {
+	popPtrs.reserve(par.populations.size());
+	for(size_t popId = 0; popId < par.populations.size(); popId++) {
 		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
@@ -31,9 +40,23 @@ Simulation::Simulation(SimParameters & params, Database & db) :
 
 void Simulation::run()
 {
-	cout << "Starting run..." << '\n';
+	clock_t startClock = clock();
+	time_t startTime = time(nullptr);
+	fprintf(stderr, "Starting at %s", ctime(&startTime));
+	
 	runUntil(parPtr->tEnd);
-	cout << "Total event count: " << queuePtr->getEventCount() << endl;
+	
+	cout << "Total event count: " << queuePtr->getEventCount() << '\n';
+	cout << "Transmission count: " << transmissionCount << '\n';
+	
+	time_t endTime = time(nullptr);
+	clock_t endClock = clock();
+	fprintf(stderr, "Ending at %s", ctime(&endTime));
+	fprintf(stderr, "Total elapsed time: %f\n", elapsed(startClock, endClock));
+	
+	rusage resourceUsage;
+	getrusage(RUSAGE_SELF, &resourceUsage);
+	fprintf(stderr, "Memory usage: %ld\n", resourceUsage.ru_maxrss);
 }
 
 void Simulation::runUntil(double time)
@@ -162,10 +185,15 @@ StrainPtr Simulation::mutateStrain(StrainPtr & strain)
 
 void Simulation::updateRates()
 {
-	cerr << getTime() << ": updating rates" << '\n';
+//	cerr << getTime() << ": updating rates" << '\n';
 	for(auto & popPtr : popPtrs) {
 		popPtr->updateRates();
 	}
+}
+
+void Simulation::countTransmission()
+{
+	transmissionCount++;
 }
 
 GenePtr Simulation::drawRandomGene()

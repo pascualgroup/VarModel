@@ -11,14 +11,29 @@ Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime) :
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this))
 {
-	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
+//	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
 	addEvent(deathEvent.get());
 }
 
+double Host::getAge()
+{
+	return getTime() - birthTime;
+}
+
+size_t Host::infectionCount()
+{
+	return infections.size();
+}
+
+bool Host::isImmune(GenePtr gene)
+{
+	return immunity.find(gene) != immunity.end();
+}
+
 void Host::prepareToDie()
 {
-	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';
+//	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';
 	
 	// Remove all events
 	for(auto & infection : infections) {
@@ -35,19 +50,21 @@ void Host::transmitTo(Host & dstHost)
 	rng_t * rngPtr = getRngPtr();
 	
 	if(infections.size() == 0) {
-		cerr << "No infections to transmit" << endl;
+	//	cerr << "No infections to transmit" << endl;
 		return;
 	}
-	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
+//	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
 	
 	// Get some current infections according to transmission probability
 	vector<StrainPtr> originalStrains;
 	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
-		bernoulli_distribution flipCoin(infItr->transmissionProbability());
-		if(flipCoin(*rngPtr)) {
-			originalStrains.push_back(
-				popPtr->simPtr->mutateStrain(infItr->strainPtr)
-			);
+		if(infItr->isActive()) {
+			bernoulli_distribution flipCoin(infItr->transmissionProbability());
+			if(flipCoin(*rngPtr)) {
+				originalStrains.push_back(
+					popPtr->simPtr->mutateStrain(infItr->strainPtr)
+				);
+			}
 		}
 	}
 	
@@ -87,6 +104,8 @@ void Host::transmitTo(Host & dstHost)
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
 	assert(strainPtr->size() > 0);
+	
+	popPtr->countTransmission();
 	
 	rng_t * rngPtr = getRngPtr();
 	double time = popPtr->getTime();
@@ -134,7 +153,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	);
 	addEvent(infectionItr->clearanceEvent.get());
 	
-	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
+//	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
 
 void Host::gainImmunity(GenePtr genePtr)
@@ -151,12 +170,10 @@ void Host::gainImmunity(GenePtr genePtr)
 		
 		updateInfectionRates();
 	
-		cerr << getTime() << ": " << toString() << " gained immunity to " <<
-			genePtr->toString() << '\n';
+	//	cerr << getTime() << ": " << toString() << " gained immunity to " << genePtr->toString() << '\n';
 	}
 	else {
-		cerr << getTime() << ": " << toString() << " already had immunity to " <<
-		genePtr->toString() << '\n';
+	//	cerr << getTime() << ": " << toString() << " already had immunity to " << genePtr->toString() << '\n';
 	}
 }
 
@@ -176,8 +193,7 @@ void Host::loseImmunity(GenePtr genePtr)
 	
 	updateInfectionRates();
 	
-	cerr << getTime() << ": " << toString() << " lost immunity to " <<
-		genePtr->toString() << '\n';
+//	cerr << getTime() << ": " << toString() << " lost immunity to " << genePtr->toString() << '\n';
 }
 
 void Host::updateInfectionRates()
@@ -195,7 +211,7 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	assert(infectionItr != infections.end());
 	
 	double time = popPtr->getTime();
-	cerr << time << ": " << infectionItr->toString() << " clearing" << '\n';
+//	cerr << time << ": " << infectionItr->toString() << " clearing" << '\n';
 	
 	// Gain immunity to active gene
 	if(infectionItr->active) {
@@ -215,6 +231,16 @@ double Host::getTime()
 rng_t * Host::getRngPtr()
 {
 	return popPtr->rngPtr;
+}
+
+SimParameters * Host::getSimulationParametersPtr()
+{
+	return popPtr->simPtr->parPtr;
+}
+
+PopulationParameters * Host::getPopulationParametersPtr()
+{
+	return popPtr->parPtr;
 }
 
 void Host::addEvent(Event * event)
@@ -275,9 +301,7 @@ void Infection::performTransition()
 	updateClearanceRate();
 	
 	double time = hostPtr->getTime();
-	cerr << time << ": " << toString() << " transitioned to " <<
-		geneIndex << "(" << getCurrentGene()->toString() << "), "
-		<< (active ? "active" : "not yet active") << '\n';
+//	cerr << time << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
 }
 
 void Infection::updateTransitionRate()
@@ -297,23 +321,39 @@ double Infection::transitionRate()
 	}
 }
 
-double Infection::activationRate()
-{
-	return 1.0;
-}
-
-double Infection::deactivationRate()
-{
-	return 1.0;
-}
-
 void Infection::updateClearanceRate()
 {
 	hostPtr->setEventRate(clearanceEvent.get(), clearanceRate());
 }
 
+double Infection::activationRate()
+{
+//	GenePtr gene = getCurrentGene();
+//	bool immune = hostPtr->isImmune(gene);
+//	double age = hostPtr->getAge();
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	
+	return simParPtr->withinHost.activationRate;
+}
+
+double Infection::deactivationRate()
+{
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	
+	GenePtr gene = getCurrentGene();
+	bool immune = hostPtr->isImmune(gene);
+	if(immune) {
+		return simParPtr->withinHost.deactivationRateImmune;
+	}
+	else {
+		return simParPtr->withinHost.deactivationRateNotImmune;
+	}
+}
+
 double Infection::clearanceRate()
 {
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	
 	// Liver stage
 	if(geneIndex == LIVER_STAGE) {
 		return 0.0;
@@ -322,11 +362,11 @@ double Infection::clearanceRate()
 	else if(!active) {
 		// Before first activation
 		if(geneIndex == 0) {
-			return 1.0;
+			return simParPtr->withinHost.clearanceRateInitial;
 		}
 		// Between activations
 		else {
-			return 1.0;
+			return simParPtr->withinHost.clearanceRateMidCourse;
 		}
 	}
 	// Gene active
@@ -335,9 +375,27 @@ double Infection::clearanceRate()
 	}
 }
 
+bool Infection::isActive()
+{
+	return active;
+}
+
 double Infection::transmissionProbability()
 {
-	return 0.8;
+	assert(active);
+	
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	
+	GenePtr genePtr = getCurrentGene();
+	
+	double p = genePtr->transmissibility;
+	assert(p > 0.0 && p < 1.0);
+	
+	// TODO: reduce by active infections or all infections?
+	if(simParPtr->transmission.coinfectionReducesTransmission) {
+		p /= hostPtr->infectionCount();
+	}
+	return p;
 }
 
 std::string Infection::toString()

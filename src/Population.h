@@ -71,6 +71,9 @@ public:
 	void updateRates();
 	
 	std::string toString();
+	
+	void countTransmission();
+	
 private:
 	Simulation * simPtr;
 	rng_t * rngPtr;

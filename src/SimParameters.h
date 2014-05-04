@@ -87,6 +87,49 @@ public:
 	}
 };
 
+class TransmissionParameters : public PtreeObject
+{
+public:
+	bool coinfectionReducesTransmission;
+	
+	TransmissionParameters()
+	{
+		DEFINE_PARAM(coinfectionReducesTransmission);
+	}
+};
+
+class WithinHostParameters : public PtreeObject
+{
+public:
+	double clearanceRateInitial;
+	double clearanceRateMidCourse;
+	double activationRate;
+	double deactivationRateImmune;
+	double deactivationRateNotImmune;
+	
+	WithinHostParameters()
+	{
+		DEFINE_PARAM(clearanceRateInitial);
+		DEFINE_PARAM(clearanceRateMidCourse);
+		DEFINE_PARAM(activationRate);
+		DEFINE_PARAM(deactivationRateImmune);
+		DEFINE_PARAM(deactivationRateNotImmune);
+	}
+};
+
+class GeneParameters : public PtreeObject
+{
+public:
+	double transmissibility;
+	double immunityLossRate;
+	
+	GeneParameters()
+	{
+		DEFINE_PARAM(transmissibility);
+		DEFINE_PARAM(immunityLossRate);
+	}
+};
+
 class SimParameters : public PtreeObject
 {
 public:
@@ -129,6 +172,15 @@ public:
 	// Vector of population parameters
 	std::vector<PopulationParameters> populations;
 	
+	// Transmission process parameters
+	TransmissionParameters transmission;
+	
+	// Within-host parameters
+	WithinHostParameters withinHost;
+	
+	// Gene parameters
+	GeneParameters genes;
+	
 	SimParameters()
 	{
 		DEFINE_PARAM(dbFilename);
@@ -146,6 +198,10 @@ public:
 		DEFINE_PARAM(hostLifetimeDistribution);
 		
 		DEFINE_PARAM(populations);
+		
+		DEFINE_PARAM(transmission);
+		DEFINE_PARAM(withinHost);
+		DEFINE_PARAM(genes);
 	}
 };
 
