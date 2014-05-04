@@ -31,6 +31,12 @@ Population::Population(Simulation * simPtr, size_t id) :
 	);
 	addEvent(bitingEvent.get());
 	
+	// Create immigration event
+	immigrationEvent = unique_ptr<ImmigrationEvent>(
+		new ImmigrationEvent(this, getImmigrationRate(), simPtr->rng)
+	);
+	addEvent(immigrationEvent.get());
+	
 	// Create initial infections
 	for(size_t i = 0; i < parPtr->nInitialInfections; i++) {
 		size_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
@@ -59,6 +65,11 @@ double Population::getBitingRate()
 {
 	BitingRate brObj = parPtr->bitingRate;
 	return brObj.mean + brObj.amplitude * simPtr->getSeasonality();
+}
+
+double Population::getImmigrationRate()
+{
+	return parPtr->immigrationRate;
 }
 
 void Population::addEvent(zppsim::Event * event)
@@ -95,6 +106,11 @@ void Population::performBitingEvent()
 	srcHostPtr->transmitTo(*dstHostPtr, *rngPtr, simPtr->parPtr->pRecombination);
 }
 
+void Population::performImmigrationEvent()
+{
+	cerr << getTime() << ": immigration event, pop " << id << '\n';
+}
+
 double Population::getDistance(Population * popPtr)
 {
 	if(popPtr == this) {
@@ -117,6 +133,11 @@ void Population::updateRates()
 	setEventRate(bitingEvent.get(), getBitingRate());
 }
 
+std::string Population::toString()
+{
+	return strprintf("p%u", id);
+}
+
 /*** BITING EVENT ***/
 
 BitingEvent::BitingEvent(Population * popPtr, double rate, zppsim::rng_t & rng) :
@@ -128,4 +149,18 @@ BitingEvent::BitingEvent(Population * popPtr, double rate, zppsim::rng_t & rng) 
 void BitingEvent::performEvent(zppsim::EventQueue & queue)
 {
 	popPtr->performBitingEvent();
+}
+
+
+/*** IMMIGRATION EVENT ***/
+
+ImmigrationEvent::ImmigrationEvent(Population * popPtr, double rate, zppsim::rng_t & rng) :
+	RateEvent(rate, 0.0, rng),
+	popPtr(popPtr)
+{
+}
+
+void ImmigrationEvent::performEvent(zppsim::EventQueue & queue)
+{
+	popPtr->performImmigrationEvent();
 }

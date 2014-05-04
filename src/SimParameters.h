@@ -29,7 +29,7 @@ public:
 	size_t size;
 	size_t nInitialInfections;
 	BitingRate bitingRate;
-	double introductionRate;
+	double immigrationRate;
 	
 	// Location of population in 2D
 	double x;
@@ -43,7 +43,7 @@ public:
 		DEFINE_PARAM(size);
 		DEFINE_PARAM(nInitialInfections);
 		DEFINE_PARAM(bitingRate);
-		DEFINE_PARAM(introductionRate);
+		DEFINE_PARAM(immigrationRate);
 		DEFINE_PARAM(x);
 		DEFINE_PARAM(y);
 		DEFINE_PARAM(selfDistance);

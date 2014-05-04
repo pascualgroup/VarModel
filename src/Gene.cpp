@@ -10,9 +10,11 @@
 #include "zppsim_random.hpp"
 #include <cassert>
 #include <iostream>
+#include "zppdata_util.hpp"
 
 using namespace std;
 using namespace zppsim;
+using namespace zppdata;
 
 //std::vector<std::weak_ptr<Gene>> Gene::genes;
 //std::unordered_map<Gene *, size_t> Gene::ptrToIndexMap;
@@ -38,6 +40,11 @@ size_t Gene::geneCount()
 Gene::Gene(size_t id) :
 	id(id)
 {
+}
+
+std::string Gene::toString()
+{
+	return strprintf("g%u", id);
 }
 
 /*Gene::~Gene()

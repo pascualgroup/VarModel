@@ -20,6 +20,11 @@ size_t Strain::size()
 	return genes.size();
 }
 
+GenePtr Strain::getGene(size_t index)
+{
+	return genes[index];
+}
+
 /*StrainPtr makeRandomStrain(size_t nGenes, zppsim::rng_t rng)
 {
 	std::vector<GenePtr> genes;

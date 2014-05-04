@@ -29,6 +29,15 @@ private:
 	Population * popPtr;
 };
 
+class ImmigrationEvent : public zppsim::RateEvent
+{
+public:
+	ImmigrationEvent(Population * popPtr, double rate, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
+private:
+	Population * popPtr;
+};
+
 class Population
 {
 friend class Simulation;
@@ -44,6 +53,7 @@ public:
 	
 	double getTime();
 	double getBitingRate();
+	double getImmigrationRate();
 	
 	void addEvent(zppsim::Event * event);
 	void removeEvent(zppsim::Event * event);
@@ -51,10 +61,13 @@ public:
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
 	void performBitingEvent();
+	void performImmigrationEvent();
 	
 	double getDistance(Population * popPtr);
 	
 	void updateRates();
+	
+	std::string toString();
 private:
 	Simulation * simPtr;
 	rng_t * rngPtr;
@@ -62,6 +75,7 @@ private:
 	size_t nextHostId;
 	std::vector<std::unique_ptr<Host>> hosts;
 	std::unique_ptr<BitingEvent> bitingEvent;
+	std::unique_ptr<ImmigrationEvent> immigrationEvent;
 	
 	size_t drawSourcePopulation();
 };

@@ -23,6 +23,16 @@ public:
 	Host * hostPtr;
 };
 
+class ImmunityLossEvent : public zppsim::RateEvent
+{
+public:
+	ImmunityLossEvent(Host * hostPtr, GenePtr genePtr, double rate, double initTime);
+	virtual void performEvent(zppsim::EventQueue & queue);
+	
+	Host * hostPtr;
+	GenePtr genePtr;
+};
+
 class InfectionProcessEvent : public zppsim::RateEvent
 {
 public:
@@ -60,15 +70,27 @@ public:
 	StrainPtr strainPtr;
 	
 	size_t id;
-	size_t currentGeneIndex;
+	size_t geneIndex;
 	bool active;
 	
 	std::unique_ptr<TransitionEvent> transitionEvent;
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
 	
-	double activationRate(size_t geneIndex);
-	double deactivationRate(size_t geneIndex);
+	GenePtr getCurrentGene();
+	
+	void performTransition();
+	
+	void updateTransitionRate();
+	double transitionRate();
+	
+	void updateClearanceRate();
 	double clearanceRate();
+	
+	std::string toString();
+	
+private:
+	double activationRate();
+	double deactivationRate();
 };
 
 class Host
@@ -81,10 +103,22 @@ public:
 	void die();
 	void transmitTo(Host & dstHost, zppsim::rng_t & rng, double pRecombination);
 	
+	double getInfectionProbability(StrainPtr & strain);
 	void receiveInfection(StrainPtr & strain);
+	
+	void gainImmunity(GenePtr const & genePtr);
+	void loseImmunity(GenePtr const & genePtr);
+	
+	void updateInfectionRates();
 	
 	void performTransition(std::list<Infection>::iterator infectionItr);
 	void clearInfection(std::list<Infection>::iterator infectionItr);
+	
+	double getTime();
+	zppsim::rng_t * getRngPtr();
+	void setEventRate(zppsim::RateEvent * event, double rate);
+	
+	std::string toString();
 private:
 	Population * popPtr;
 	size_t id;
@@ -97,6 +131,7 @@ private:
 	
 	// Hash set of genes that this host has immunity to
 	zppsim::unordered_set_bh<GenePtr> immunity;
+	zppsim::unordered_map_bh<GenePtr, std::unique_ptr<ImmunityLossEvent>> immunityLossEvents;
 	
 	std::unique_ptr<DeathEvent> deathEvent;
 };

@@ -23,6 +23,11 @@ class Gene
 public:
 	Gene(size_t id);
 	size_t const id;
+	
+	double const transmissibility = 0.8;
+	double const immunityLossRate = 0.1;
+	
+	std::string toString();
 };
 
 #endif /* defined(__malariamodel__Gene__) */

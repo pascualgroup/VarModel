@@ -14,9 +14,12 @@ typedef std::weak_ptr<Strain> StrainPtrW;
 
 class Strain
 {
+friend class Simulation;
 public:
 	Strain(std::vector<GenePtr> const & genes);
 	size_t size();
+	GenePtr getGene(size_t index);
+private:
 	std::vector<GenePtr> genes;
 };
 
