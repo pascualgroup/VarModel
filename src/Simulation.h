@@ -49,8 +49,10 @@ public:
 	double getSeasonality();
 	double distanceWeightFunction(double d);
 	
+	GenePtr drawRandomGene();
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
+	StrainPtr mutateStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
 	Host * drawDestinationHost(size_t srcPopId);

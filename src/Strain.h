@@ -18,6 +18,7 @@ friend class Simulation;
 public:
 	Strain(std::vector<GenePtr> const & genes);
 	size_t size();
+	std::vector<GenePtr> getGenes();
 	GenePtr getGene(size_t index);
 private:
 	std::vector<GenePtr> genes;

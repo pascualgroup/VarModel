@@ -119,8 +119,7 @@ StrainPtr Simulation::generateRandomStrain()
 	// Uniformly randomly draw genes from pool
 	std::vector<GenePtr> strainGenes(genesPerStrain);
 	for(size_t i = 0; i < genesPerStrain; i++) {
-		size_t geneIndex = drawUniformIndex(rng, genes.size());
-		strainGenes[i] = genes[geneIndex];
+		strainGenes[i] = drawRandomGene();
 	}
 	
 	return getStrain(strainGenes);
@@ -146,12 +145,33 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 	return getStrain(daughterGenes);
 }
 
+StrainPtr Simulation::mutateStrain(StrainPtr & strain)
+{
+	vector<size_t> indices = drawMultipleBernoulli(rng, strain->size(), parPtr->pMutation);
+	if(indices.size() == 0) {
+		return strain;
+	}
+	else {
+		vector<GenePtr> genes = strain->getGenes();
+		for(size_t index : indices) {
+			genes[index] = drawRandomGene();
+		}
+		return getStrain(genes);
+	}
+}
+
 void Simulation::updateRates()
 {
 	cerr << getTime() << ": updating rates" << '\n';
 	for(auto & popPtr : popPtrs) {
 		popPtr->updateRates();
 	}
+}
+
+GenePtr Simulation::drawRandomGene()
+{
+	size_t geneIndex = drawUniformIndex(rng, genes.size());
+	return genes[geneIndex];
 }
 
 StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)

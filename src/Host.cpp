@@ -59,7 +59,9 @@ void Host::transmitTo(Host & dstHost)
 	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
 		bernoulli_distribution flipCoin(infItr->transmissionProbability());
 		if(flipCoin(*rngPtr)) {
-			originalStrains.push_back(infItr->strainPtr);
+			originalStrains.push_back(
+				popPtr->simPtr->mutateStrain(infItr->strainPtr)
+			);
 		}
 	}
 	

@@ -109,6 +109,10 @@ public:
 	// Number of genes in a strain
 	size_t genesPerStrain;
 	
+	// Probability per gene of a mutation when a strain
+	// is picked up
+	double pMutation;
+	
 	// Probability that a transmitted strain will be a recombinant
 	double pRecombinant;
 	
