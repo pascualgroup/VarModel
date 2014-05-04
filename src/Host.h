@@ -66,6 +66,8 @@ class Infection
 public:
 	Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex);
 	
+	void prepareToEnd();
+	
 	Host * hostPtr;
 	StrainPtr strainPtr;
 	
@@ -100,12 +102,12 @@ class Host
 friend class Population;
 friend class DeathEvent;
 public:
-	Host(Population * popPtr, size_t id, double deathTime);
+	Host(Population * popPtr, size_t id, double birthTime, double deathTime);
 	
-	void die();
+	void prepareToDie();
+	
 	void transmitTo(Host & dstHost);
 	
-	double getInfectionProbability(StrainPtr & strain);
 	void receiveInfection(StrainPtr & strain);
 	
 	void gainImmunity(GenePtr genePtr);
@@ -118,13 +120,18 @@ public:
 	
 	double getTime();
 	zppsim::rng_t * getRngPtr();
+	
+	void addEvent(zppsim::Event * event);
+	void removeEvent(zppsim::Event * event);
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
 	std::string toString();
 private:
 	Population * popPtr;
-	size_t id;
-	double deathTime;
+	
+	size_t const id;
+	double const birthTime;
+	double const deathTime;
 	
 	size_t nextInfectionId;
 	

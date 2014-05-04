@@ -6,42 +6,28 @@
 using namespace std;
 using namespace zppsim;
 
-Host::Host(Population * popPtr, size_t id, double deathTime) :
-	popPtr(popPtr), id(id), deathTime(deathTime), nextInfectionId(0),
+Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime) :
+	popPtr(popPtr), id(id),
+	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this))
 {
 	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
-	popPtr->addEvent(deathEvent.get());
+	addEvent(deathEvent.get());
 }
 
-void Host::die()
+void Host::prepareToDie()
 {
-	cerr << popPtr->getTime() << ", death event: " << popPtr->id << ", " << id << '\n';
+	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';
 	
-	id = popPtr->nextHostId++;
-	deathTime = popPtr->simPtr->getTime() + popPtr->simPtr->drawHostLifetime();
-	
-	cerr << "new id: " << id << '\n';
-	cerr << "new death time: " << deathTime << '\n';
-	
-	// Remove infections and immune history
+	// Remove all events
 	for(auto & infection : infections) {
-		if(infection.transitionEvent != nullptr) {
-			popPtr->removeEvent(infection.transitionEvent.get());
-		}
-		if(infection.clearanceEvent != nullptr) {
-			popPtr->removeEvent(infection.clearanceEvent.get());
-		}
+		infection.prepareToEnd();
 	}
-	infections.clear();
 	for(auto itr = immunityLossEvents.begin(); itr != immunityLossEvents.end(); itr++) {
-		popPtr->removeEvent(itr->second.get());
+		removeEvent(itr->second.get());
 	}
-	immunity.clear();
-	immunityLossEvents.clear();
-	
-	popPtr->setEventTime(deathEvent.get(), deathTime);
+	removeEvent(deathEvent.get());
 }
 
 void Host::transmitTo(Host & dstHost)
@@ -98,11 +84,6 @@ void Host::transmitTo(Host & dstHost)
 	}
 }
 
-double Host::getInfectionProbability(StrainPtr & strain)
-{
-	return 0.3;
-}
-
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
 	assert(strainPtr->size() > 0);
@@ -127,7 +108,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
 			new TransitionEvent(infectionItr, time + tLiverStage)
 		);
-		popPtr->addEvent(infectionItr->transitionEvent.get());
+		addEvent(infectionItr->transitionEvent.get());
 	}
 	// Otherwise create a rate-based transition event
 	// (first gene not yet active -> first gene active)
@@ -140,7 +121,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 				*rngPtr
 			)
 		);
-		popPtr->addEvent(infectionItr->transitionEvent.get());
+		addEvent(infectionItr->transitionEvent.get());
 	}
 	
 	// Create a clearance event
@@ -151,7 +132,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 			infectionItr, infectionItr->clearanceRate(), time, *rngPtr
 		)
 	);
-	popPtr->addEvent(infectionItr->clearanceEvent.get());
+	addEvent(infectionItr->clearanceEvent.get());
 	
 	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
@@ -166,7 +147,7 @@ void Host::gainImmunity(GenePtr genePtr)
 			this, genePtr, genePtr->immunityLossRate, getTime()
 		);
 		immunityLossEvents[genePtr] = unique_ptr<ImmunityLossEvent>(ilEvent);
-		popPtr->addEvent(ilEvent);
+		addEvent(ilEvent);
 		
 		updateInfectionRates();
 	
@@ -190,7 +171,7 @@ void Host::loseImmunity(GenePtr genePtr)
 	auto itr2 = immunityLossEvents.find(genePtr);
 	assert(itr2 != immunityLossEvents.end());
 	ImmunityLossEvent * ilEvent = itr2->second.get();
-	popPtr->removeEvent(ilEvent);
+	removeEvent(ilEvent);
 	immunityLossEvents.erase(itr2);
 	
 	updateInfectionRates();
@@ -221,11 +202,8 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 		gainImmunity(infectionItr->getCurrentGene());
 	}
 	
-	// Remove transition and clearance events
-	popPtr->removeEvent(infectionItr->transitionEvent.get());
-	popPtr->removeEvent(infectionItr->clearanceEvent.get());
-	
 	// Remove infection
+	infectionItr->prepareToEnd();
 	infections.erase(infectionItr);
 }
 
@@ -237,6 +215,16 @@ double Host::getTime()
 rng_t * Host::getRngPtr()
 {
 	return popPtr->rngPtr;
+}
+
+void Host::addEvent(Event * event)
+{
+	popPtr->addEvent(event);
+}
+
+void Host::removeEvent(Event * event)
+{
+	popPtr->removeEvent(event);
 }
 
 void Host::setEventRate(RateEvent * event, double rate)
@@ -253,6 +241,12 @@ Infection::Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t in
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
 	geneIndex(initialGeneIndex), active(false)
 {
+}
+
+void Infection::prepareToEnd()
+{
+	hostPtr->removeEvent(transitionEvent.get());
+	hostPtr->removeEvent(clearanceEvent.get());
 }
 
 GenePtr Infection::getCurrentGene()
@@ -358,7 +352,8 @@ DeathEvent::DeathEvent(Host * hostPtr):
 
 void DeathEvent::performEvent(zppsim::EventQueue & queue)
 {
-	hostPtr->die();
+	hostPtr->prepareToDie();
+	hostPtr->popPtr->removeHost(hostPtr);
 }
 
 ImmunityLossEvent::ImmunityLossEvent(Host * hostPtr, GenePtr genePtr,

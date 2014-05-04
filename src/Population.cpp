@@ -22,7 +22,13 @@ Population::Population(Simulation * simPtr, size_t id) :
 	// Create hosts
 	hosts.reserve(parPtr->size);
 	for(size_t i = 0; i < parPtr->size; i++) {
-		hosts.emplace_back(new Host(this, nextHostId++, simPtr->drawHostLifetime()));
+		size_t hostId = nextHostId++;
+		double lifetime = simPtr->drawHostLifetime();
+		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
+		double deathTime = birthTime + lifetime;
+		
+		hosts.emplace_back(new Host(this, hostId, birthTime, deathTime));
+		hostIdIndexMap[hostId] = hosts.size() - 1;
 	}
 	
 	// Create biting event
@@ -51,9 +57,42 @@ size_t Population::size()
 	return hosts.size();
 }
 
-Host * Population::getHost(size_t hostId)
+Host * Population::getHostAtIndex(size_t hostIndex)
 {
-	return hosts[hostId].get();
+	return hosts[hostIndex].get();
+}
+
+void Population::removeHost(Host * hostPtr)
+{
+	size_t index = hostIdIndexMap[hostPtr->id];
+	hostIdIndexMap.erase(hostPtr->id);
+	if(index < hosts.size() - 1) {
+		hosts[index] = std::move(hosts.back());
+		hostIdIndexMap[hosts[index]->id] = index;
+	}
+	hosts.pop_back();
+	
+	// In the future, need to update rates
+//	updateRates();
+	
+	// For now, just create a new one so pop size doesn't change
+	createNewHost();
+}
+
+Host * Population::createNewHost()
+{
+	double lifetime = simPtr->drawHostLifetime();
+	double birthTime = getTime();
+	double deathTime = birthTime + lifetime;
+	
+	size_t hostId = nextHostId++;
+	hosts.emplace_back(new Host(this, hostId, birthTime, deathTime));
+	hostIdIndexMap[hostId] = hosts.size() - 1;
+	
+	// In the future, need to update rates
+//	updateRates();
+	
+	return hosts.back().get();
 }
 
 double Population::getTime()

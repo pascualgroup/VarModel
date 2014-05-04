@@ -49,7 +49,10 @@ public:
 	
 	double bitingRate();
 	size_t size();
-	Host * getHost(size_t hostId);
+	
+	Host * getHostAtIndex(size_t hostIndex);
+	void removeHost(Host * hostPtr);
+	Host * createNewHost();
 	
 	double getTime();
 	double getBitingRate();
@@ -73,7 +76,10 @@ private:
 	rng_t * rngPtr;
 	PopulationParameters * parPtr;
 	size_t nextHostId;
+	
 	std::vector<std::unique_ptr<Host>> hosts;
+	std::unordered_map<size_t, size_t> hostIdIndexMap;
+	
 	std::unique_ptr<BitingEvent> bitingEvent;
 	std::unique_ptr<ImmigrationEvent> immigrationEvent;
 	

@@ -109,7 +109,7 @@ Host * Simulation::drawDestinationHost(size_t srcPopId)
 	size_t dstPopId = sampleDiscreteLinearSearch(rng, weights);
 	Population * dstPopPtr = popPtrs[dstPopId].get();
 	size_t dstHostIndex = drawUniformIndex(rng, dstPopPtr->size());
-	return dstPopPtr->getHost(dstHostIndex);
+	return dstPopPtr->getHostAtIndex(dstHostIndex);
 }
 
 StrainPtr Simulation::generateRandomStrain()
