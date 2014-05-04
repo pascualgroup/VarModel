@@ -103,7 +103,7 @@ void Population::performBitingEvent()
 	Host * dstHostPtr = simPtr->drawDestinationHost(id);
 	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
 	
-	srcHostPtr->transmitTo(*dstHostPtr, *rngPtr, simPtr->parPtr->pRecombination);
+	srcHostPtr->transmitTo(*dstHostPtr);
 }
 
 void Population::performImmigrationEvent()

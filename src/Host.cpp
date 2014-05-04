@@ -39,51 +39,60 @@ void Host::die()
 		popPtr->removeEvent(itr->second.get());
 	}
 	immunity.clear();
+	immunityLossEvents.clear();
 	
 	popPtr->setEventTime(deathEvent.get(), deathTime);
 }
 
-void Host::transmitTo(Host & dstHost, rng_t & rng, double pRecombination)
+void Host::transmitTo(Host & dstHost)
 {
+	rng_t * rngPtr = getRngPtr();
+	
 	if(infections.size() == 0) {
 		cerr << "No infections to transmit" << endl;
 		return;
 	}
 	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
 	
-	// Get all current infections
-	vector<StrainPtr> allStrains;
+	// Get some current infections according to transmission probability
+	vector<StrainPtr> originalStrains;
 	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
-		allStrains.push_back(infItr->strainPtr);
+		bernoulli_distribution flipCoin(infItr->transmissionProbability());
+		if(flipCoin(*rngPtr)) {
+			originalStrains.push_back(infItr->strainPtr);
+		}
 	}
 	
-	// Make daughter strains for subset of current infections
-	if(allStrains.size() > 1) {
-		cerr << "Multiple infections" << '\n';
-		vector<pair<size_t, size_t>> indexPairs = drawMultipleBernoulliIndexPairs(
-			rng, allStrains.size(), pRecombination, false, true
+	vector<StrainPtr> strainsToTransmit;
+	if(originalStrains.size() > 1) {
+		// Take each original strain with probability 1.0 - pRecombinant
+		double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
+		strainsToTransmit = drawMultipleBernoulliRandomSubset(
+			*rngPtr, originalStrains, 1.0 - pRecombinant, false
 		);
-		for(auto & indexPair : indexPairs) {
-//			cerr << "Drew recombination pair " << indexPair.first << ", " << indexPair.second << '\n';
-			
-			allStrains.push_back(popPtr->simPtr->recombineStrains(
-				allStrains[indexPair.first],
-				allStrains[indexPair.second]
-			));
+		
+		// Complete a set of size originalStrains.size() using recombinants
+		size_t nRecombinants = originalStrains.size() - strainsToTransmit.size();
+		for(size_t i = 0; i < nRecombinants; i++) {
+			uniform_int_distribution<size_t> indDist(0, originalStrains.size() - 1);
+			size_t ind1 = indDist(*rngPtr);
+			size_t ind2 = indDist(*rngPtr);
+			strainsToTransmit.push_back(
+				popPtr->simPtr->recombineStrains(
+					originalStrains[ind1],
+					originalStrains[ind2]
+				)
+			);
 		}
 	}
+	else {
+		strainsToTransmit = originalStrains;
+	}
 	
-	// Get random subset of original + daughter strains of same size as original strains
-	vector<StrainPtr> transmissionStrains = drawRandomSubset(
-		*getRngPtr(), allStrains, infections.size(), false
-	);
-	
-	// Transmit strains with some probability
-	for(auto & strainPtr : transmissionStrains) {
-		bernoulli_distribution flipCoin(dstHost.getInfectionProbability(strainPtr));
-		if(flipCoin(*getRngPtr())) {
-			dstHost.receiveInfection(strainPtr);
-		}
+	// Transmit all strains
+	for(auto & strainPtr : strainsToTransmit) {
+		dstHost.receiveInfection(strainPtr);
 	}
 }
 
@@ -145,7 +154,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
 
-void Host::gainImmunity(GenePtr const & genePtr)
+void Host::gainImmunity(GenePtr genePtr)
 {
 	if(immunity.find(genePtr) == immunity.end()) {
 		immunity.insert(genePtr);
@@ -168,7 +177,7 @@ void Host::gainImmunity(GenePtr const & genePtr)
 	}
 }
 
-void Host::loseImmunity(GenePtr const & genePtr)
+void Host::loseImmunity(GenePtr genePtr)
 {
 	// Remove immunity
 	auto itr1 = immunity.find(genePtr);
@@ -328,6 +337,11 @@ double Infection::clearanceRate()
 	else {
 		return 0.0;
 	}
+}
+
+double Infection::transmissionProbability()
+{
+	return 0.8;
 }
 
 std::string Infection::toString()

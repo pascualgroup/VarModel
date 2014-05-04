@@ -109,9 +109,8 @@ public:
 	// Number of genes in a strain
 	size_t genesPerStrain;
 	
-	// Probability that a pair of strains will recombine
-	// to form daughter strain
-	double pRecombination;
+	// Probability that a transmitted strain will be a recombinant
+	double pRecombinant;
 	
 	// Length of liver stage
 	double tLiverStage;
@@ -137,7 +136,7 @@ public:
 		
 		DEFINE_PARAM(genePoolSize);
 		DEFINE_PARAM(genesPerStrain);
-		DEFINE_PARAM(pRecombination);
+		DEFINE_PARAM(pRecombinant);
 		DEFINE_PARAM(tLiverStage);
 		
 		DEFINE_PARAM(hostLifetimeDistribution);

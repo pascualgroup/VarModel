@@ -86,6 +86,8 @@ public:
 	void updateClearanceRate();
 	double clearanceRate();
 	
+	double transmissionProbability();
+	
 	std::string toString();
 	
 private:
@@ -101,13 +103,13 @@ public:
 	Host(Population * popPtr, size_t id, double deathTime);
 	
 	void die();
-	void transmitTo(Host & dstHost, zppsim::rng_t & rng, double pRecombination);
+	void transmitTo(Host & dstHost);
 	
 	double getInfectionProbability(StrainPtr & strain);
 	void receiveInfection(StrainPtr & strain);
 	
-	void gainImmunity(GenePtr const & genePtr);
-	void loseImmunity(GenePtr const & genePtr);
+	void gainImmunity(GenePtr genePtr);
+	void loseImmunity(GenePtr genePtr);
 	
 	void updateInfectionRates();
 	
