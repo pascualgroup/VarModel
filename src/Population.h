@@ -69,6 +69,7 @@ public:
 	double getDistance(Population * popPtr);
 	
 	void updateRates();
+	void sampleHosts();
 	
 	std::string toString();
 	
@@ -78,7 +79,6 @@ private:
 	Simulation * simPtr;
 	rng_t * rngPtr;
 	PopulationParameters * parPtr;
-	size_t nextHostId;
 	
 	std::vector<std::unique_ptr<Host>> hosts;
 	std::unordered_map<size_t, size_t> hostIdIndexMap;

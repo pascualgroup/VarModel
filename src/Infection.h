@@ -75,6 +75,8 @@ public:
 	
 	std::string toString();
 	
+	void write(zppdata::DBTable * table);
+	
 private:
 	double activationRate();
 	double deactivationRate();

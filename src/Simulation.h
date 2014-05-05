@@ -26,6 +26,15 @@ private:
 	Simulation * simPtr;
 };
 
+class HostStateSamplingEvent : public zppsim::PeriodicEvent
+{
+public:
+	HostStateSamplingEvent(Simulation * simPtr, double initialTime, double period);
+	virtual void performEvent(zppsim::EventQueue & queue);
+private:
+	Simulation * simPtr;
+};
+
 class Simulation
 {
 friend class Population;
@@ -58,6 +67,7 @@ public:
 	Host * drawDestinationHost(size_t srcPopId);
 	
 	void updateRates();
+	void sampleHosts();
 	
 	void countTransmission();
 	
@@ -69,7 +79,9 @@ private:
 	
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
 	RateUpdateEvent rateUpdateEvent;
+	HostStateSamplingEvent hostStateSamplingEvent;
 	
+	size_t nextHostId;
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	
 	// Strain tracking: one strain object for each unique strain
@@ -86,6 +98,11 @@ private:
 	
 	std::unique_ptr<zppdata::DBTable> genesTablePtr;
 	std::unique_ptr<zppdata::DBTable> strainsTablePtr;
+	std::unique_ptr<zppdata::DBTable> hostsTablePtr;
+	std::unique_ptr<zppdata::DBTable> sampledHostsTablePtr;
+	std::unique_ptr<zppdata::DBTable> sampledHostInfectionsTablePtr;
+	std::unique_ptr<zppdata::DBTable> sampledHostImmunityTablePtr;
+	std::unique_ptr<zppdata::DBTable> sampledHostClinicalImmunityTablePtr;
 	
 	void initializeDatabaseTables();
 };

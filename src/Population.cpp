@@ -16,18 +16,17 @@ using namespace zppsim;
 
 Population::Population(Simulation * simPtr, size_t id) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
-	parPtr(&(simPtr->parPtr->populations[id])),
-	nextHostId(0)
+	parPtr(&(simPtr->parPtr->populations[id]))
 {
 	// Create hosts
 	hosts.reserve(parPtr->size);
 	for(size_t i = 0; i < parPtr->size; i++) {
-		size_t hostId = nextHostId++;
+		size_t hostId = simPtr->nextHostId++;
 		double lifetime = simPtr->drawHostLifetime();
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
 		
-		hosts.emplace_back(new Host(this, hostId, birthTime, deathTime));
+		hosts.emplace_back(new Host(this, hostId, birthTime, deathTime, simPtr->hostsTablePtr.get()));
 		hostIdIndexMap[hostId] = hosts.size() - 1;
 	}
 	
@@ -85,8 +84,8 @@ Host * Population::createNewHost()
 	double birthTime = getTime();
 	double deathTime = birthTime + lifetime;
 	
-	size_t hostId = nextHostId++;
-	hosts.emplace_back(new Host(this, hostId, birthTime, deathTime));
+	size_t hostId = simPtr->nextHostId++;
+	hosts.emplace_back(new Host(this, hostId, birthTime, deathTime, simPtr->hostsTablePtr.get()));
 	hostIdIndexMap[hostId] = hosts.size() - 1;
 	
 	// In the future, need to update rates
@@ -174,6 +173,25 @@ double Population::getDistance(Population * popPtr)
 void Population::updateRates()
 {
 	setEventRate(bitingEvent.get(), getBitingRate());
+}
+
+void Population::sampleHosts()
+{
+	vector<size_t> hostIndices = drawUniformIndices(
+		*rngPtr, hosts.size(), parPtr->sampleSize, true
+	);
+	for(size_t index : hostIndices) {
+		if(simPtr->sampledHostsTablePtr != nullptr) {
+			DBRow row;
+			row.set("time", getTime());
+			row.set("hostId", int64_t(hosts[index]->id));
+			simPtr->sampledHostsTablePtr->insert(row);
+		}
+		
+		hosts[index]->writeInfections(simPtr->sampledHostInfectionsTablePtr.get());
+		hosts[index]->immunity.write(simPtr->sampledHostImmunityTablePtr.get());
+		hosts[index]->clinicalImmunity.write(simPtr->sampledHostClinicalImmunityTablePtr.get());
+	}
 }
 
 std::string Population::toString()

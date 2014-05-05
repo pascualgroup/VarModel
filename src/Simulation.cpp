@@ -28,6 +28,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	rng(parPtr->randomSeed),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
+	hostStateSamplingEvent(this, 0.0, parPtr->sampleHostsEvery),
+	nextHostId(0),
 	nextStrainId(0),
 	transmissionCount(0)
 {
@@ -36,6 +38,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	initializeDatabaseTables();
 	
 	queuePtr->addEvent(&rateUpdateEvent);
+	queuePtr->addEvent(&hostStateSamplingEvent);
 	
 	// Create gene pool
 	genes.reserve(parPtr->genePoolSize);
@@ -72,6 +75,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 
 void Simulation::initializeDatabaseTables()
 {
+	// GENES
 	if(parPtr->dbTablesEnabled["genes"]) {
 		genesTablePtr = unique_ptr<DBTable>(new DBTable(
 			dbPtr,
@@ -86,6 +90,7 @@ void Simulation::initializeDatabaseTables()
 		genesTablePtr->create();
 	}
 	
+	// STRAINS
 	if(parPtr->dbTablesEnabled["strains"]) {
 		strainsTablePtr = unique_ptr<DBTable>(new DBTable(
 			dbPtr,
@@ -97,6 +102,74 @@ void Simulation::initializeDatabaseTables()
 			}
 		));
 		strainsTablePtr->create();
+	}
+	
+	// HOSTS
+	if(parPtr->dbTablesEnabled["hosts"]) {
+		hostsTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"hosts",
+			{
+				{"hostId", DBType::INTEGER},
+				{"birthTime", DBType::REAL},
+				{"deathTime", DBType::REAL}
+			}
+		));
+		hostsTablePtr->create();
+	}
+	
+	// SAMPLED HOSTS
+	if(parPtr->dbTablesEnabled["sampledHosts"]) {
+		sampledHostsTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"sampledHosts",
+			{
+				{"time", DBType::REAL},
+				{"hostId", DBType::INTEGER}
+			}
+		));
+		sampledHostsTablePtr->create();
+	}
+	
+	// SAMPLED HOSTS: INFECTIONS
+	if(parPtr->dbTablesEnabled["sampledHostInfections"]) {
+		sampledHostInfectionsTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"sampledHostInfections",
+			{
+				{"time", DBType::REAL},
+				{"hostId", DBType::INTEGER},
+				{"infectionId", DBType::INTEGER},
+				{"strainId", DBType::INTEGER},
+				{"geneIndex", DBType::INTEGER},
+				{"active", DBType::INTEGER}
+			}
+		));
+		sampledHostInfectionsTablePtr->create();
+	}
+	
+	// SAMPLED HOSTS: IMMUNITY
+	vector<DBColumn> immunityColumns = {
+		{"time", DBType::REAL},
+		{"hostId", DBType::INTEGER},
+		{"geneId", DBType::INTEGER},
+		{"lossRate", DBType::REAL}
+	};
+	if(parPtr->dbTablesEnabled["sampledHostImmunity"]) {
+		sampledHostImmunityTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"sampledHostImmunity",
+			immunityColumns
+		));
+		sampledHostImmunityTablePtr->create();
+	}
+	if(parPtr->dbTablesEnabled["sampledHostClinicalImmunity"]) {
+		sampledHostClinicalImmunityTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"sampledHostClinicalImmunity",
+			immunityColumns
+		));
+		sampledHostClinicalImmunityTablePtr->create();
 	}
 }
 
@@ -267,6 +340,14 @@ void Simulation::updateRates()
 	}
 }
 
+void Simulation::sampleHosts()
+{
+	cerr << getTime() << ": sampling hosts" << '\n';
+	for(auto & popPtr : popPtrs) {
+		popPtr->sampleHosts();
+	}
+}
+
 void Simulation::countTransmission()
 {
 	transmissionCount++;
@@ -311,4 +392,14 @@ RateUpdateEvent::RateUpdateEvent(Simulation * simPtr, double initialTime, double
 void RateUpdateEvent::performEvent(zppsim::EventQueue & queue)
 {
 	simPtr->updateRates();
+}
+
+HostStateSamplingEvent::HostStateSamplingEvent(Simulation * simPtr, double initialTime, double period) :
+	PeriodicEvent(initialTime, period), simPtr(simPtr)
+{
+}
+
+void HostStateSamplingEvent::performEvent(zppsim::EventQueue & queue)
+{
+	simPtr->sampleHosts();
 }

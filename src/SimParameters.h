@@ -27,6 +27,8 @@ class PopulationParameters : public PtreeObject
 {
 public:
 	size_t size;
+	size_t sampleSize;
+	
 	size_t nInitialInfections;
 	BitingRate bitingRate;
 	double immigrationRate;
@@ -41,6 +43,7 @@ public:
 	PopulationParameters()
 	{
 		DEFINE_PARAM(size);
+		DEFINE_PARAM(sampleSize);
 		DEFINE_PARAM(nInitialInfections);
 		DEFINE_PARAM(bitingRate);
 		DEFINE_PARAM(immigrationRate);
@@ -150,6 +153,9 @@ public:
 	// How often to update the seasonal rates
 	double seasonalUpdateEvery;
 	
+	// How often to sample hosts
+	double sampleHostsEvery;
+	
 	// Number of var genes in global pool
 	size_t genePoolSize;
 	
@@ -198,7 +204,9 @@ public:
 		
 		DEFINE_PARAM(tYear);
 		DEFINE_PARAM(tEnd);
+		
 		DEFINE_PARAM(seasonalUpdateEvery);
+		DEFINE_PARAM(sampleHostsEvery);
 		
 		DEFINE_PARAM(genePoolSize);
 		DEFINE_PARAM(genesPerStrain);

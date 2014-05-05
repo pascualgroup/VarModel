@@ -81,3 +81,17 @@ void ImmuneHistory::prepareToDie()
 		hostPtr->removeEvent(itr->second.get());
 	}
 }
+
+void ImmuneHistory::write(DBTable * table)
+{
+	if(table != nullptr) {
+		DBRow row;
+		row.set("time", hostPtr->getTime());
+		row.set("hostId", int64_t(hostPtr->id));
+		for(auto & genePtr : genes) {
+			row.set("geneId", int64_t(genePtr->id));
+			row.set("lossRate", lossEvents[genePtr]->getRate());
+			table->insert(row);
+		}
+	}
+}

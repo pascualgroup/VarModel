@@ -1,10 +1,15 @@
 {
 	"dbFilename" : "output.sqlite",
-	"dbCommitPeriod" : 36.5,
+	"dbCommitPeriod" : 30,
 	
 	"dbTablesEnabled" : {
 		"genes" : true,
-		"strains" : true
+		"strains" : true,
+		"hosts" : true,
+		"sampledHosts" : true,
+		"sampledHostInfections" : true,
+		"sampledHostImmunity" : true,
+		"sampledHostClinicalImmunity" : true
 	},
 	
 	"randomSeed" : 0,
@@ -13,6 +18,8 @@
 	"tEnd" : 365,
 	
 	"seasonalUpdateEvery" : 1.0,
+	
+	"sampleHostsEvery" : 30.0,
 	
 	"genePoolSize" : 30,
 	"genesPerStrain" : 5,
@@ -43,6 +50,7 @@
 	"populations" : [
 		{
 			"size" : 1000,
+			"sampleSize" : 100,
 			"nInitialInfections" : 5,
 			"bitingRate" : {
 				"mean" : 1.0,

@@ -6,14 +6,22 @@
 using namespace std;
 using namespace zppsim;
 
-Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime) :
-	popPtr(popPtr), id(id),
+Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime, DBTable * table) :
+	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
 	immunity(this, false),
 	clinicalImmunity(this, true)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
+	
+	if(table != nullptr) {
+		DBRow row;
+		row.set("hostId", int64_t(id));
+		row.set("birthTime", birthTime);
+		row.set("deathTime", deathTime);
+		table->insert(row);
+	}
 	
 	addEvent(deathEvent.get());
 }
@@ -217,6 +225,15 @@ void Host::removeEvent(Event * event)
 void Host::setEventRate(RateEvent * event, double rate)
 {
 	popPtr->setEventRate(event, rate);
+}
+
+void Host::writeInfections(DBTable * table)
+{
+	if(table != nullptr) {
+		for(auto itr = infections.begin(); itr != infections.end(); itr++) {
+			itr->write(table);
+		}
+	}
 }
 
 std::string Host::toString()

@@ -38,6 +38,7 @@ public:
 	bool isImmune(GenePtr genePtr);
 	
 	void prepareToDie();
+	void write(zppdata::DBTable * table);
 	
 	zppsim::unordered_set_bh<GenePtr> genes;
 	zppsim::unordered_map_bh<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
