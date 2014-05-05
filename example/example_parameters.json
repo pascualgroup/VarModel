@@ -1,0 +1,58 @@
+{
+	"dbFilename" : "output.sqlite",
+	"randomSeed" : 0,
+	
+	"tYear" : 365.0,
+	"tEnd" : 365,
+	
+	"seasonalUpdateEvery" : 1.0,
+	
+	"genePoolSize" : 30,
+	"genesPerStrain" : 5,
+	"pRecombinant" : 0.0,
+	"tLiverStage" : 7.0,
+	
+	"distanceFunction" : {
+		"power" : 1.0
+	},
+	
+	"hostLifetimeDistribution" : {
+		"dt" : 365.0,
+		"pdf" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+	},
+	
+	"transmission" : {
+		"coinfectionReducesTransmission" : true
+	},
+	
+	"withinHost" : {
+		"clearanceRateInitial" : 0.001,
+		"clearanceRateMidCourse" : 0.01,
+		"activationRate" : 100,
+		"deactivationRateImmune" : 100,
+		"deactivationRateNotImmune" : 0.02
+	},
+	
+	"populations" : [
+		{
+			"size" : 1000,
+			"nInitialInfections" : 5,
+			"bitingRate" : {
+				"mean" : 1.0,
+				"amplitude" : 0.0
+			},
+			"immigrationRate" : 0.01,
+			"x" : 0,
+			"y" : 0,
+			"selfDistance" : 0.5
+		}
+	],
+	
+	"genes" : {
+		"transmissibility" : [0.8],
+		"immunityLossRate" : [0.001],
+		"clinicalImmunityLossRate" : [0.1]
+	},
+	
+	"trackClinicalImmunity" : true
+}
