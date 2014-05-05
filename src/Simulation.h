@@ -32,7 +32,7 @@ friend class Population;
 friend class BitingEvent;
 friend class Host;
 public:
-	Simulation(SimParameters & params, zppdata::Database & db);
+	Simulation(SimParameters * parPtr, zppdata::Database * dbPtr);
 	
 	void run();
 	void runUntil(double time);
@@ -73,6 +73,7 @@ private:
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	
 	// Strain tracking: one strain object for each unique strain
+	size_t nextStrainId;
 	std::vector<StrainPtr> strains;
 	std::unordered_map<StrainPtr, size_t> strainPtrToIndexMap;
 	zppsim::unordered_map_bh<std::vector<GenePtr>, size_t> geneVecToStrainIndexMap;
@@ -82,6 +83,11 @@ private:
 	std::vector<GenePtr> genes;
 	
 	size_t transmissionCount;
+	
+	std::unique_ptr<zppdata::DBTable> genesTablePtr;
+	std::unique_ptr<zppdata::DBTable> strainsTablePtr;
+	
+	void initializeDatabaseTables();
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

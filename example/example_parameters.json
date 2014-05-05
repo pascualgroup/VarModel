@@ -1,5 +1,12 @@
 {
 	"dbFilename" : "output.sqlite",
+	"dbCommitPeriod" : 36.5,
+	
+	"dbTablesEnabled" : {
+		"genes" : true,
+		"strains" : true
+	},
+	
 	"randomSeed" : 0,
 	
 	"tYear" : 365.0,

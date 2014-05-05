@@ -22,44 +22,82 @@ T getEntry(vector<T> vals, size_t index, size_t size)
 	}
 }
 
-Simulation::Simulation(SimParameters & par, Database & db) :
-	parPtr(&par),
-	dbPtr(&db),
+Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
+	parPtr(parPtr),
+	dbPtr(dbPtr),
 	rng(parPtr->randomSeed),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
+	nextStrainId(0),
 	transmissionCount(0)
 {
+	dbPtr->beginTransaction();
+	
+	initializeDatabaseTables();
+	
 	queuePtr->addEvent(&rateUpdateEvent);
 	
 	// Create gene pool
-	genes.reserve(par.genePoolSize);
-	for(size_t i = 0; i < par.genePoolSize; i++) {
+	genes.reserve(parPtr->genePoolSize);
+	for(size_t i = 0; i < parPtr->genePoolSize; i++) {
 		double transmissibility = getEntry(
-			par.genes.transmissibility, i, par.genePoolSize
+			parPtr->genes.transmissibility, i, parPtr->genePoolSize
 		);
 		double immunityLossRate = getEntry(
-			par.genes.immunityLossRate, i, par.genePoolSize
+			parPtr->genes.immunityLossRate, i, parPtr->genePoolSize
 		);
 		double clinicalImmunityLossRate = getEntry(
-			par.genes.clinicalImmunityLossRate, i, par.genePoolSize
+			parPtr->genes.clinicalImmunityLossRate, i, parPtr->genePoolSize
 		);
 		
 		genes.emplace_back(new Gene(
 			i,
 			transmissibility,
 			immunityLossRate,
-			clinicalImmunityLossRate
+			clinicalImmunityLossRate,
+			genesTablePtr.get()
 		));
 	}
 	
 	// Create populations
-	popPtrs.reserve(par.populations.size());
-	for(size_t popId = 0; popId < par.populations.size(); popId++) {
+	popPtrs.reserve(parPtr->populations.size());
+	for(size_t popId = 0; popId < parPtr->populations.size(); popId++) {
 		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
+	dbPtr->commit();
+	
 	cerr << "# events: " << queuePtr->size() << '\n';
+}
+
+void Simulation::initializeDatabaseTables()
+{
+	if(parPtr->dbTablesEnabled["genes"]) {
+		genesTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"genes",
+			{
+				{"geneId", DBType::INTEGER},
+				{"transmissibility", DBType::REAL},
+				{"immunityLossRate", DBType::REAL},
+				{"clinicalImmunityLossRate", DBType::REAL}
+			}
+		));
+		genesTablePtr->create();
+	}
+	
+	if(parPtr->dbTablesEnabled["strains"]) {
+		strainsTablePtr = unique_ptr<DBTable>(new DBTable(
+			dbPtr,
+			"strains",
+			{
+				{"strainId", DBType::INTEGER},
+				{"geneIndex", DBType::INTEGER},
+				{"geneId", DBType::INTEGER}
+			}
+		));
+		strainsTablePtr->create();
+	}
 }
 
 void Simulation::run()
@@ -68,7 +106,21 @@ void Simulation::run()
 	time_t startTime = time(nullptr);
 	fprintf(stderr, "Starting at %s", ctime(&startTime));
 	
-	runUntil(parPtr->tEnd);
+	bool done = false;
+	for(size_t i = 0; !done; i++) {
+		double tNextCommit = i * parPtr->dbCommitPeriod;
+		
+		dbPtr->beginTransaction();
+		if(tNextCommit < parPtr->tEnd) {
+			runUntil(tNextCommit);
+		}
+		else {
+			runUntil(parPtr->tEnd);
+			done = true;
+		}
+		dbPtr->commit();
+		cerr << "Committed at t = " << getTime() << '\n';
+	}
 	
 	cout << "Total event count: " << queuePtr->getEventCount() << '\n';
 	cout << "Transmission count: " << transmissionCount << '\n';
@@ -231,9 +283,19 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 	StrainPtr strainPtr;
 	auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
 	if(strainItr == geneVecToStrainIndexMap.end()) {
-		strains.emplace_back(new Strain(strainGenes));
+		strains.emplace_back(new Strain(nextStrainId++, strainGenes));
 		strainPtr = strains.back();
 		geneVecToStrainIndexMap[strainGenes] = strains.size() - 1;
+		
+		if(strainsTablePtr != nullptr) {
+			DBRow row;
+			row.set("strainId", int64_t(strainPtr->id));
+			for(size_t i = 0; i < strainPtr->size(); i++) {
+				row.set("geneIndex", int64_t(i));
+				row.set("geneId", int64_t(strainPtr->getGene(i)->id));
+				strainsTablePtr->insert(row);
+			}
+		}
 	}
 	else {
 		strainPtr = strains[strainItr->second];

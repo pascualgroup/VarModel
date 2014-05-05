@@ -6,8 +6,8 @@
 using namespace std;
 using namespace zppsim;
 
-Strain::Strain(std::vector<GenePtr> const & genes) :
-	genes(genes)
+Strain::Strain(size_t id, std::vector<GenePtr> const & genes) :
+	id(id), genes(genes)
 {
 }
 

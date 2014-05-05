@@ -36,7 +36,8 @@ int main(int argc, char **argv) {
 	cerr << "Loaded parameters:" << endl;
 	write_json(cerr, params.dumpToPtree());
 	
-	Database db;
-	unique_ptr<Simulation> simPtr(new Simulation(params, db));
+	Database db(params.dbFilename);
+	
+	unique_ptr<Simulation> simPtr(new Simulation(&params, &db));
 	simPtr->run();
 }

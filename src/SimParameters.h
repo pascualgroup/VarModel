@@ -136,11 +136,13 @@ class SimParameters : public PtreeObject
 {
 public:
 	std::string dbFilename = "output.sqlite";
+	double dbCommitPeriod;
+	std::map<std::string, bool> dbTablesEnabled;
 	
 	uint32_t randomSeed = 0;
 	
 	// Simulation year time scale (used for seasonality period, by default in days)
-	double tYear = 365.0;
+	double tYear;
 	
 	// Simulation end time
 	double tEnd;
@@ -189,6 +191,9 @@ public:
 	SimParameters()
 	{
 		DEFINE_PARAM(dbFilename);
+		DEFINE_PARAM(dbCommitPeriod);
+		DEFINE_PARAM(dbTablesEnabled);
+		
 		DEFINE_PARAM(randomSeed);
 		
 		DEFINE_PARAM(tYear);

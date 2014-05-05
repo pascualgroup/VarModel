@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include "Database.hpp"
 #include "zppsim_random.hpp"
 
 class Gene;
@@ -26,7 +27,7 @@ public:
 	double const immunityLossRate;
 	double const clinicalImmunityLossRate;
 	
-	Gene(size_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate);
+	Gene(size_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, zppdata::DBTable * table);
 	
 	std::string toString();
 };
