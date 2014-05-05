@@ -37,7 +37,11 @@ void Infection::performTransition()
 	}
 	else if(active) {
 		assert(geneIndex != strainPtr->size() - 1);
-		hostPtr->gainImmunity(strainPtr->getGene(geneIndex));
+		GenePtr genePtr = strainPtr->getGene(geneIndex);
+		hostPtr->immunity.gainImmunity(genePtr);
+		if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
+			hostPtr->clinicalImmunity.gainImmunity(genePtr);
+		}
 		geneIndex++;
 		active = false;
 	}
@@ -89,7 +93,7 @@ double Infection::deactivationRate()
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
 	GenePtr gene = getCurrentGene();
-	bool immune = hostPtr->isImmune(gene);
+	bool immune = hostPtr->immunity.isImmune(gene);
 	if(immune) {
 		return simParPtr->withinHost.deactivationRateImmune;
 	}

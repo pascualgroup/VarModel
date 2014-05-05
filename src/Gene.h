@@ -24,8 +24,9 @@ public:
 	size_t const id;
 	double const transmissibility;
 	double const immunityLossRate;
+	double const clinicalImmunityLossRate;
 	
-	Gene(size_t id, double transmissibility, double immunityLossRate);
+	Gene(size_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate);
 	
 	std::string toString();
 };

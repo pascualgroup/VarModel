@@ -9,7 +9,9 @@ using namespace zppsim;
 Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime) :
 	popPtr(popPtr), id(id),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
-	deathEvent(new DeathEvent(this))
+	deathEvent(new DeathEvent(this)),
+	immunity(this, false),
+	clinicalImmunity(this, true)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
@@ -26,11 +28,6 @@ size_t Host::infectionCount()
 	return infections.size();
 }
 
-bool Host::isImmune(GenePtr gene)
-{
-	return immunity.find(gene) != immunity.end();
-}
-
 void Host::prepareToDie()
 {
 //	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';
@@ -39,9 +36,9 @@ void Host::prepareToDie()
 	for(auto & infection : infections) {
 		infection.prepareToEnd();
 	}
-	for(auto itr = immunityLossEvents.begin(); itr != immunityLossEvents.end(); itr++) {
-		removeEvent(itr->second.get());
-	}
+	immunity.prepareToDie();
+	clinicalImmunity.prepareToDie();
+	
 	removeEvent(deathEvent.get());
 }
 
@@ -156,46 +153,6 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 //	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
 
-void Host::gainImmunity(GenePtr genePtr)
-{
-	if(immunity.find(genePtr) == immunity.end()) {
-		immunity.insert(genePtr);
-		
-		assert(immunityLossEvents.find(genePtr) == immunityLossEvents.end());
-		ImmunityLossEvent * ilEvent = new ImmunityLossEvent(
-			this, genePtr, genePtr->immunityLossRate, getTime()
-		);
-		immunityLossEvents[genePtr] = unique_ptr<ImmunityLossEvent>(ilEvent);
-		addEvent(ilEvent);
-		
-		updateInfectionRates();
-	
-	//	cerr << getTime() << ": " << toString() << " gained immunity to " << genePtr->toString() << '\n';
-	}
-	else {
-	//	cerr << getTime() << ": " << toString() << " already had immunity to " << genePtr->toString() << '\n';
-	}
-}
-
-void Host::loseImmunity(GenePtr genePtr)
-{
-	// Remove immunity
-	auto itr1 = immunity.find(genePtr);
-	assert(itr1 != immunity.end());
-	immunity.erase(itr1);
-	
-	// Remove immunity loss event
-	auto itr2 = immunityLossEvents.find(genePtr);
-	assert(itr2 != immunityLossEvents.end());
-	ImmunityLossEvent * ilEvent = itr2->second.get();
-	removeEvent(ilEvent);
-	immunityLossEvents.erase(itr2);
-	
-	updateInfectionRates();
-	
-//	cerr << getTime() << ": " << toString() << " lost immunity to " << genePtr->toString() << '\n';
-}
-
 void Host::updateInfectionRates()
 {
 	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
@@ -215,7 +172,11 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	
 	// Gain immunity to active gene
 	if(infectionItr->active) {
-		gainImmunity(infectionItr->getCurrentGene());
+		GenePtr genePtr = infectionItr->getCurrentGene();
+		immunity.gainImmunity(genePtr);
+		if(getSimulationParametersPtr()->trackClinicalImmunity) {
+			clinicalImmunity.gainImmunity(genePtr);
+		}
 	}
 	
 	// Remove infection
@@ -274,17 +235,7 @@ void DeathEvent::performEvent(zppsim::EventQueue & queue)
 	hostPtr->popPtr->removeHost(hostPtr);
 }
 
-ImmunityLossEvent::ImmunityLossEvent(Host * hostPtr, GenePtr genePtr,
-	double rate, double initTime) :
-	RateEvent(rate, initTime, *hostPtr->getRngPtr()),
-	hostPtr(hostPtr), genePtr(genePtr)
-{
-}
-
-void ImmunityLossEvent::performEvent(zppsim::EventQueue & queue)
-{
-	hostPtr->loseImmunity(genePtr);
-}
+/*** INFECTION PROCESS EVENTS ***/
 
 InfectionProcessEvent::InfectionProcessEvent(
 	std::list<Infection>::iterator infectionItr, double time

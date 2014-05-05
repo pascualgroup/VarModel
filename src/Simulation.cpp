@@ -35,13 +35,21 @@ Simulation::Simulation(SimParameters & par, Database & db) :
 	// Create gene pool
 	genes.reserve(par.genePoolSize);
 	for(size_t i = 0; i < par.genePoolSize; i++) {
-		double transmissibility = getEntry(par.genes.transmissibility, i, par.genePoolSize);
-		double immunityLossRate = getEntry(par.genes.immunityLossRate, i, par.genePoolSize);
+		double transmissibility = getEntry(
+			par.genes.transmissibility, i, par.genePoolSize
+		);
+		double immunityLossRate = getEntry(
+			par.genes.immunityLossRate, i, par.genePoolSize
+		);
+		double clinicalImmunityLossRate = getEntry(
+			par.genes.clinicalImmunityLossRate, i, par.genePoolSize
+		);
 		
 		genes.emplace_back(new Gene(
 			i,
 			transmissibility,
-			immunityLossRate
+			immunityLossRate,
+			clinicalImmunityLossRate
 		));
 	}
 	

@@ -122,11 +122,13 @@ class GeneParameters : public PtreeObject
 public:
 	std::vector<double> transmissibility;
 	std::vector<double> immunityLossRate;
+	std::vector<double> clinicalImmunityLossRate;
 	
 	GeneParameters()
 	{
 		DEFINE_PARAM(transmissibility);
 		DEFINE_PARAM(immunityLossRate);
+		DEFINE_PARAM(clinicalImmunityLossRate);
 	}
 };
 
@@ -181,6 +183,9 @@ public:
 	// Gene parameters
 	GeneParameters genes;
 	
+	// Switch on/off clinical immunity tracking
+	bool trackClinicalImmunity;
+	
 	SimParameters()
 	{
 		DEFINE_PARAM(dbFilename);
@@ -202,6 +207,8 @@ public:
 		DEFINE_PARAM(transmission);
 		DEFINE_PARAM(withinHost);
 		DEFINE_PARAM(genes);
+		
+		DEFINE_PARAM(trackClinicalImmunity);
 	}
 };
 

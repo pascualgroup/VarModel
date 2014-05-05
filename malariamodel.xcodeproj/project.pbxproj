@@ -33,6 +33,7 @@
 		694E202718EF70AD0000D563 /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
 		694E202A18EF7C0A0000D563 /* TestGene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202818EF7C0A0000D563 /* TestGene.cpp */; };
 		694E202D18EF83550000D563 /* TestStrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202B18EF83550000D563 /* TestStrain.cpp */; };
+		69A421561917D4D70081DA06 /* ImmuneHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A421541917D4D70081DA06 /* ImmuneHistory.cpp */; };
 		69BEE5CA1905A30D00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
 		69BEE5CB1905A30F00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
 		69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */; };
@@ -92,6 +93,8 @@
 		694E202518EF70AD0000D563 /* Gene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
 		694E202818EF7C0A0000D563 /* TestGene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestGene.cpp; sourceTree = "<group>"; };
 		694E202B18EF83550000D563 /* TestStrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestStrain.cpp; sourceTree = "<group>"; };
+		69A421541917D4D70081DA06 /* ImmuneHistory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImmuneHistory.cpp; sourceTree = "<group>"; };
+		69A421551917D4D70081DA06 /* ImmuneHistory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImmuneHistory.h; sourceTree = "<group>"; };
 		69BEE5C81905A30D00E39AA1 /* Population.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Population.cpp; sourceTree = "<group>"; };
 		69BEE5C91905A30D00E39AA1 /* Population.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Population.h; sourceTree = "<group>"; };
 		69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PtreeObject.cpp; path = zppdata/src/PtreeObject.cpp; sourceTree = "<group>"; };
@@ -146,6 +149,8 @@
 				69BEE5C81905A30D00E39AA1 /* Population.cpp */,
 				692A381A18B949590085986A /* Host.h */,
 				692A381918B949590085986A /* Host.cpp */,
+				69A421551917D4D70081DA06 /* ImmuneHistory.h */,
+				69A421541917D4D70081DA06 /* ImmuneHistory.cpp */,
 				693303421917857300EBB876 /* Infection.h */,
 				693303411917857300EBB876 /* Infection.cpp */,
 				693F00F618BCFC63000F31C7 /* Strain.h */,
@@ -301,6 +306,7 @@
 				691F744818EDCB12001A1DE4 /* zppsim_util.cpp in Sources */,
 				69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */,
 				691F741618EDC9DE001A1DE4 /* Database.cpp in Sources */,
+				69A421561917D4D70081DA06 /* ImmuneHistory.cpp in Sources */,
 				691F744618EDCB12001A1DE4 /* zppsim_random.cpp in Sources */,
 				691F741818EDC9DE001A1DE4 /* zppdata_util.cpp in Sources */,
 				692A381418B9468E0085986A /* main.cpp in Sources */,

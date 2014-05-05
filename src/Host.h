@@ -9,6 +9,7 @@
 #include "zppsim_util.hpp"
 #include "SimParameters.h"
 #include "Infection.h"
+#include "ImmuneHistory.h"
 
 #define LIVER_STAGE (std::numeric_limits<size_t>::max())
 
@@ -25,20 +26,13 @@ public:
 	Host * hostPtr;
 };
 
-class ImmunityLossEvent : public zppsim::RateEvent
-{
-public:
-	ImmunityLossEvent(Host * hostPtr, GenePtr genePtr, double rate, double initTime);
-	virtual void performEvent(zppsim::EventQueue & queue);
-	
-	Host * hostPtr;
-	GenePtr genePtr;
-};
 
 class Host
 {
 friend class Population;
 friend class DeathEvent;
+friend class Infection;
+friend class Immunity;
 public:
 	Host(Population * popPtr, size_t id, double birthTime, double deathTime);
 	
@@ -48,16 +42,11 @@ public:
 	
 	void receiveInfection(StrainPtr & strain);
 	
-	void gainImmunity(GenePtr genePtr);
-	void loseImmunity(GenePtr genePtr);
-	
 	void updateInfectionRates();
 	
-	bool isImmune(GenePtr gene);
 	double getAge();
 	size_t infectionCount();
 	
-	void performTransition(std::list<Infection>::iterator infectionItr);
 	void clearInfection(std::list<Infection>::iterator infectionItr);
 	
 	double getTime();
@@ -83,11 +72,11 @@ private:
 	// Linked list of current infections
 	std::list<Infection> infections;
 	
-	// Hash set of genes that this host has immunity to
-	zppsim::unordered_set_bh<GenePtr> immunity;
-	zppsim::unordered_map_bh<GenePtr, std::unique_ptr<ImmunityLossEvent>> immunityLossEvents;
-	
 	std::unique_ptr<DeathEvent> deathEvent;
+	
+	// Two sets of immune history (regular & "clinical")
+	ImmuneHistory immunity;
+	ImmuneHistory clinicalImmunity;
 };
 
 #endif
