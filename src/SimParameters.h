@@ -120,8 +120,8 @@ public:
 class GeneParameters : public PtreeObject
 {
 public:
-	double transmissibility;
-	double immunityLossRate;
+	std::vector<double> transmissibility;
+	std::vector<double> immunityLossRate;
 	
 	GeneParameters()
 	{

@@ -148,7 +148,10 @@ void Population::performBitingEvent()
 
 void Population::performImmigrationEvent()
 {
-//	cerr << getTime() << ": immigration event, pop " << id << '\n';
+	cerr << getTime() << ": immigration event, pop " << id << '\n';
+	size_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
+	StrainPtr strain = simPtr->generateRandomStrain();
+	hosts[hostIndex]->receiveInfection(strain);
 }
 
 double Population::getDistance(Population * popPtr)

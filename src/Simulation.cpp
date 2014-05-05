@@ -5,8 +5,21 @@ using namespace std;
 using namespace zppdata;
 using namespace zppsim;
 
-float elapsed(clock_t clockStart, clock_t clockEnd) {
+static float elapsed(clock_t clockStart, clock_t clockEnd)
+{
 	return float(clockEnd - clockStart) / CLOCKS_PER_SEC;
+}
+
+template<typename T>
+T getEntry(vector<T> vals, size_t index, size_t size)
+{
+	if(vals.size() == 1) {
+		return vals[0];
+	}
+	else {
+		assert(vals.size() == size);
+		return vals[index];
+	}
 }
 
 Simulation::Simulation(SimParameters & par, Database & db) :
@@ -22,10 +35,13 @@ Simulation::Simulation(SimParameters & par, Database & db) :
 	// Create gene pool
 	genes.reserve(par.genePoolSize);
 	for(size_t i = 0; i < par.genePoolSize; i++) {
+		double transmissibility = getEntry(par.genes.transmissibility, i, par.genePoolSize);
+		double immunityLossRate = getEntry(par.genes.immunityLossRate, i, par.genePoolSize);
+		
 		genes.emplace_back(new Gene(
 			i,
-			par.genes.transmissibility,
-			par.genes.immunityLossRate
+			transmissibility,
+			immunityLossRate
 		));
 	}
 	
