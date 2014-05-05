@@ -11,7 +11,7 @@
 #include "Infection.h"
 #include "ImmuneHistory.h"
 
-#define LIVER_STAGE (std::numeric_limits<size_t>::max())
+#define WAITING_STAGE (std::numeric_limits<size_t>::max())
 
 class Host;
 class Population;

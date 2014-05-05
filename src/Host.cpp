@@ -108,7 +108,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	double time = popPtr->getTime();
 	
 	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
-	size_t initialGeneIndex = tLiverStage == 0 ? 0 : LIVER_STAGE;
+	size_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
 	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex);
 	
 	
@@ -120,7 +120,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	
 	// If starting in liver stage, create a fixed-time transition event
 	// (liver stage -> first gene not yet active)
-	if(initialGeneIndex == LIVER_STAGE) {
+	if(initialGeneIndex == WAITING_STAGE) {
 		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
 			new TransitionEvent(infectionItr, time + tLiverStage)
 		);
@@ -156,7 +156,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 void Host::updateInfectionRates()
 {
 	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
-		if(itr->geneIndex != LIVER_STAGE) {
+		if(itr->geneIndex != WAITING_STAGE) {
 			itr->updateClearanceRate();
 			itr->updateTransitionRate();
 		}

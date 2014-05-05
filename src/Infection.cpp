@@ -25,13 +25,13 @@ void Infection::prepareToEnd()
 
 GenePtr Infection::getCurrentGene()
 {
-	assert(geneIndex != LIVER_STAGE);
+	assert(geneIndex != WAITING_STAGE);
 	return strainPtr->getGene(geneIndex);
 }
 
 void Infection::performTransition()
 {
-	if(geneIndex == LIVER_STAGE) {
+	if(geneIndex == WAITING_STAGE) {
 		assert(!active);
 		geneIndex = 0;
 	}
@@ -63,7 +63,7 @@ void Infection::updateTransitionRate()
 
 double Infection::transitionRate()
 {
-	assert(geneIndex != LIVER_STAGE);
+	assert(geneIndex != WAITING_STAGE);
 	
 	if(!active) {
 		return activationRate();
@@ -107,7 +107,7 @@ double Infection::clearanceRate()
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
 	// Liver stage
-	if(geneIndex == LIVER_STAGE) {
+	if(geneIndex == WAITING_STAGE) {
 		return 0.0;
 	}
 	// Gene active
