@@ -11,9 +11,12 @@
 #include "Host.h"
 #include "zppdata_util.hpp"
 
-Infection::Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex) :
+using namespace std;
+
+Infection::Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex, double initialTime) :
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
-	geneIndex(initialGeneIndex), active(false)
+	geneIndex(initialGeneIndex), active(false),
+	transitionTime(initialTime)
 {
 }
 
@@ -29,8 +32,35 @@ GenePtr Infection::getCurrentGene()
 	return strainPtr->getGene(geneIndex);
 }
 
+size_t Infection::getCurrentGeneId()
+{
+	return getCurrentGene()->id;
+}
+
+bool Infection::isImmune()
+{
+	return hostPtr->immunity.isImmune(getCurrentGene());
+}
+
+bool Infection::isClinicallyImmune()
+{
+	return hostPtr->clinicalImmunity.isImmune(getCurrentGene());
+}
+
+double Infection::getTransitionTime()
+{
+	return transitionTime;
+}
+
+double Infection::getAgeAtTransitionTime()
+{
+	return transitionTime - hostPtr->birthTime;
+}
+
 void Infection::performTransition()
 {
+	transitionTime = hostPtr->getTime();
+	
 	if(geneIndex == WAITING_STAGE) {
 		assert(!active);
 		geneIndex = 0;
@@ -51,9 +81,7 @@ void Infection::performTransition()
 	
 	updateTransitionRate();
 	updateClearanceRate();
-	
-	double time = hostPtr->getTime();
-//	cerr << time << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
+//	cerr << transitionTime << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
 }
 
 void Infection::updateTransitionRate()
@@ -80,21 +108,29 @@ void Infection::updateClearanceRate()
 
 double Infection::activationRate()
 {
-//	GenePtr gene = getCurrentGene();
-//	bool immune = hostPtr->isImmune(gene);
-//	double age = hostPtr->getAge();
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	assert(!active);
+//	GenePtr genePtr = getCurrentGene();
+//	size_t geneId = getCurrentGeneId();
+//	bool immune = isImmune();
+//	bool clinicallyImmune = isClinicallyImmune();
+//	double age = getAgeAtTransitionTime();
+//	size_t activeCount = hostPtr->getActiveInfectionCount();
+//	vector<GenePtr> activeGenes = hostPtr->getActiveInfectionGenes();
+//	vector<size_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
+//	size_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
+//	size_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
 	
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	return simParPtr->withinHost.activationRate;
 }
 
 double Infection::deactivationRate()
 {
+	assert(active);
+	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
-	GenePtr gene = getCurrentGene();
-	bool immune = hostPtr->immunity.isImmune(gene);
-	if(immune) {
+	if(isImmune()) {
 		return simParPtr->withinHost.deactivationRateImmune;
 	}
 	else {

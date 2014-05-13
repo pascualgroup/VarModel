@@ -31,6 +31,67 @@ double Host::getAge()
 	return getTime() - birthTime;
 }
 
+size_t Host::getActiveInfectionCount()
+{
+	size_t count = 0;
+	for(auto & infection : infections) {
+		if(infection.isActive()) {
+			count++;
+		}
+	}
+	return count;
+}
+
+std::vector<GenePtr> Host::getActiveInfectionGenes()
+{
+	vector<GenePtr> genes;
+	genes.reserve(infections.size());
+	for(auto & infection : infections) {
+		if(infection.isActive()) {
+			genes.push_back(infection.getCurrentGene());
+		}
+	}
+	return genes;
+}
+
+std::vector<size_t> Host::getActiveInfectionGeneIds()
+{
+	vector<size_t> ids;
+	ids.reserve(infections.size());
+	for(auto & infection : infections) {
+		if(infection.isActive()) {
+			ids.push_back(infection.getCurrentGeneId());
+		}
+	}
+	return ids;
+}
+
+size_t Host::getActiveInfectionImmunityCount()
+{
+	size_t count = 0;
+	for(auto & infection : infections) {
+		if(infection.isActive()) {
+			if(immunity.isImmune(infection.getCurrentGene())) {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+size_t Host::getActiveInfectionClinicalImmunityCount()
+{
+	size_t count = 0;
+	for(auto & infection : infections) {
+		if(infection.isActive()) {
+			if(clinicalImmunity.isImmune(infection.getCurrentGene())) {
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
 void Host::prepareToDie()
 {
 //	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';
@@ -112,7 +173,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	
 	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
 	size_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
-	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex);
+	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex, time);
 	
 	
 	// Get an iterator to the infection so that events can

@@ -49,6 +49,13 @@ public:
 	
 	double getAge();
 	
+	size_t getActiveInfectionCount();
+	std::vector<GenePtr> getActiveInfectionGenes();
+	std::vector<size_t> getActiveInfectionGeneIds();
+	
+	size_t getActiveInfectionImmunityCount();
+	size_t getActiveInfectionClinicalImmunityCount();
+	
 	void clearInfection(std::list<Infection>::iterator infectionItr);
 	
 	double getTime();

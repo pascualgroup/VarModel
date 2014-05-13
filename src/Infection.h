@@ -46,7 +46,7 @@ public:
 class Infection
 {
 public:
-	Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex);
+	Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex, double initialTime);
 	
 	void prepareToEnd();
 	
@@ -54,14 +54,21 @@ public:
 	StrainPtr strainPtr;
 	
 	size_t id;
+	
 	size_t geneIndex;
 	bool active;
+	double transitionTime;
 	
 	std::unique_ptr<TransitionEvent> transitionEvent;
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
 	
 	bool isActive();
 	GenePtr getCurrentGene();
+	size_t getCurrentGeneId();
+	bool isImmune();
+	bool isClinicallyImmune();
+	double getTransitionTime();
+	double getAgeAtTransitionTime();
 	
 	void performTransition();
 	
