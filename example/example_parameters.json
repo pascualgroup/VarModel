@@ -21,8 +21,9 @@
 	
 	"sampleHostsEvery" : 30.0,
 	
-	"genePoolSize" : 30,
-	"genesPerStrain" : 5,
+	"genePoolSize" : 2,
+	"genesPerStrain" : 100,
+	"pMutation" : 0.01,
 	"pRecombinant" : 0.0,
 	"tLiverStage" : 7.0,
 	
@@ -51,7 +52,7 @@
 		{
 			"size" : 1000,
 			"sampleSize" : 100,
-			"nInitialInfections" : 5,
+			"nInitialInfections" : 100,
 			"bitingRate" : {
 				"mean" : 1.0,
 				"amplitude" : 0.0
@@ -66,7 +67,9 @@
 	"genes" : {
 		"transmissibility" : [0.8],
 		"immunityLossRate" : [0.001],
-		"clinicalImmunityLossRate" : [0.1]
+		"clinicalImmunityLossRate" : [0.1],
+		
+		"mutationWeights" : [[1, 5], [5, 1]]
 	},
 	
 	"trackClinicalImmunity" : true

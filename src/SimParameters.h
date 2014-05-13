@@ -127,11 +127,20 @@ public:
 	std::vector<double> immunityLossRate;
 	std::vector<double> clinicalImmunityLossRate;
 	
+	// mutationWeights[i][j] is the relative probability that gene i
+	// will transition to gene j, given a mutation event: relative
+	// as compared with all other entries of mutationWeights[i]; that is,
+	// relative probabilites are normalized at runtime and do not need
+	// to add up to 1.
+	std::vector<std::vector<double>> mutationWeights;
+	
 	GeneParameters()
 	{
 		DEFINE_PARAM(transmissibility);
 		DEFINE_PARAM(immunityLossRate);
 		DEFINE_PARAM(clinicalImmunityLossRate);
+		
+		DEFINE_PARAM(mutationWeights);
 	}
 };
 
@@ -210,6 +219,7 @@ public:
 		
 		DEFINE_PARAM(genePoolSize);
 		DEFINE_PARAM(genesPerStrain);
+		DEFINE_PARAM(pMutation);
 		DEFINE_PARAM(pRecombinant);
 		DEFINE_PARAM(tLiverStage);
 		

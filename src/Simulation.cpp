@@ -33,6 +33,18 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	nextStrainId(0),
 	transmissionCount(0)
 {
+	// Construct transition probability distributions for genes
+	if(parPtr->genes.mutationWeights.size() > 1) {
+		assert(parPtr->genes.mutationWeights.size() == parPtr->genePoolSize);
+		for(size_t i = 0; i < parPtr->genePoolSize; i++) {
+			assert(parPtr->genes.mutationWeights[i].size() == parPtr->genePoolSize);
+			mutationDistributions.emplace_back(
+				parPtr->genes.mutationWeights[i].begin(),
+				parPtr->genes.mutationWeights[i].end()
+			);
+		}
+	}
+	
 	dbPtr->beginTransaction();
 	
 	initializeDatabaseTables();
@@ -326,7 +338,9 @@ StrainPtr Simulation::mutateStrain(StrainPtr & strain)
 	else {
 		vector<GenePtr> genes = strain->getGenes();
 		for(size_t index : indices) {
-			genes[index] = drawRandomGene();
+//			cerr << "start gene: " << genes[index]->id << '\n';
+			genes[index] = mutateGene(genes[index]);
+//			cerr << "end gene: " << genes[index]->id << '\n';
 		}
 		return getStrain(genes);
 	}
@@ -358,6 +372,23 @@ GenePtr Simulation::drawRandomGene()
 	size_t geneIndex = drawUniformIndex(rng, genes.size());
 	return genes[geneIndex];
 }
+
+GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
+	size_t srcGeneId = srcGenePtr->id;
+	
+	if(mutationDistributions.size() == 0) {
+//		cerr << "not using mutation distributions" << '\n';
+		return drawRandomGene();
+	}
+	else {
+		assert(mutationDistributions.size() == genes.size());
+		assert(mutationDistributions[srcGeneId].min() == 0);
+		assert(mutationDistributions[srcGeneId].max() == genes.size() - 1);
+//		cerr << "using mutation distributions" << '\n';
+		return genes[mutationDistributions[srcGeneId](rng)];
+	}
+}
+
 
 StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 {

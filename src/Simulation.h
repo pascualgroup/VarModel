@@ -59,6 +59,8 @@ public:
 	double distanceWeightFunction(double d);
 	
 	GenePtr drawRandomGene();
+	GenePtr mutateGene(GenePtr const & srcGene);
+	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr mutateStrain(StrainPtr & strain);
@@ -93,6 +95,7 @@ private:
 	// Gene tracking: right now genes comprise a fixed pool, so no complicated
 	// tracking to perform
 	std::vector<GenePtr> genes;
+	std::vector<std::discrete_distribution<>> mutationDistributions;
 	
 	size_t transmissionCount;
 	
