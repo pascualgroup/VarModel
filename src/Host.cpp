@@ -231,7 +231,9 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 {
 	assert(infectionItr != infections.end());
 	
-	double time = popPtr->getTime();
+	bool shouldUpdateAllRates = infectionItr->transitionAffectsAllInfections();
+	
+//	double time = popPtr->getTime();
 //	cerr << time << ": " << infectionItr->toString() << " clearing" << '\n';
 	
 	// Gain immunity to active gene
@@ -246,6 +248,10 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	// Remove infection
 	infectionItr->prepareToEnd();
 	infections.erase(infectionItr);
+	
+	if(shouldUpdateAllRates) {
+		updateInfectionRates();
+	}
 }
 
 double Host::getTime()
@@ -306,61 +312,4 @@ void DeathEvent::performEvent(zppsim::EventQueue & queue)
 {
 	hostPtr->prepareToDie();
 	hostPtr->popPtr->removeHost(hostPtr);
-}
-
-/*** INFECTION PROCESS EVENTS ***/
-
-InfectionProcessEvent::InfectionProcessEvent(
-	std::list<Infection>::iterator infectionItr, double time
-) :
-	RateEvent(time), infectionItr(infectionItr)
-{
-}
-
-InfectionProcessEvent::InfectionProcessEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
-) :
-	RateEvent(rate, time, rng), infectionItr(infectionItr)
-{
-}
-
-TransitionEvent::TransitionEvent(
-	std::list<Infection>::iterator infectionItr, double time
-) :
-	InfectionProcessEvent(infectionItr, time)
-{
-}
-
-
-TransitionEvent::TransitionEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
-) :
-	InfectionProcessEvent(infectionItr, rate, time, rng)
-{
-}
-
-ClearanceEvent::ClearanceEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
-) :
-	InfectionProcessEvent(infectionItr, rate, time, rng)
-{
-}
-
-void TransitionEvent::performEvent(zppsim::EventQueue &queue)
-{
-	// If this is the final deactivation, then it's equivalent to clearing
-	if(infectionItr->active
-		&& infectionItr->geneIndex == infectionItr->strainPtr->size() - 1
-	) {
-		infectionItr->hostPtr->clearInfection(infectionItr);
-	}
-	// Otherwise, actually perform a transition
-	else {
-		infectionItr->performTransition();
-	}
-}
-
-void ClearanceEvent::performEvent(zppsim::EventQueue &queue)
-{
-	infectionItr->hostPtr->clearInfection(infectionItr);
 }

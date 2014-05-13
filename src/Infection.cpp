@@ -61,6 +61,8 @@ void Infection::performTransition()
 {
 	transitionTime = hostPtr->getTime();
 	
+	bool shouldUpdateAllInfections = transitionAffectsAllInfections();
+	
 	if(geneIndex == WAITING_STAGE) {
 		assert(!active);
 		geneIndex = 0;
@@ -79,14 +81,30 @@ void Infection::performTransition()
 		active = true;
 	}
 	
-	updateTransitionRate();
-	updateClearanceRate();
+	if(shouldUpdateAllInfections) {
+		// Every infection's rates need to be updated
+		hostPtr->updateInfectionRates();
+	}
+	else {
+		updateTransitionRate();
+		updateClearanceRate();
+	}
 //	cerr << transitionTime << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
 }
 
 void Infection::updateTransitionRate()
 {
 	hostPtr->setEventRate(transitionEvent.get(), transitionRate());
+}
+
+bool Infection::transitionAffectsAllInfections()
+{
+	if(geneIndex == WAITING_STAGE) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 double Infection::transitionRate()
@@ -209,5 +227,62 @@ void Infection::write(DBTable * table)
 		}
 		table->insert(row);
 	}
+}
+
+/*** INFECTION PROCESS EVENTS ***/
+
+InfectionProcessEvent::InfectionProcessEvent(
+	std::list<Infection>::iterator infectionItr, double time
+) :
+	RateEvent(time), infectionItr(infectionItr)
+{
+}
+
+InfectionProcessEvent::InfectionProcessEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
+	RateEvent(rate, time, rng), infectionItr(infectionItr)
+{
+}
+
+TransitionEvent::TransitionEvent(
+	std::list<Infection>::iterator infectionItr, double time
+) :
+	InfectionProcessEvent(infectionItr, time)
+{
+}
+
+
+TransitionEvent::TransitionEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
+	InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
+ClearanceEvent::ClearanceEvent(
+	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+) :
+	InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
+void TransitionEvent::performEvent(zppsim::EventQueue &queue)
+{
+	// If this is the final deactivation, then it's equivalent to clearing
+	if(infectionItr->active
+		&& infectionItr->geneIndex == infectionItr->strainPtr->size() - 1
+	) {
+		infectionItr->hostPtr->clearInfection(infectionItr);
+	}
+	// Otherwise, actually perform a transition
+	else {
+		infectionItr->performTransition();
+	}
+}
+
+void ClearanceEvent::performEvent(zppsim::EventQueue &queue)
+{
+	infectionItr->hostPtr->clearInfection(infectionItr);
 }
 

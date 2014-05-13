@@ -73,6 +73,8 @@ public:
 	void performTransition();
 	
 	void updateTransitionRate();
+	bool transitionAffectsAllInfections();
+	
 	double transitionRate();
 	
 	void updateClearanceRate();
