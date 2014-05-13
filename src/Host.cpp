@@ -31,11 +31,6 @@ double Host::getAge()
 	return getTime() - birthTime;
 }
 
-size_t Host::infectionCount()
-{
-	return infections.size();
-}
-
 void Host::prepareToDie()
 {
 //	cerr << popPtr->getTime() << ", host going to die: " << toString() << '\n';

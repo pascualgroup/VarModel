@@ -145,7 +145,7 @@ double Infection::transmissionProbability()
 	
 	// TODO: reduce by active infections or all infections?
 	if(simParPtr->transmission.coinfectionReducesTransmission) {
-		p /= hostPtr->infectionCount();
+		p /= hostPtr->infections.size();
 	}
 	return p;
 }

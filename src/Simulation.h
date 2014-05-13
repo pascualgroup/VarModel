@@ -108,6 +108,7 @@ private:
 	std::unique_ptr<zppdata::DBTable> sampledHostClinicalImmunityTablePtr;
 	
 	void initializeDatabaseTables();
+	void commitDatabase();
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

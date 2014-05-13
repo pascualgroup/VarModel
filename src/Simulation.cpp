@@ -80,9 +80,21 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
-	dbPtr->commit();
+	commitDatabase();
 	
 	cerr << "# events: " << queuePtr->size() << '\n';
+}
+
+void Simulation::commitDatabase()
+{
+	bool done = false;
+	while(!done) {
+		done = dbPtr->commit();
+		if(!done) {
+			cerr << "Commit unsuccessful due to busy database; retrying in 100 ms" << '\n';
+			usleep(100000);
+		}
+	}
 }
 
 void Simulation::initializeDatabaseTables()
@@ -203,7 +215,7 @@ void Simulation::run()
 			runUntil(parPtr->tEnd);
 			done = true;
 		}
-		dbPtr->commit();
+		commitDatabase();
 		cerr << "Committed at t = " << getTime() << '\n';
 	}
 	

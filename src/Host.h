@@ -48,7 +48,6 @@ public:
 	void updateInfectionRates();
 	
 	double getAge();
-	size_t infectionCount();
 	
 	void clearInfection(std::list<Infection>::iterator infectionItr);
 	
