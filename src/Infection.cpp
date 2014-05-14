@@ -213,17 +213,17 @@ void Infection::write(DBTable * table)
 {
 	if(table != nullptr) {
 		DBRow row;
-		row.set("time", hostPtr->getTime());
-		row.set("hostId", int64_t(hostPtr->id));
-		row.set("infectionId", int64_t(id));
-		row.set("strainId", int64_t(strainPtr->id));
+		row.setReal("time", hostPtr->getTime());
+		row.setInteger("hostId", int64_t(hostPtr->id));
+		row.setInteger("infectionId", int64_t(id));
+		row.setInteger("strainId", int64_t(strainPtr->id));
 		if(geneIndex == WAITING_STAGE) {
-			row.set_null("geneIndex");
-			row.set_null("active");
+			row.setNull("geneIndex");
+			row.setNull("active");
 		}
 		else {
-			row.set("geneIndex", int64_t(geneIndex));
-			row.set("active", int64_t(active));
+			row.setInteger("geneIndex", int64_t(geneIndex));
+			row.setInteger("active", int64_t(active));
 		}
 		table->insert(row);
 	}

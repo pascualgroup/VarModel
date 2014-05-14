@@ -17,9 +17,9 @@ Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime, D
 	
 	if(table != nullptr) {
 		DBRow row;
-		row.set("hostId", int64_t(id));
-		row.set("birthTime", birthTime);
-		row.set("deathTime", deathTime);
+		row.setInteger("hostId", int64_t(id));
+		row.setReal("birthTime", birthTime);
+		row.setReal("deathTime", deathTime);
 		table->insert(row);
 	}
 	

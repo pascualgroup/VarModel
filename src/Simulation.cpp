@@ -413,10 +413,10 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 		
 		if(strainsTablePtr != nullptr) {
 			DBRow row;
-			row.set("strainId", int64_t(strainPtr->id));
+			row.setInteger("strainId", int64_t(strainPtr->id));
 			for(size_t i = 0; i < strainPtr->size(); i++) {
-				row.set("geneIndex", int64_t(i));
-				row.set("geneId", int64_t(strainPtr->getGene(i)->id));
+				row.setInteger("geneIndex", int64_t(i));
+				row.setInteger("geneId", int64_t(strainPtr->getGene(i)->id));
 				strainsTablePtr->insert(row);
 			}
 		}

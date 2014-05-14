@@ -183,8 +183,8 @@ void Population::sampleHosts()
 	for(size_t index : hostIndices) {
 		if(simPtr->sampledHostsTablePtr != nullptr) {
 			DBRow row;
-			row.set("time", getTime());
-			row.set("hostId", int64_t(hosts[index]->id));
+			row.setReal("time", getTime());
+			row.setInteger("hostId", int64_t(hosts[index]->id));
 			simPtr->sampledHostsTablePtr->insert(row);
 		}
 		

@@ -23,10 +23,10 @@ Gene::Gene(size_t id, double transmissibility, double immunityLossRate, double c
 {
 	if(table != nullptr) {
 		DBRow row;
-		row.set("geneId", int64_t(id));
-		row.set("transmissibility", transmissibility);
-		row.set("immunityLossRate", immunityLossRate);
-		row.set("clinicalImmunityLossRate", clinicalImmunityLossRate);
+		row.setInteger("geneId", int64_t(id));
+		row.setReal("transmissibility", transmissibility);
+		row.setReal("immunityLossRate", immunityLossRate);
+		row.setReal("clinicalImmunityLossRate", clinicalImmunityLossRate);
 		table->insert(row);
 	}
 }

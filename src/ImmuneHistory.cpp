@@ -86,11 +86,11 @@ void ImmuneHistory::write(DBTable * table)
 {
 	if(table != nullptr) {
 		DBRow row;
-		row.set("time", hostPtr->getTime());
-		row.set("hostId", int64_t(hostPtr->id));
+		row.setReal("time", hostPtr->getTime());
+		row.setInteger("hostId", int64_t(hostPtr->id));
 		for(auto & genePtr : genes) {
-			row.set("geneId", int64_t(genePtr->id));
-			row.set("lossRate", lossEvents[genePtr]->getRate());
+			row.setInteger("geneId", int64_t(genePtr->id));
+			row.setReal("lossRate", lossEvents[genePtr]->getRate());
 			table->insert(row);
 		}
 	}
