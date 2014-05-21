@@ -1,6 +1,16 @@
 #include "Simulation.h"
 #include "zppsim_util.hpp"
 
+#define INITIALIZE_TABLE(tableName, columns) \
+if(parPtr->dbTablesEnabled[#tableName]) { \
+	tableName ## TablePtr = unique_ptr<DBTable>(new DBTable( \
+		dbPtr, \
+		#tableName, \
+		columns \
+	)); \
+	(tableName ## TablePtr)->create(); \
+}
+
 using namespace std;
 using namespace zppdata;
 using namespace zppsim;
@@ -99,102 +109,74 @@ void Simulation::commitDatabase()
 
 void Simulation::initializeDatabaseTables()
 {
+	// INITIALIZE_TABLE is a macro that checks if the table is enabled;
+	// and if it is creates a table object and calls xTablePtr->create(),
+	// and otherwise leaves xTablePtr == nullptr.
+	
 	// GENES
-	if(parPtr->dbTablesEnabled["genes"]) {
-		genesTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"genes",
-			{
-				{"geneId", DBType::INTEGER},
-				{"transmissibility", DBType::REAL},
-				{"immunityLossRate", DBType::REAL},
-				{"clinicalImmunityLossRate", DBType::REAL}
-			}
-		));
-		genesTablePtr->create();
-	}
+	vector<DBColumn> genesColumns = {
+		{"geneId", DBType::INTEGER},
+		{"transmissibility", DBType::REAL},
+		{"immunityLossRate", DBType::REAL},
+		{"clinicalImmunityLossRate", DBType::REAL}
+	};
+	INITIALIZE_TABLE(genes, genesColumns);
 	
 	// STRAINS
-	if(parPtr->dbTablesEnabled["strains"]) {
-		strainsTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"strains",
-			{
-				{"strainId", DBType::INTEGER},
-				{"geneIndex", DBType::INTEGER},
-				{"geneId", DBType::INTEGER}
-			}
-		));
-		strainsTablePtr->create();
-	}
+	vector<DBColumn> strainsColumns = {
+		{"strainId", DBType::INTEGER},
+		{"geneIndex", DBType::INTEGER},
+		{"geneId", DBType::INTEGER}
+	};
+	INITIALIZE_TABLE(strains, strainsColumns);
 	
 	// HOSTS
-	if(parPtr->dbTablesEnabled["hosts"]) {
-		hostsTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"hosts",
-			{
-				{"hostId", DBType::INTEGER},
-				{"birthTime", DBType::REAL},
-				{"deathTime", DBType::REAL}
-			}
-		));
-		hostsTablePtr->create();
-	}
+	vector<DBColumn> hostsColumns = {
+		{"hostId", DBType::INTEGER},
+		{"birthTime", DBType::REAL},
+		{"deathTime", DBType::REAL}
+	};
+	INITIALIZE_TABLE(hosts, hostsColumns);
 	
 	// SAMPLED HOSTS
-	if(parPtr->dbTablesEnabled["sampledHosts"]) {
-		sampledHostsTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"sampledHosts",
-			{
-				{"time", DBType::REAL},
-				{"hostId", DBType::INTEGER}
-			}
-		));
-		sampledHostsTablePtr->create();
-	}
+	vector<DBColumn> sampledHostsColumns = {
+		{"time", DBType::REAL},
+		{"hostId", DBType::INTEGER}
+	};
+	INITIALIZE_TABLE(sampledHosts, sampledHostsColumns);
 	
-	// SAMPLED HOSTS: INFECTIONS
-	if(parPtr->dbTablesEnabled["sampledHostInfections"]) {
-		sampledHostInfectionsTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"sampledHostInfections",
-			{
-				{"time", DBType::REAL},
-				{"hostId", DBType::INTEGER},
-				{"infectionId", DBType::INTEGER},
-				{"strainId", DBType::INTEGER},
-				{"geneIndex", DBType::INTEGER},
-				{"active", DBType::INTEGER}
-			}
-		));
-		sampledHostInfectionsTablePtr->create();
-	}
+	// SAMPLED TRANSMISSION EVENTS
+	vector<DBColumn> sampledTransmissionsColumns = {
+		{"time", DBType::REAL},
+		{"transmissionId", DBType::INTEGER},
+		{"sourceHostId", DBType::INTEGER},
+		{"targetHostId", DBType::INTEGER}
+	};
+	INITIALIZE_TABLE(sampledTransmissions, sampledTransmissionsColumns);
 	
-	// SAMPLED HOSTS: IMMUNITY
+	// SAMPLED HOSTS & TRANSMISSIONS: INFECTIONS
+	vector<DBColumn> infectionColumns = {
+		{"time", DBType::REAL},
+		{"hostId", DBType::INTEGER},
+		{"infectionId", DBType::INTEGER},
+		{"strainId", DBType::INTEGER},
+		{"geneIndex", DBType::INTEGER},
+		{"active", DBType::INTEGER}
+	};
+	INITIALIZE_TABLE(sampledHostInfections, infectionColumns);
+	INITIALIZE_TABLE(sampledTransmissionInfections, infectionColumns);
+	
+	// SAMPLED HOSTS AND TRANSMISSIONS: IMMUNITY
 	vector<DBColumn> immunityColumns = {
 		{"time", DBType::REAL},
 		{"hostId", DBType::INTEGER},
 		{"geneId", DBType::INTEGER},
 		{"lossRate", DBType::REAL}
 	};
-	if(parPtr->dbTablesEnabled["sampledHostImmunity"]) {
-		sampledHostImmunityTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"sampledHostImmunity",
-			immunityColumns
-		));
-		sampledHostImmunityTablePtr->create();
-	}
-	if(parPtr->dbTablesEnabled["sampledHostClinicalImmunity"]) {
-		sampledHostClinicalImmunityTablePtr = unique_ptr<DBTable>(new DBTable(
-			dbPtr,
-			"sampledHostClinicalImmunity",
-			immunityColumns
-		));
-		sampledHostClinicalImmunityTablePtr->create();
-	}
+	INITIALIZE_TABLE(sampledHostImmunity, immunityColumns);
+	INITIALIZE_TABLE(sampledHostClinicalImmunity, immunityColumns);
+	INITIALIZE_TABLE(sampledTransmissionImmunity, immunityColumns);
+	INITIALIZE_TABLE(sampledTransmissionClinicalImmunity, immunityColumns);
 }
 
 void Simulation::run()

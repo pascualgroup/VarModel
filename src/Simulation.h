@@ -15,6 +15,8 @@
 #include "zppdata_util.hpp"
 #include "EventQueue.hpp"
 
+#define DECLARE_TABLE(tableName) std::unique_ptr<zppdata::DBTable> tableName ## TablePtr
+
 class Simulation;
 
 class RateUpdateEvent : public zppsim::PeriodicEvent
@@ -99,13 +101,23 @@ private:
 	
 	size_t transmissionCount;
 	
-	std::unique_ptr<zppdata::DBTable> genesTablePtr;
-	std::unique_ptr<zppdata::DBTable> strainsTablePtr;
-	std::unique_ptr<zppdata::DBTable> hostsTablePtr;
-	std::unique_ptr<zppdata::DBTable> sampledHostsTablePtr;
-	std::unique_ptr<zppdata::DBTable> sampledHostInfectionsTablePtr;
-	std::unique_ptr<zppdata::DBTable> sampledHostImmunityTablePtr;
-	std::unique_ptr<zppdata::DBTable> sampledHostClinicalImmunityTablePtr;
+	// DECLARE_TABLE is a macro mapping e.g.,
+	// DECLARE_TABLE(genes);
+	// -->
+	// std::unique_ptr<zppdata::DBTable> genesTablePtr;
+	DECLARE_TABLE(genes);
+	DECLARE_TABLE(strains);
+	DECLARE_TABLE(hosts);
+	
+	DECLARE_TABLE(sampledHosts);
+	DECLARE_TABLE(sampledHostInfections);
+	DECLARE_TABLE(sampledHostImmunity);
+	DECLARE_TABLE(sampledHostClinicalImmunity);
+	
+	DECLARE_TABLE(sampledTransmissions);
+	DECLARE_TABLE(sampledTransmissionInfections);
+	DECLARE_TABLE(sampledTransmissionImmunity);
+	DECLARE_TABLE(sampledTransmissionClinicalImmunity);
 	
 	void initializeDatabaseTables();
 	void commitDatabase();
