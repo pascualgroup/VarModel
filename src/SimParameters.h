@@ -26,10 +26,10 @@ public:
 class PopulationParameters : public PtreeObject
 {
 public:
-	size_t size;
-	size_t sampleSize;
+	int64_t size;
+	int64_t sampleSize;
 	
-	size_t nInitialInfections;
+	int64_t nInitialInfections;
 	BitingRate bitingRate;
 	double immigrationRate;
 	
@@ -56,7 +56,12 @@ public:
 class DistanceFunction : public PtreeObject
 {
 public:
-	double alpha;
+	double power;
+	
+	DistanceFunction()
+	{
+		DEFINE_PARAM(power);
+	}
 };
 
 class DiscreteDistribution : public PtreeObject
@@ -151,7 +156,7 @@ public:
 	double dbCommitPeriod;
 	std::map<std::string, bool> dbTablesEnabled;
 	
-	uint32_t randomSeed = 0;
+	int64_t randomSeed = 0;
 	
 	// Simulation year time scale (used for seasonality period, by default in days)
 	double tYear;
@@ -166,10 +171,10 @@ public:
 	double sampleHostsEvery;
 	
 	// Number of var genes in global pool
-	size_t genePoolSize;
+	int64_t genePoolSize;
 	
 	// Number of genes in a strain
-	size_t genesPerStrain;
+	int64_t genesPerStrain;
 	
 	// Probability per gene of a mutation when a strain
 	// is picked up
@@ -222,6 +227,8 @@ public:
 		DEFINE_PARAM(pMutation);
 		DEFINE_PARAM(pRecombinant);
 		DEFINE_PARAM(tLiverStage);
+		
+		DEFINE_PARAM(distanceFunction);
 		
 		DEFINE_PARAM(hostLifetimeDistribution);
 		

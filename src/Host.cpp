@@ -6,7 +6,7 @@
 using namespace std;
 using namespace zppsim;
 
-Host::Host(Population * popPtr, size_t id, double birthTime, double deathTime, DBTable * table) :
+Host::Host(Population * popPtr, int64_t id, double birthTime, double deathTime, DBTable * table) :
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
@@ -31,9 +31,9 @@ double Host::getAge()
 	return getTime() - birthTime;
 }
 
-size_t Host::getActiveInfectionCount()
+int64_t Host::getActiveInfectionCount()
 {
-	size_t count = 0;
+	int64_t count = 0;
 	for(auto & infection : infections) {
 		if(infection.isActive()) {
 			count++;
@@ -54,9 +54,9 @@ std::vector<GenePtr> Host::getActiveInfectionGenes()
 	return genes;
 }
 
-std::vector<size_t> Host::getActiveInfectionGeneIds()
+std::vector<int64_t> Host::getActiveInfectionGeneIds()
 {
-	vector<size_t> ids;
+	vector<int64_t> ids;
 	ids.reserve(infections.size());
 	for(auto & infection : infections) {
 		if(infection.isActive()) {
@@ -66,9 +66,9 @@ std::vector<size_t> Host::getActiveInfectionGeneIds()
 	return ids;
 }
 
-size_t Host::getActiveInfectionImmunityCount()
+int64_t Host::getActiveInfectionImmunityCount()
 {
-	size_t count = 0;
+	int64_t count = 0;
 	for(auto & infection : infections) {
 		if(infection.isActive()) {
 			if(immunity.isImmune(infection.getCurrentGene())) {
@@ -79,9 +79,9 @@ size_t Host::getActiveInfectionImmunityCount()
 	return count;
 }
 
-size_t Host::getActiveInfectionClinicalImmunityCount()
+int64_t Host::getActiveInfectionClinicalImmunityCount()
 {
-	size_t count = 0;
+	int64_t count = 0;
 	for(auto & infection : infections) {
 		if(infection.isActive()) {
 			if(clinicalImmunity.isImmune(infection.getCurrentGene())) {
@@ -139,11 +139,11 @@ void Host::transmitTo(Host & dstHost)
 		);
 		
 		// Complete a set of size originalStrains.size() using recombinants
-		size_t nRecombinants = originalStrains.size() - strainsToTransmit.size();
-		for(size_t i = 0; i < nRecombinants; i++) {
-			uniform_int_distribution<size_t> indDist(0, originalStrains.size() - 1);
-			size_t ind1 = indDist(*rngPtr);
-			size_t ind2 = indDist(*rngPtr);
+		int64_t nRecombinants = originalStrains.size() - strainsToTransmit.size();
+		for(int64_t i = 0; i < nRecombinants; i++) {
+			uniform_int_distribution<int64_t> indDist(0, originalStrains.size() - 1);
+			int64_t ind1 = indDist(*rngPtr);
+			int64_t ind2 = indDist(*rngPtr);
 			strainsToTransmit.push_back(
 				popPtr->simPtr->recombineStrains(
 					originalStrains[ind1],
@@ -172,7 +172,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	double time = popPtr->getTime();
 	
 	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
-	size_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
+	int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
 	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex, time);
 	
 	

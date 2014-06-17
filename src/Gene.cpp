@@ -16,7 +16,7 @@ using namespace std;
 using namespace zppsim;
 using namespace zppdata;
 
-Gene::Gene(size_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, DBTable * table) :
+Gene::Gene(int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, DBTable * table) :
 	id(id),
 	transmissibility(transmissibility),
 	immunityLossRate(immunityLossRate), clinicalImmunityLossRate(clinicalImmunityLossRate)

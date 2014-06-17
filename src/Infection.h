@@ -46,16 +46,16 @@ public:
 class Infection
 {
 public:
-	Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex, double initialTime);
+	Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime);
 	
 	void prepareToEnd();
 	
 	Host * hostPtr;
 	StrainPtr strainPtr;
 	
-	size_t id;
+	int64_t id;
 	
-	size_t geneIndex;
+	int64_t geneIndex;
 	bool active;
 	double transitionTime;
 	
@@ -64,7 +64,7 @@ public:
 	
 	bool isActive();
 	GenePtr getCurrentGene();
-	size_t getCurrentGeneId();
+	int64_t getCurrentGeneId();
 	bool isImmune();
 	bool isClinicallyImmune();
 	double getTransitionTime();

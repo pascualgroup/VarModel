@@ -1,74 +1,154 @@
 {
+	// Output filename.
 	"dbFilename" : "output.sqlite",
+	
+	// How often to commit the database, in simulation time
+	// (prevents database from becoming bottleneck).
 	"dbCommitPeriod" : 30,
 	
+	// Enable/disable database tables
 	"dbTablesEnabled" : {
+		// Genes and attributes
 		"genes" : true,
+		
+		// Strains (lists of genes)
 		"strains" : true,
+		
+		// Hosts: incl. birth and death time
 		"hosts" : true,
+		
+		// Sampled hosts: list of hosts sampled over time
 		"sampledHosts" : true,
+		
+		// Sampled hosts: list of infections
 		"sampledHostInfections" : true,
+		
+		// Sampled hosts: list of immunities
 		"sampledHostImmunity" : true,
+		
+		// Sampled hosts: list of "clinical" immunities
 		"sampledHostClinicalImmunity" : true
 	},
 	
+	// Random seed: if 0, seed is generated from system random generator
 	"randomSeed" : 0,
 	
+	// Length of a year in simulation units (used to define seasonal period)
 	"tYear" : 365.0,
-	"tEnd" : 365,
 	
+	// End time of simulation
+	"tEnd" : 365.0,
+	
+	// How often to update seasonal rates
 	"seasonalUpdateEvery" : 1.0,
 	
+	// How often to sample hosts
 	"sampleHostsEvery" : 30.0,
 	
+	// Number of var genes in pool
 	"genePoolSize" : 2,
+	
+	// Number of genes in each strain
 	"genesPerStrain" : 100,
+	
+	// Probability of mutation, per locus, per transmission events
 	"pMutation" : 0.01,
+	
+	// Probability that a transmitted strain will be a recombinant
+	// (non-recombinant strains will be a random subset of original strains)
 	"pRecombinant" : 0.0,
 	"tLiverStage" : 7.0,
 	
+	// Parameter used to determine effective distance, and thus contact rate,
+	// for different populations. The relative weight of populations is given by
+	// d^(-
 	"distanceFunction" : {
 		"power" : 1.0
 	},
 	
+	// Host-lifetime distribution, specified as a discrete PDF,
+	// with uniform density within each discrete chunk
 	"hostLifetimeDistribution" : {
 		"dt" : 365.0,
 		"pdf" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
 	},
 	
+	// Transmission parameters (will probably change)
 	"transmission" : {
+		// If true, the probability of transmission is reduced by the number of active
+		// infections
 		"coinfectionReducesTransmission" : true
 	},
 	
+	// Within-host parameters (will definitely change)
 	"withinHost" : {
+		// Clearance rate before first activation
 		"clearanceRateInitial" : 0.001,
+		
+		// Clearance rate between activations
 		"clearanceRateMidCourse" : 0.01,
+		
+		// Infection activation rate
 		"activationRate" : 100,
+		
+		// Infection deactivation rate if host is immune
 		"deactivationRateImmune" : 100,
+		
+		// Infection deactivation rate if host is not immune
 		"deactivationRateNotImmune" : 0.02
 	},
 	
+	// Array of population parameters
 	"populations" : [
+		// First population
 		{
+			// Population size
 			"size" : 1000,
+			
+			// Number of hosts to sample at sampling interval
 			"sampleSize" : 100,
+			
+			// Number of initial infections in the population
 			"nInitialInfections" : 100,
+			
+			// Biting rate mean/amplitude (question: should amplitude be done as a fraction
+			// of mean (0.0 to 1.0) rather than absolute?)
 			"bitingRate" : {
 				"mean" : 1.0,
 				"amplitude" : 0.0
 			},
+			
+			// Rate of appearance of new strains
 			"immigrationRate" : 0.01,
+			
+			// Location in space, used to calculate contact rates between populations
 			"x" : 0,
 			"y" : 0,
+			
+			// "Distance" for within-population contacts, used to calculate
+			// within-population contact rate
 			"selfDistance" : 0.5
 		}
+		// Additional populations can appear here (separate {} sections with commas)
 	],
 	
+	// Gene parameters
 	"genes" : {
+		// Array of transmissibility values, one for each gene, or a single value
+		// shared across genes
 		"transmissibility" : [0.8],
+		
+		// Array of immunity loss rates, one for each gene, or a single value
+		// shared across genes
 		"immunityLossRate" : [0.001],
+		
+		// Array of clinical immunity-loss rates, one for each gene, or a single value
+		// shared across genes
 		"clinicalImmunityLossRate" : [0.1],
 		
+		// Relative mutation rates from each gene to each other gene;
+		// mutationWeights[i] is the relative probability of different mutations from
+		// gene i
 		"mutationWeights" : [[1, 5], [5, 1]]
 	},
 	

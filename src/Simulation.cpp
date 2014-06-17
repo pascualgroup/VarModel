@@ -1,6 +1,12 @@
 #include "Simulation.h"
 #include "zppsim_util.hpp"
 
+// 100-millisecond delay between database commit retries
+#define DB_RETRY_DELAY 100000
+
+// 10-second maximum database retry before failure
+#define DB_TIMEOUT 10000000
+
 #define INITIALIZE_TABLE(tableName, columns) \
 if(parPtr->dbTablesEnabled[#tableName]) { \
 	tableName ## TablePtr = unique_ptr<DBTable>(new DBTable( \
@@ -46,7 +52,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	// Construct transition probability distributions for genes
 	if(parPtr->genes.mutationWeights.size() > 1) {
 		assert(parPtr->genes.mutationWeights.size() == parPtr->genePoolSize);
-		for(size_t i = 0; i < parPtr->genePoolSize; i++) {
+		for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
 			assert(parPtr->genes.mutationWeights[i].size() == parPtr->genePoolSize);
 			mutationDistributions.emplace_back(
 				parPtr->genes.mutationWeights[i].begin(),
@@ -64,7 +70,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
 	// Create gene pool
 	genes.reserve(parPtr->genePoolSize);
-	for(size_t i = 0; i < parPtr->genePoolSize; i++) {
+	for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
 		double transmissibility = getEntry(
 			parPtr->genes.transmissibility, i, parPtr->genePoolSize
 		);
@@ -86,25 +92,13 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
-	for(size_t popId = 0; popId < parPtr->populations.size(); popId++) {
+	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
 		popPtrs.emplace_back(new Population(this, popId));
 	}
 	
-	commitDatabase();
+	dbPtr->commitWithRetry(DB_RETRY_DELAY, DB_TIMEOUT, cerr);
 	
 	cerr << "# events: " << queuePtr->size() << '\n';
-}
-
-void Simulation::commitDatabase()
-{
-	bool done = false;
-	while(!done) {
-		done = dbPtr->commit();
-		if(!done) {
-			cerr << "Commit unsuccessful due to busy database; retrying in 100 ms" << '\n';
-			usleep(100000);
-		}
-	}
 }
 
 void Simulation::initializeDatabaseTables()
@@ -186,7 +180,7 @@ void Simulation::run()
 	fprintf(stderr, "Starting at %s", ctime(&startTime));
 	
 	bool done = false;
-	for(size_t i = 0; !done; i++) {
+	for(int64_t i = 0; !done; i++) {
 		double tNextCommit = i * parPtr->dbCommitPeriod;
 		
 		dbPtr->beginTransaction();
@@ -197,7 +191,7 @@ void Simulation::run()
 			runUntil(parPtr->tEnd);
 			done = true;
 		}
-		commitDatabase();
+		dbPtr->commitWithRetry(DB_RETRY_DELAY, DB_TIMEOUT, cerr);
 		cerr << "Committed at t = " << getTime() << '\n';
 	}
 	
@@ -268,10 +262,10 @@ double Simulation::getSeasonality()
 double Simulation::distanceWeightFunction(double d)
 {
 	assert(d > 0.0);
-	return pow(d, -parPtr->distanceFunction.alpha);
+	return pow(d, -parPtr->distanceFunction.power);
 }
 
-Host * Simulation::drawDestinationHost(size_t srcPopId)
+Host * Simulation::drawDestinationHost(int64_t srcPopId)
 {
 	Population * srcPopPtr = popPtrs[srcPopId].get();
 	
@@ -284,19 +278,19 @@ Host * Simulation::drawDestinationHost(size_t srcPopId)
 			* popPtr->size()
 		);
 	}
-	size_t dstPopId = sampleDiscreteLinearSearch(rng, weights);
+	int64_t dstPopId = sampleDiscreteLinearSearch(rng, weights);
 	Population * dstPopPtr = popPtrs[dstPopId].get();
-	size_t dstHostIndex = drawUniformIndex(rng, dstPopPtr->size());
+	int64_t dstHostIndex = drawUniformIndex(rng, dstPopPtr->size());
 	return dstPopPtr->getHostAtIndex(dstHostIndex);
 }
 
 StrainPtr Simulation::generateRandomStrain()
 {
-	size_t genesPerStrain = parPtr->genesPerStrain;
+	int64_t genesPerStrain = parPtr->genesPerStrain;
 	
 	// Uniformly randomly draw genes from pool
 	std::vector<GenePtr> strainGenes(genesPerStrain);
-	for(size_t i = 0; i < genesPerStrain; i++) {
+	for(int64_t i = 0; i < genesPerStrain; i++) {
 		strainGenes[i] = drawRandomGene();
 	}
 	
@@ -314,7 +308,7 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 	copy(s2->genes.begin(), s2->genes.end(), std::back_inserter(allGenes));
 	assert(allGenes.size() == s1->size() + s2->size());
 	
-	vector<size_t> daughterIndices = drawUniformIndices(rng, allGenes.size(), s1->size(), false);
+	vector<size_t> daughterIndices = drawUniformIndices(rng, allGenes.size(), size_t(s1->size()), false);
 	vector<GenePtr> daughterGenes(daughterIndices.size());
 	for(size_t i = 0; i < daughterIndices.size(); i++) {
 		daughterGenes[i] = allGenes[daughterIndices[i]];
@@ -325,13 +319,13 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 
 StrainPtr Simulation::mutateStrain(StrainPtr & strain)
 {
-	vector<size_t> indices = drawMultipleBernoulli(rng, strain->size(), parPtr->pMutation);
+	vector<int64_t> indices = drawMultipleBernoulli(rng, strain->size(), parPtr->pMutation);
 	if(indices.size() == 0) {
 		return strain;
 	}
 	else {
 		vector<GenePtr> genes = strain->getGenes();
-		for(size_t index : indices) {
+		for(int64_t index : indices) {
 //			cerr << "start gene: " << genes[index]->id << '\n';
 			genes[index] = mutateGene(genes[index]);
 //			cerr << "end gene: " << genes[index]->id << '\n';
@@ -363,12 +357,12 @@ void Simulation::countTransmission()
 
 GenePtr Simulation::drawRandomGene()
 {
-	size_t geneIndex = drawUniformIndex(rng, genes.size());
+	int64_t geneIndex = drawUniformIndex(rng, genes.size());
 	return genes[geneIndex];
 }
 
 GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
-	size_t srcGeneId = srcGenePtr->id;
+	int64_t srcGeneId = srcGenePtr->id;
 	
 	if(mutationDistributions.size() == 0) {
 //		cerr << "not using mutation distributions" << '\n';
@@ -396,7 +390,7 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 		if(strainsTablePtr != nullptr) {
 			DBRow row;
 			row.setInteger("strainId", int64_t(strainPtr->id));
-			for(size_t i = 0; i < strainPtr->size(); i++) {
+			for(int64_t i = 0; i < strainPtr->size(); i++) {
 				row.setInteger("geneIndex", int64_t(i));
 				row.setInteger("geneId", int64_t(strainPtr->getGene(i)->id));
 				strainsTablePtr->insert(row);

@@ -12,7 +12,7 @@
 #include "ImmuneHistory.h"
 #include "Database.hpp"
 
-#define WAITING_STAGE (std::numeric_limits<size_t>::max())
+#define WAITING_STAGE (std::numeric_limits<int64_t>::max())
 
 class Host;
 class Population;
@@ -35,9 +35,9 @@ friend class DeathEvent;
 friend class Infection;
 friend class Immunity;
 public:
-	size_t const id;
+	int64_t const id;
 	
-	Host(Population * popPtr, size_t id, double birthTime, double deathTime, zppdata::DBTable * table);
+	Host(Population * popPtr, int64_t id, double birthTime, double deathTime, zppdata::DBTable * table);
 	
 	void prepareToDie();
 	
@@ -49,12 +49,12 @@ public:
 	
 	double getAge();
 	
-	size_t getActiveInfectionCount();
+	int64_t getActiveInfectionCount();
 	std::vector<GenePtr> getActiveInfectionGenes();
-	std::vector<size_t> getActiveInfectionGeneIds();
+	std::vector<int64_t> getActiveInfectionGeneIds();
 	
-	size_t getActiveInfectionImmunityCount();
-	size_t getActiveInfectionClinicalImmunityCount();
+	int64_t getActiveInfectionImmunityCount();
+	int64_t getActiveInfectionClinicalImmunityCount();
 	
 	void clearInfection(std::list<Infection>::iterator infectionItr);
 	
@@ -76,7 +76,7 @@ private:
 	double const birthTime;
 	double const deathTime;
 	
-	size_t nextInfectionId;
+	int64_t nextInfectionId;
 	
 	// Linked list of current infections
 	std::list<Infection> infections;

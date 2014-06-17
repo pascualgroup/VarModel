@@ -13,7 +13,7 @@
 
 using namespace std;
 
-Infection::Infection(Host * hostPtr, size_t id, StrainPtr & strainPtr, size_t initialGeneIndex, double initialTime) :
+Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime) :
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
 	geneIndex(initialGeneIndex), active(false),
 	transitionTime(initialTime)
@@ -32,7 +32,7 @@ GenePtr Infection::getCurrentGene()
 	return strainPtr->getGene(geneIndex);
 }
 
-size_t Infection::getCurrentGeneId()
+int64_t Infection::getCurrentGeneId()
 {
 	return getCurrentGene()->id;
 }
@@ -128,15 +128,15 @@ double Infection::activationRate()
 {
 	assert(!active);
 //	GenePtr genePtr = getCurrentGene();
-//	size_t geneId = getCurrentGeneId();
+//	int64_t geneId = getCurrentGeneId();
 //	bool immune = isImmune();
 //	bool clinicallyImmune = isClinicallyImmune();
 //	double age = getAgeAtTransitionTime();
-//	size_t activeCount = hostPtr->getActiveInfectionCount();
+//	int64_t activeCount = hostPtr->getActiveInfectionCount();
 //	vector<GenePtr> activeGenes = hostPtr->getActiveInfectionGenes();
-//	vector<size_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
-//	size_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
-//	size_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
+//	vector<int64_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
+//	int64_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
+//	int64_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
 	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	return simParPtr->withinHost.activationRate;
@@ -197,9 +197,8 @@ double Infection::transmissionProbability()
 	double p = genePtr->transmissibility;
 	assert(p > 0.0 && p < 1.0);
 	
-	// TODO: reduce by active infections or all infections?
 	if(simParPtr->transmission.coinfectionReducesTransmission) {
-		p /= hostPtr->infections.size();
+		p /= hostPtr->getActiveInfectionCount();
 	}
 	return p;
 }

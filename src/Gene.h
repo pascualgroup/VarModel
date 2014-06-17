@@ -22,12 +22,12 @@ typedef std::weak_ptr<Gene> GenePtrW;
 class Gene
 {
 public:
-	size_t const id;
+	int64_t const id;
 	double const transmissibility;
 	double const immunityLossRate;
 	double const clinicalImmunityLossRate;
 	
-	Gene(size_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, zppdata::DBTable * table);
+	Gene(int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, zppdata::DBTable * table);
 	
 	std::string toString();
 };

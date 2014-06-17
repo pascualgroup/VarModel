@@ -14,14 +14,14 @@
 using namespace std;
 using namespace zppsim;
 
-Population::Population(Simulation * simPtr, size_t id) :
+Population::Population(Simulation * simPtr, int64_t id) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
 	parPtr(&(simPtr->parPtr->populations[id]))
 {
 	// Create hosts
 	hosts.reserve(parPtr->size);
-	for(size_t i = 0; i < parPtr->size; i++) {
-		size_t hostId = simPtr->nextHostId++;
+	for(int64_t i = 0; i < parPtr->size; i++) {
+		int64_t hostId = simPtr->nextHostId++;
 		double lifetime = simPtr->drawHostLifetime();
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
@@ -43,27 +43,27 @@ Population::Population(Simulation * simPtr, size_t id) :
 	addEvent(immigrationEvent.get());
 	
 	// Create initial infections
-	for(size_t i = 0; i < parPtr->nInitialInfections; i++) {
-		size_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
+	for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+		int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
 		StrainPtr strainPtr = simPtr->generateRandomStrain();
 		
 		hosts[hostId]->receiveInfection(strainPtr);
 	}
 }
 
-size_t Population::size()
+int64_t Population::size()
 {
 	return hosts.size();
 }
 
-Host * Population::getHostAtIndex(size_t hostIndex)
+Host * Population::getHostAtIndex(int64_t hostIndex)
 {
 	return hosts[hostIndex].get();
 }
 
 void Population::removeHost(Host * hostPtr)
 {
-	size_t index = hostIdIndexMap[hostPtr->id];
+	int64_t index = hostIdIndexMap[hostPtr->id];
 	hostIdIndexMap.erase(hostPtr->id);
 	if(index < hosts.size() - 1) {
 		hosts[index] = std::move(hosts.back());
@@ -84,7 +84,7 @@ Host * Population::createNewHost()
 	double birthTime = getTime();
 	double deathTime = birthTime + lifetime;
 	
-	size_t hostId = simPtr->nextHostId++;
+	int64_t hostId = simPtr->nextHostId++;
 	hosts.emplace_back(new Host(this, hostId, birthTime, deathTime, simPtr->hostsTablePtr.get()));
 	hostIdIndexMap[hostId] = hosts.size() - 1;
 	
@@ -135,7 +135,7 @@ void Population::performBitingEvent()
 {
 //	cerr << simPtr->getTime() << ": biting event, src pop " << id << '\n';
 	
-	size_t srcHostIndex = drawUniformIndex(*rngPtr, hosts.size());
+	int64_t srcHostIndex = drawUniformIndex(*rngPtr, hosts.size());
 	Host * srcHostPtr = hosts[srcHostIndex].get();
 //	cerr << "src host: " << srcHostPtr->id << '\n';
 	
@@ -148,7 +148,7 @@ void Population::performBitingEvent()
 void Population::performImmigrationEvent()
 {
 	cerr << getTime() << ": immigration event, pop " << id << '\n';
-	size_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
+	int64_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
 	StrainPtr strain = simPtr->generateRandomStrain();
 	hosts[hostIndex]->receiveInfection(strain);
 }
@@ -178,7 +178,7 @@ void Population::updateRates()
 void Population::sampleHosts()
 {
 	vector<size_t> hostIndices = drawUniformIndices(
-		*rngPtr, hosts.size(), parPtr->sampleSize, true
+		*rngPtr, hosts.size(), size_t(parPtr->sampleSize), true
 	);
 	for(size_t index : hostIndices) {
 		if(simPtr->sampledHostsTablePtr != nullptr) {

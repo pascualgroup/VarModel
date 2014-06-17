@@ -68,7 +68,7 @@ public:
 	StrainPtr mutateStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
-	Host * drawDestinationHost(size_t srcPopId);
+	Host * drawDestinationHost(int64_t srcPopId);
 	
 	void updateRates();
 	void sampleHosts();
@@ -85,21 +85,21 @@ private:
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
 	
-	size_t nextHostId;
+	int64_t nextHostId;
 	std::vector<std::unique_ptr<Population>> popPtrs;
 	
 	// Strain tracking: one strain object for each unique strain
-	size_t nextStrainId;
+	int64_t nextStrainId;
 	std::vector<StrainPtr> strains;
-	std::unordered_map<StrainPtr, size_t> strainPtrToIndexMap;
-	zppsim::unordered_map_bh<std::vector<GenePtr>, size_t> geneVecToStrainIndexMap;
+	std::unordered_map<StrainPtr, int64_t> strainPtrToIndexMap;
+	zppsim::unordered_map_bh<std::vector<GenePtr>, int64_t> geneVecToStrainIndexMap;
 	
 	// Gene tracking: right now genes comprise a fixed pool, so no complicated
 	// tracking to perform
 	std::vector<GenePtr> genes;
 	std::vector<std::discrete_distribution<>> mutationDistributions;
 	
-	size_t transmissionCount;
+	int64_t transmissionCount;
 	
 	// DECLARE_TABLE is a macro mapping e.g.,
 	// DECLARE_TABLE(genes);
@@ -120,7 +120,6 @@ private:
 	DECLARE_TABLE(sampledTransmissionClinicalImmunity);
 	
 	void initializeDatabaseTables();
-	void commitDatabase();
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

@@ -43,14 +43,14 @@ class Population
 friend class Simulation;
 friend class Host;
 public:
-	size_t const id;
+	int64_t const id;
 	
-	Population(Simulation * simPtr, size_t id);
+	Population(Simulation * simPtr, int64_t id);
 	
 	double bitingRate();
-	size_t size();
+	int64_t size();
 	
-	Host * getHostAtIndex(size_t hostIndex);
+	Host * getHostAtIndex(int64_t hostIndex);
 	void removeHost(Host * hostPtr);
 	Host * createNewHost();
 	
@@ -81,12 +81,12 @@ private:
 	PopulationParameters * parPtr;
 	
 	std::vector<std::unique_ptr<Host>> hosts;
-	std::unordered_map<size_t, size_t> hostIdIndexMap;
+	std::unordered_map<int64_t, int64_t> hostIdIndexMap;
 	
 	std::unique_ptr<BitingEvent> bitingEvent;
 	std::unique_ptr<ImmigrationEvent> immigrationEvent;
 	
-	size_t drawSourcePopulation();
+	int64_t drawSourcePopulation();
 };
 
 #endif /* defined(__malariamodel__Population__) */

@@ -20,6 +20,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
+	// Load parameters from JSON file
 	ifstream paramsStream(argv[1]);
 	ptree paramsPtree;
 	read_json(paramsStream, paramsPtree);
