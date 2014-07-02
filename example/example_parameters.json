@@ -34,10 +34,10 @@
 	"randomSeed" : 0,
 	
 	// Length of a year in simulation units (used to define seasonal period)
-	"tYear" : 365.0,
+	"tYear" : 360.0,
 	
 	// End time of simulation
-	"tEnd" : 365.0,
+	"tEnd" : 360.0,
 	
 	// How often to update seasonal rates
 	"seasonalUpdateEvery" : 1.0,
@@ -46,7 +46,7 @@
 	"sampleHostsEvery" : 30.0,
 	
 	// Number of var genes in pool
-	"genePoolSize" : 2,
+	"genePoolSize" : 100,
 	
 	// Number of genes in each strain
 	"genesPerStrain" : 100,
@@ -61,7 +61,7 @@
 	
 	// Parameter used to determine effective distance, and thus contact rate,
 	// for different populations. The relative weight of populations is given by
-	// d^(-
+	// d^(-power)
 	"distanceFunction" : {
 		"power" : 1.0
 	},
@@ -149,7 +149,8 @@
 		// Relative mutation rates from each gene to each other gene;
 		// mutationWeights[i] is the relative probability of different mutations from
 		// gene i
-		"mutationWeights" : [[1, 5], [5, 1]]
+		//"mutationWeights" : [[1, 5], [5, 1]]
+		"mutationWeights" : [1]
 	},
 	
 	"trackClinicalImmunity" : true
