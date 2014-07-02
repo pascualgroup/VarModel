@@ -59,3 +59,42 @@ git log
 ```
 
 (Of course, Bitbucket also has a graphical view of commit history.)
+
+## Code organization
+
+The code is object-oriented and hierarchical. At the top level is an instance of the `Simulation` class, which contains collections of `Gene`, `Strain`, and `Population` objects. Each `Population` object contains a collection of `Host` objects, each of which contains current infections and immune history through `Infection` and `ImmuneHistory` objects. In other words, the simulation hierarchy is organized like this:
+
+```
+Simulation
+	Gene objects
+	Strain objects
+	Population objects
+		Host objects
+			Infection objects
+			ImmuneHistory objects
+```
+
+The relationships are not strictly hierarchical, since `Infection` and `ImmuneHistory` contain references to strains and genes, and during the simulation, interactions happen at multiple levels.
+
+Interactions are generally mediated using member function calls, but in some cases internal state may be accessed directly. That is, data hiding/encapsulation is not strictly enforced.
+
+## Event-based simulation architecture
+
+The simulation is implemented using a global event queue, which contains lightweight event objects that generally do nothing but call a member function on a core simulation object (e.g., perform some action on an `Infection`, `Host`, or `Population`). These events include contact events (paired biting events); immigration; loss of immunity; transitions between infection states; host death; periodic updates to contact rates based on a seasonal function; and meta-operations such as host sampling.
+
+The underlying event queue implementation is similar to the ["next-reaction method" of Gibson and Bruck](http://pubs.acs.org/doi/abs/10.1021/jp993732q), but dependencies among events are specified explicitly by asking the queue to update rates or add/remove events as part of the function that performs the event.
+
+The event queue consists of a large number of events, each of which is associated with a "putative time". In the case of events scheduled to happen at a specific time (e.g., periodic updates of contact rates) or whose times are precalculated by drawing from a random distribution but do not depend on subsequent simulation events (e.g., death times), these times canot change. For events that are Poisson processes whose rates may change as a result of other simulation events, these times really are "putative" and may be recalculated.
+
+In order to facilitate fast updating of changing-rate events, the underlying data structure is an indexed binary heap, so that all operations are `O(log(N))`, where `N` is the number of events on the heap. That is, the number of events that can be executed per second will go down as the size of the simulation goes up, but it will go up only logarithmically, and thus total simulation time should be `O(N log(N))`.
+
+Abstractly, the simulation proceeds by repeating these two steps:
+1. Remove next event from event queue.
+2. Perform event.
+
+The first step is handled by the underlying event queue implementation: the priority heap always has the lowest-time event ready to be accessed. The second step may include requests to the event queue to update rates for certain events, add events, or remove events.
+
+## Detailed description of simulation
+
+## Summary of C++ features used
+
