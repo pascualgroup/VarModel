@@ -1,6 +1,3 @@
-[submodule "zppdata"]
-	path = zppdata
-	url = git@bitbucket.org:edbaskerville/zppdata
 [submodule "catch"]
 	path = catch
 	url = https://github.com/philsquared/Catch.git
