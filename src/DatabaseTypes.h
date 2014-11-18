@@ -6,6 +6,22 @@
 using namespace zppdb;
 
 /**
+	\brief Row type for meta table.
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+	MetaRow,
+	/**
+		\brief meta-information key (`"parameters"`)
+	*/
+	((Text)(key))
+	
+	/**
+		\brief value (parameter values in JSON format)
+	*/
+	((Text)(value))
+)
+
+/**
 	\brief Type defining rows in `genes` table
 */
 ZPPDB_DEFINE_ROW_TYPE(

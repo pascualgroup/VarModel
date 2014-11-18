@@ -270,8 +270,7 @@
 				69410D131A192B2C00AB306C /* json.c */,
 				69410D141A192B2C00AB306C /* json.h */,
 			);
-			name = libjson;
-			path = zppjson/libjson;
+			path = libjson;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */

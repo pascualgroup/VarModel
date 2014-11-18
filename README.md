@@ -11,16 +11,11 @@ git submodule init
 git submodule update
 ```
 
-The `submodule` commands load three external git repositories into this one: the
-[Catch](https://github.com/philsquared/Catch) test framework; 
-[zppdata](https://bitbucket.org/edbaskerville/zppdata), which contains some JSON and SQLite data management utilities; and
-[zppsim](https://bitbucket.org/edbaskerville/zppsim), which contains random number utilities and a general-purpose event queue
-for stochastic simulations.
+The `submodule` commands load code from some other git repositories that this code depends on.
 
-To get a new version of the code, use `git pull` and then `git submodule update` to make sure submodules are updated if necessary:
+To update to a new version of the code, do the following in the project directory:
 
 ```sh
-cd [path-to]/malariamodel
 git pull origin master
 git submodule update
 ```
@@ -58,11 +53,15 @@ and you can view a history of commits using
 git log
 ```
 
-(Of course, Bitbucket also has a graphical view of commit history.)
+Bitbucket also has a graphical view of commit history.
+
+## Building the code
+
+TODO
 
 ## Code organization
 
-The code is object-oriented and hierarchical. At the top level is an instance of the `Simulation` class, which contains collections of `Gene`, `Strain`, and `Population` objects. Each `Population` object contains a collection of `Host` objects, each of which contains current infections and immune history through `Infection` and `ImmuneHistory` objects. In other words, the simulation hierarchy is organized like this:
+The code is object-oriented and mostly hierarchical. At the top level is an instance of the `Simulation` class, which contains collections of `Gene`, `Strain`, and `Population` objects. Each `Population` object contains a collection of `Host` objects, each of which contains current infections and immune history through `Infection` and `ImmuneHistory` objects. In other words, the simulation hierarchy is organized like this:
 
 ```
 Simulation

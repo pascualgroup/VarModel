@@ -3,6 +3,7 @@
 
 #include "zppjson.hpp"
 #include "zppdb.hpp"
+#include "DatabaseTypes.h"
 #include "SimParameters.h"
 #include "Simulation.h"
 
@@ -13,22 +14,6 @@
 using namespace std;
 using namespace zppjson;
 using namespace zppdb;
-
-/**
-	\brief Row type for meta table.
-*/
-ZPPDB_DEFINE_ROW_TYPE(
-	MetaRow,
-	/**
-		\brief meta-information key (`"parameters"`)
-	*/
-	((Text)(key))
-	
-	/**
-		\brief value (parameter values in JSON format)
-	*/
-	((Text)(value))
-)
 
 /**
 	\brief Main entry point to program.

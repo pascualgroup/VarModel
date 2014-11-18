@@ -10,3 +10,6 @@
 [submodule "zppjson"]
 	path = zppjson
 	url = git@bitbucket.org:edbaskerville/zppjson
+[submodule "libjson"]
+	path = libjson
+	url = https://github.com/vincenthz/libjson.git
