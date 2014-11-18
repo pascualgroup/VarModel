@@ -10,7 +10,8 @@
 #include "SimParameters.h"
 #include "Infection.h"
 #include "ImmuneHistory.h"
-#include "Database.hpp"
+#include "zppdb.hpp"
+#include "DatabaseTypes.h"
 
 #define WAITING_STAGE (std::numeric_limits<int64_t>::max())
 
@@ -37,7 +38,12 @@ friend class Immunity;
 public:
 	int64_t const id;
 	
-	Host(Population * popPtr, int64_t id, double birthTime, double deathTime, zppdata::DBTable * table);
+	Host(
+		Population * popPtr, int64_t id, double birthTime, double deathTime,
+		bool writeToDatabase,
+		Database & db,
+		zppdb::Table<HostRow> & table
+	);
 	
 	void prepareToDie();
 	
@@ -68,7 +74,7 @@ public:
 	void removeEvent(zppsim::Event * event);
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
-	void writeInfections(DBTable * table);
+	void writeInfections(Database & db, Table<InfectionRow> & table);
 	
 	std::string toString();
 private:

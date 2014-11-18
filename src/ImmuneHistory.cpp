@@ -82,16 +82,14 @@ void ImmuneHistory::prepareToDie()
 	}
 }
 
-void ImmuneHistory::write(DBTable * table)
+void ImmuneHistory::write(Database & db, Table<ImmunityRow> & table)
 {
-	if(table != nullptr) {
-		DBRow row;
-		row.setReal("time", hostPtr->getTime());
-		row.setInteger("hostId", int64_t(hostPtr->id));
-		for(auto & genePtr : genes) {
-			row.setInteger("geneId", int64_t(genePtr->id));
-			row.setReal("lossRate", lossEvents[genePtr]->getRate());
-			table->insert(row);
-		}
+	ImmunityRow row;
+	row.time = hostPtr->getTime();
+	row.hostId = hostPtr->id;
+	for(auto & genePtr : genes) {
+		row.geneId = genePtr->id;
+		row.lossRate = lossEvents[genePtr]->getRate();
+		db.insert(table, row);
 	}
 }

@@ -1,245 +1,318 @@
 #ifndef __malariamodel__SimParameters__
 #define __malariamodel__SimParameters__
 
-#define DEFINE_PARAM(x) define(#x, x)
+#include "zppjson.hpp"
 
-#include "PtreeObject.hpp"
-#include "zppsim_random.hpp"
-#include <random>
+using namespace zppjson;
 
-using namespace zppdata;
-using namespace zppsim;
+/**
+	\brief Type for defining sinusoidal variable (e.g., seasonal biting rate).
+	
+	The value of the variable is equal to
+	`mean * (1.0 + relativeAmplitude * sin(2 * pi * ((t / period) - phase)))`
+*/
+ZPPJSON_DEFINE_TYPE(
+	Sinusoid,
+	
+	/**
+		\brief Mean value of seasonal variable.
+	*/
+	( (Double)(mean) )
+	
+	/**
+		\brief Amplitude of seasonal variable, as a fraction of mean.
+	*/
+	( (Double)(relativeAmplitude) )
+	
+	/**
+		\brief Period of seasonal variable, in simulation time units.
+	*/
+	( (Double)(period) )
+	
+	/**
+		\brief Phase of the seasonal variable as a fraction, between 0 and 1,
+		of the period.
+	*/
+	( (Double)(phase) )
+)
 
-class BitingRate : public PtreeObject
-{
-public:
-	double mean;
-	double amplitude;
-	
-	BitingRate()
-	{
-		DEFINE_PARAM(mean);
-		DEFINE_PARAM(amplitude);
-	}
-};
+double evaluateSinusoid(Sinusoid & s, double t);
 
-class PopulationParameters : public PtreeObject
-{
-public:
-	int64_t size;
-	int64_t sampleSize;
-	
-	int64_t nInitialInfections;
-	BitingRate bitingRate;
-	double immigrationRate;
-	
-	// Location of population in 2D
-	double x;
-	double y;
-	
-	// "Distance" to self for use in contact-weight calculations
-	double selfDistance;
-	
-	PopulationParameters()
-	{
-		DEFINE_PARAM(size);
-		DEFINE_PARAM(sampleSize);
-		DEFINE_PARAM(nInitialInfections);
-		DEFINE_PARAM(bitingRate);
-		DEFINE_PARAM(immigrationRate);
-		DEFINE_PARAM(x);
-		DEFINE_PARAM(y);
-		DEFINE_PARAM(selfDistance);
-	}
-};
 
-class DistanceFunction : public PtreeObject
-{
-public:
-	double power;
+/**
+	\brief Type representing discretized distribution.
+*/
+ZPPJSON_DEFINE_TYPE(
+	DiscretizedPDF,
 	
-	DistanceFunction()
-	{
-		DEFINE_PARAM(power);
-	}
-};
+	/**
+		\brief Lower bound of the distribution's support.
+	*/
+	( (Double)(x0) )
+	
+	/**
+		\brief Discretization of PDF.
+	*/
+	( (Double)(dx) )
+	
+	/**
+		\brief Relative probability of each discrete segment of PDF.
+		
+		Probabilities map to `[x0 + i * dx, x0 + (i + 1) * dx]`.
+	*/
+	( (Array<Double>)(pdf) )
+)
 
-class DiscreteDistribution : public PtreeObject
-{
-public:
-	double dt;
-	std::vector<double> pdf;
+/**
+	\brief Type defining parameters for a single population.
+*/
+ZPPJSON_DEFINE_TYPE(
+	PopulationParameters,
 	
-	std::unique_ptr<std::discrete_distribution<>> discDist;
-	std::unique_ptr<std::uniform_real_distribution<>> realDist;
-	
-	DiscreteDistribution() :
-		discDist(nullptr),
-		realDist(nullptr)
-	{
-		DEFINE_PARAM(dt);
-		DEFINE_PARAM(pdf);
-	}
-	
-	double draw(rng_t & rng)
-	{
-		if(discDist == nullptr) {
-			discDist = std::unique_ptr<std::discrete_distribution<>>(
-				new std::discrete_distribution<>(pdf.begin(), pdf.end())
-			);
-			realDist = std::unique_ptr<std::uniform_real_distribution<>>(
-				new std::uniform_real_distribution<>(0.0, 1.0)
-			);
-		}
-		return ((*discDist)(rng) + (*realDist)(rng)) * dt;
-	}
-};
+	/**
+		\brief Number of individuals in the population.
+	*/
+	( (Int64)(size) )
 
-class TransmissionParameters : public PtreeObject
-{
-public:
-	bool coinfectionReducesTransmission;
-	
-	TransmissionParameters()
-	{
-		DEFINE_PARAM(coinfectionReducesTransmission);
-	}
-};
+	/**
+		\brief Number of hosts to sample from population.
+	*/
+	( (Int64)(sampleSize) )
 
-class WithinHostParameters : public PtreeObject
-{
-public:
-	double clearanceRateInitial;
-	double clearanceRateMidCourse;
-	double activationRate;
-	double deactivationRateImmune;
-	double deactivationRateNotImmune;
-	
-	WithinHostParameters()
-	{
-		DEFINE_PARAM(clearanceRateInitial);
-		DEFINE_PARAM(clearanceRateMidCourse);
-		DEFINE_PARAM(activationRate);
-		DEFINE_PARAM(deactivationRateImmune);
-		DEFINE_PARAM(deactivationRateNotImmune);
-	}
-};
+	/**
+		\brief Number of initial infections in population.
+	*/
+	( (Int64)(nInitialInfections) )
 
-class GeneParameters : public PtreeObject
-{
-public:
-	std::vector<double> transmissibility;
-	std::vector<double> immunityLossRate;
-	std::vector<double> clinicalImmunityLossRate;
-	
-	// mutationWeights[i][j] is the relative probability that gene i
-	// will transition to gene j, given a mutation event: relative
-	// as compared with all other entries of mutationWeights[i]; that is,
-	// relative probabilites are normalized at runtime and do not need
-	// to add up to 1.
-	std::vector<std::vector<double>> mutationWeights;
-	
-	GeneParameters()
-	{
-		DEFINE_PARAM(transmissibility);
-		DEFINE_PARAM(immunityLossRate);
-		DEFINE_PARAM(clinicalImmunityLossRate);
+	/**
+		\brief Sinusoidal "paired" biting rate per host.
 		
-		DEFINE_PARAM(mutationWeights);
-	}
-};
+		The probability per unit time that a host will be bitten in order to
+		serve as the source of a transmission event.
+	*/
+	( (Sinusoid)(bitingRate) )
 
-class SimParameters : public PtreeObject
-{
-public:
-	std::string dbFilename = "output.sqlite";
-	double dbCommitPeriod;
-	std::map<std::string, bool> dbTablesEnabled;
+	/**
+		\brief Immigration rate, in number of random infection events per unit
+		time (per population, not per capita).
+	*/
+	( (Double)(immigrationRate) )
+
+	/**
+		\brief x-position of population in 2D space.
+	*/
+	( (Double)(x) )
+
+	/**
+		\brief y-position of population in 2D space.
+	*/
+	( (Double)(y) )
 	
-	int64_t randomSeed = 0;
+	/**
+		\brief Effective "distance" of a population to itself
+	*/
+	( (Double)(selfDistance) )
+)
+
+/**
+	\brief Type defining within-host parameters.
 	
-	// Simulation year time scale (used for seasonality period, by default in days)
-	double tYear;
+	These parameters are a starting point for within-host model development;
+	the actual rules will likely be different from these, and these parameters
+	will need to evolve accordingly.
+*/
+ZPPJSON_DEFINE_TYPE(
+	WithinHostParameters,
 	
-	// Simulation end time
-	double tEnd;
+	/**
+		\brief The clearance rate of an infection in the latent delay period.
+	*/
+	( (Double)(clearanceRateInitial) )
+
+	/**
+		\brief The clearance rate of an infection between activations (??).
+	*/
+	( (Double)(clearanceRateMidCourse) )
+
+	/**
+		\brief The rate at which alleles are activated.
+	*/
+	( (Double)(activationRate) )
 	
-	// How often to update the seasonal rates
-	double seasonalUpdateEvery;
+	/**
+		\brief The rate at which alleles are deactivated if the host is immune.
+	*/
+	( (Double)(deactivationRateImmune) )
 	
-	// How often to sample hosts
-	double sampleHostsEvery;
+	/**
+		\brief The rate at which alleles are deactivated if the host is not
+		immune.
+	*/
+	( (Double)(deactivationRateNotImmune) )
+)
+
+/**
+	\brief Type defining parameters governing genes.
+*/
+ZPPJSON_DEFINE_TYPE(
+	GeneParameters,
 	
-	// Number of var genes in global pool
-	int64_t genePoolSize;
-	
-	// Number of genes in a strain
-	int64_t genesPerStrain;
-	
-	// Probability per gene of a mutation when a strain
-	// is picked up
-	double pMutation;
-	
-	// Probability that a transmitted strain will be a recombinant
-	double pRecombinant;
-	
-	// Length of liver stage
-	double tLiverStage;
-	
-	// Parameters controlling distance function
-	DistanceFunction distanceFunction;
-	
-	// Host-lifetime distribution, specified as a discrete PDF,
-	// with uniform density within each discrete chunk
-	DiscreteDistribution hostLifetimeDistribution;
-	
-	// Vector of population parameters
-	std::vector<PopulationParameters> populations;
-	
-	// Transmission process parameters
-	TransmissionParameters transmission;
-	
-	// Within-host parameters
-	WithinHostParameters withinHost;
-	
-	// Gene parameters
-	GeneParameters genes;
-	
-	// Switch on/off clinical immunity tracking
-	bool trackClinicalImmunity;
-	
-	SimParameters()
-	{
-		DEFINE_PARAM(dbFilename);
-		DEFINE_PARAM(dbCommitPeriod);
-		DEFINE_PARAM(dbTablesEnabled);
+	/**
+		\brief Transmissibility of genes.
 		
-		DEFINE_PARAM(randomSeed);
+		If only one entry present, used for all genes.
+	*/
+	( (Array<Double>)(transmissibility) )
+	
+	/**
+		\brief Immunity loss rate of genes.
 		
-		DEFINE_PARAM(tYear);
-		DEFINE_PARAM(tEnd);
+		If only one entry present, used for all genes.
+	*/
+	( (Array<Double>)(immunityLossRate) )
+	
+	/**
+		\brief Clinical immunity loss rate of genes.
 		
-		DEFINE_PARAM(seasonalUpdateEvery);
-		DEFINE_PARAM(sampleHostsEvery);
+		If only one entry present, used for all genes.
+	*/
+	( (Array<Double>)(clinicalImmunityLossRate) )
+	
+	/**
+		\brief Relative probabilities of transitions between different genes.
 		
-		DEFINE_PARAM(genePoolSize);
-		DEFINE_PARAM(genesPerStrain);
-		DEFINE_PARAM(pMutation);
-		DEFINE_PARAM(pRecombinant);
-		DEFINE_PARAM(tLiverStage);
+		`mutationWeights[i][j]` is the relative probability that gene `i` will
+		transition to gene `j`, given a mutation event.
 		
-		DEFINE_PARAM(distanceFunction);
+		`mutationWeights` is normalized so that
 		
-		DEFINE_PARAM(hostLifetimeDistribution);
+		`sum(mutationWeights[i][...])` = 1.
+	*/
+	( (Array<Array<Double>>)(mutationWeights) )
+)
+
+/**
+	\brief All simulation parameters.
+*/
+ZPPJSON_DEFINE_TYPE(
+	SimParameters,
+	
+	/**
+		\brief Output filename of database.
 		
-		DEFINE_PARAM(populations);
+		Absolute pathname or taken relative to the working directory the
+		program was executed in.
+	*/
+	( (String)(dbFilename) )
+	
+	/**
+		\brief How often, in simulation time units, to commit the database.
 		
-		DEFINE_PARAM(transmission);
-		DEFINE_PARAM(withinHost);
-		DEFINE_PARAM(genes);
+		Too-frequent commits can cause database maintenance to become a
+		bottleneck. If the simulation is running oddly slow, try increasing
+		this number.
+	*/
+	( (Double)(dbCommitPeriod) )
+	
+	/**
+		\brief Random seed for simulation.
 		
-		DEFINE_PARAM(trackClinicalImmunity);
-	}
-};
+		If missing or set to zero, a seed will be generated and will appear
+		in the parameter values inserted into
+	*/
+	( (Int64)(randomSeed) )
+	
+	/**
+		\brief Simulation end time
+	*/
+	( (Double)(tEnd) )
+	
+	/**
+		\brief How often to update seasonal rates.
+	*/
+	( (Double)(seasonalUpdateEvery) )
+	
+	/**
+		\brief Whether or not to write out all hosts to database
+	*/
+	( (Bool)(outputHosts) )
+	
+	/**
+		\brief Whether or not to write out all genes to database
+	*/
+	( (Bool)(outputGenes) )
+	
+	/**
+		\brief Whether or not to write out all strains to database
+	*/
+	( (Bool)(outputStrains) )
+	
+	/**
+		\brief How often to sample hosts
+	*/
+	( (Double)(sampleHostsEvery) )
+	
+	/**
+		\brief Number of genes in the global pool.
+	*/
+	( (Int64)(genePoolSize) )
+	
+	/**
+		\brief Number of genes per pathogen strain.
+	*/
+	( (Int64)(genesPerStrain) )
+	
+	/**
+		\brief Probability per gene of a mutation when a strain is picked up.
+	*/
+	( (Double)(pMutation) )
+	
+	/**
+		\brief Probability that a transmitted strain will be a recombinant.
+	*/
+	( (Double)(pRecombinant) )
+	
+	/**
+		\brief Duration of liver stage (pre-expression)
+	*/
+	( (Double)(tLiverStage) )
+	
+	/**
+		\brief Parameter controlling distance function.
+	*/
+	( (Double)(distancePower) )
+	
+	/**
+		\brief Host-lifetime distribution, specified as a discrete PDF,
+		with uniform density within each discrete chunk
+	*/
+	( (DiscretizedPDF)(hostLifetimeDistribution) )
+	
+	/**
+		\brief Array of population parameters, one set for each population.
+	*/
+	( (Array<PopulationParameters>)(populations) )
+	
+	/**
+		\brief Whether or not coinfection reduces transmission.
+	*/
+	( (Bool)(coinfectionReducesTransmission) )
+	
+	/**
+		\brief Parameters governing within-host dynamics
+		(see WithinHostParameters class).
+	*/
+	( (WithinHostParameters)(withinHost) )
+	
+	/**
+		\brief Parameters governing genes (see GeneParameters class).
+	*/
+	( (GeneParameters)(genes) )
+	
+	/**
+		\brief Whether or not clinical immunity is tracked.
+	*/
+	( (Bool)(trackClinicalImmunity) )
+)
 
 #endif /* defined(__malariamodel__SimParameters__) */

@@ -9,7 +9,7 @@
 #include "Infection.h"
 #include "SimParameters.h"
 #include "Host.h"
-#include "zppdata_util.hpp"
+#include <sstream>
 
 using namespace std;
 
@@ -197,7 +197,7 @@ double Infection::transmissionProbability()
 	double p = genePtr->transmissibility;
 	assert(p > 0.0 && p < 1.0);
 	
-	if(simParPtr->transmission.coinfectionReducesTransmission) {
+	if(simParPtr->coinfectionReducesTransmission) {
 		p /= hostPtr->getActiveInfectionCount();
 	}
 	return p;
@@ -205,27 +205,27 @@ double Infection::transmissionProbability()
 
 std::string Infection::toString()
 {
-	return hostPtr->toString() + ".i" + strprintf("%u", id);
+	stringstream ss;
+	ss << hostPtr->toString() << ".i" << id;
+	return ss.str();
 }
 
-void Infection::write(DBTable * table)
+void Infection::write(Database & db, Table<InfectionRow> & table)
 {
-	if(table != nullptr) {
-		DBRow row;
-		row.setReal("time", hostPtr->getTime());
-		row.setInteger("hostId", int64_t(hostPtr->id));
-		row.setInteger("infectionId", int64_t(id));
-		row.setInteger("strainId", int64_t(strainPtr->id));
-		if(geneIndex == WAITING_STAGE) {
-			row.setNull("geneIndex");
-			row.setNull("active");
-		}
-		else {
-			row.setInteger("geneIndex", int64_t(geneIndex));
-			row.setInteger("active", int64_t(active));
-		}
-		table->insert(row);
+	InfectionRow row;
+	row.time = hostPtr->getTime();
+	row.hostId = hostPtr->id;
+	row.infectionId = id;
+	row.strainId = strainPtr->id;
+	if(geneIndex == WAITING_STAGE) {
+		row.geneIndex.setNull();
+		row.active.setNull();
 	}
+	else {
+		row.geneIndex = geneIndex;
+		row.active = active;
+	}
+	db.insert(table, row);
 }
 
 /*** INFECTION PROCESS EVENTS ***/
@@ -238,7 +238,7 @@ InfectionProcessEvent::InfectionProcessEvent(
 }
 
 InfectionProcessEvent::InfectionProcessEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
 	RateEvent(rate, time, rng), infectionItr(infectionItr)
 {
@@ -253,14 +253,14 @@ TransitionEvent::TransitionEvent(
 
 
 TransitionEvent::TransitionEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
 	InfectionProcessEvent(infectionItr, rate, time, rng)
 {
 }
 
 ClearanceEvent::ClearanceEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, rng_t & rng
+	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
 	InfectionProcessEvent(infectionItr, rate, time, rng)
 {

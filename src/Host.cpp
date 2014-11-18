@@ -2,11 +2,17 @@
 #include "Simulation.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace zppsim;
 
-Host::Host(Population * popPtr, int64_t id, double birthTime, double deathTime, DBTable * table) :
+Host::Host(
+	Population * popPtr, int64_t id, double birthTime, double deathTime,
+	bool writeToDatabase,
+	Database & db,
+	zppdb::Table<HostRow> & table
+):
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
@@ -15,14 +21,13 @@ Host::Host(Population * popPtr, int64_t id, double birthTime, double deathTime, 
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
-	if(table != nullptr) {
-		DBRow row;
-		row.setInteger("hostId", int64_t(id));
-		row.setReal("birthTime", birthTime);
-		row.setReal("deathTime", deathTime);
-		table->insert(row);
+	if(writeToDatabase) {
+		HostRow row;
+		row.hostId = id;
+		row.birthTime = birthTime;
+		row.deathTime = deathTime;
+		db.insert(table, row);
 	}
-	
 	addEvent(deathEvent.get());
 }
 
@@ -289,18 +294,18 @@ void Host::setEventRate(RateEvent * event, double rate)
 	popPtr->setEventRate(event, rate);
 }
 
-void Host::writeInfections(DBTable * table)
+void Host::writeInfections(Database & db, Table<InfectionRow> & table)
 {
-	if(table != nullptr) {
-		for(auto itr = infections.begin(); itr != infections.end(); itr++) {
-			itr->write(table);
-		}
+	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
+		itr->write(db, table);
 	}
 }
 
 std::string Host::toString()
 {
-	return popPtr->toString() + ".h" + strprintf("%u", id);
+	stringstream ss;
+	ss << popPtr->toString() << ".h" << id;
+	return ss.str();
 }
 
 DeathEvent::DeathEvent(Host * hostPtr):

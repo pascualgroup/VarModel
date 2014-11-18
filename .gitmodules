@@ -4,3 +4,9 @@
 [submodule "zppsim"]
 	path = zppsim
 	url = git@bitbucket.org:edbaskerville/zppsim
+[submodule "zppdb"]
+	path = zppdb
+	url = git@bitbucket.org:edbaskerville/zppdb
+[submodule "zppjson"]
+	path = zppjson
+	url = git@bitbucket.org:edbaskerville/zppjson

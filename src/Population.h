@@ -77,7 +77,7 @@ public:
 	
 private:
 	Simulation * simPtr;
-	rng_t * rngPtr;
+	zppsim::rng_t * rngPtr;
 	PopulationParameters * parPtr;
 	
 	std::vector<std::unique_ptr<Host>> hosts;

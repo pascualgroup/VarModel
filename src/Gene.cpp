@@ -10,28 +10,34 @@
 #include "zppsim_random.hpp"
 #include <cassert>
 #include <iostream>
-#include "zppdata_util.hpp"
+#include <sstream>
 
 using namespace std;
 using namespace zppsim;
-using namespace zppdata;
+using namespace zppdb;
 
-Gene::Gene(int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, DBTable * table) :
+Gene::Gene(
+	int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
+	bool writeToDatabase, Database & db, Table<GeneRow> & table
+) :
 	id(id),
 	transmissibility(transmissibility),
 	immunityLossRate(immunityLossRate), clinicalImmunityLossRate(clinicalImmunityLossRate)
 {
-	if(table != nullptr) {
-		DBRow row;
-		row.setInteger("geneId", int64_t(id));
-		row.setReal("transmissibility", transmissibility);
-		row.setReal("immunityLossRate", immunityLossRate);
-		row.setReal("clinicalImmunityLossRate", clinicalImmunityLossRate);
-		table->insert(row);
+	if(writeToDatabase) {
+		GeneRow row;
+		row.geneId = id;
+		row.transmissibility = transmissibility;
+		row.immunityLossRate = immunityLossRate;
+		row.clinicalImmunityLossRate = clinicalImmunityLossRate;
+		
+		db.insert(table, row);
 	}
 }
 
 std::string Gene::toString()
 {
-	return strprintf("g%u", id);
+	stringstream ss;
+	ss << id;
+	return ss.str();
 }

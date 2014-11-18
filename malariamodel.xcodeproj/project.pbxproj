@@ -7,39 +7,44 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		691F741618EDC9DE001A1DE4 /* Database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F741218EDC9DE001A1DE4 /* Database.cpp */; };
-		691F741718EDC9DE001A1DE4 /* Database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F741218EDC9DE001A1DE4 /* Database.cpp */; };
-		691F741818EDC9DE001A1DE4 /* zppdata_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F741418EDC9DE001A1DE4 /* zppdata_util.cpp */; };
-		691F741918EDC9DE001A1DE4 /* zppdata_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F741418EDC9DE001A1DE4 /* zppdata_util.cpp */; };
 		691F744418EDCB12001A1DE4 /* EventQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F743D18EDCB12001A1DE4 /* EventQueue.cpp */; };
 		691F744518EDCB12001A1DE4 /* EventQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F743D18EDCB12001A1DE4 /* EventQueue.cpp */; };
 		691F744618EDCB12001A1DE4 /* zppsim_random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F744018EDCB12001A1DE4 /* zppsim_random.cpp */; };
 		691F744718EDCB12001A1DE4 /* zppsim_random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F744018EDCB12001A1DE4 /* zppsim_random.cpp */; };
 		691F744818EDCB12001A1DE4 /* zppsim_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F744218EDCB12001A1DE4 /* zppsim_util.cpp */; };
 		691F744918EDCB12001A1DE4 /* zppsim_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 691F744218EDCB12001A1DE4 /* zppsim_util.cpp */; };
-		692A381418B9468E0085986A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381318B9468E0085986A /* main.cpp */; };
-		692A382818B949590085986A /* Host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381918B949590085986A /* Host.cpp */; };
-		692A382A18B949590085986A /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381F18B949590085986A /* Simulation.cpp */; };
 		692A383018B94A060085986A /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 692A382F18B94A060085986A /* libsqlite3.0.dylib */; };
 		692A384318B94A700085986A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A384018B94A700085986A /* test.cpp */; };
-		692A384618B94B380085986A /* Host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381918B949590085986A /* Host.cpp */; };
-		692A384918B94B4C0085986A /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381F18B949590085986A /* Simulation.cpp */; };
 		692A385218B94D4C0085986A /* libsqlite3.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 692A382F18B94A060085986A /* libsqlite3.0.dylib */; };
-		693303431917857300EBB876 /* Infection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693303411917857300EBB876 /* Infection.cpp */; };
-		693303441917857300EBB876 /* Infection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693303411917857300EBB876 /* Infection.cpp */; };
-		693F00F718BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
-		693F00F818BCFC63000F31C7 /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
-		694E202618EF70AD0000D563 /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
-		694E202718EF70AD0000D563 /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
+		69410D151A192B2C00AB306C /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 69410D131A192B2C00AB306C /* json.c */; };
+		69410D161A192B2C00AB306C /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = 69410D131A192B2C00AB306C /* json.c */; };
+		69410D241A192B3900AB306C /* JsonElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D1B1A192B3900AB306C /* JsonElement.cpp */; };
+		69410D251A192B3900AB306C /* JsonElement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D1B1A192B3900AB306C /* JsonElement.cpp */; };
+		69410D261A192B3900AB306C /* zppjson_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D211A192B3900AB306C /* zppjson_parse.cpp */; };
+		69410D271A192B3900AB306C /* zppjson_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D211A192B3900AB306C /* zppjson_parse.cpp */; };
+		69410D321A192B4C00AB306C /* Database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D281A192B4C00AB306C /* Database.cpp */; };
+		69410D331A192B4C00AB306C /* Database.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69410D281A192B4C00AB306C /* Database.cpp */; };
 		694E202A18EF7C0A0000D563 /* TestGene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202818EF7C0A0000D563 /* TestGene.cpp */; };
 		694E202D18EF83550000D563 /* TestStrain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202B18EF83550000D563 /* TestStrain.cpp */; };
-		69A421561917D4D70081DA06 /* ImmuneHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A421541917D4D70081DA06 /* ImmuneHistory.cpp */; };
-		69BEE5CA1905A30D00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
-		69BEE5CB1905A30F00E39AA1 /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
-		69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */; };
-		69C4AD7018EC755D00AEB45B /* PtreeObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */; };
-		69C4AD7118EC755D00AEB45B /* zppdata_ptree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */; };
-		69C4AD7218EC755D00AEB45B /* zppdata_ptree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */; };
+		69BEDEA41A1AB65500A08D9F /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381F18B949590085986A /* Simulation.cpp */; };
+		69BEDEAB1A1AB66A00A08D9F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381318B9468E0085986A /* main.cpp */; };
+		69BEDEAC1A1AB66A00A08D9F /* Simulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381F18B949590085986A /* Simulation.cpp */; };
+		69BEDEAD1A1AB66A00A08D9F /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
+		69BEDEAE1A1AB66A00A08D9F /* Host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381918B949590085986A /* Host.cpp */; };
+		69BEDEAF1A1AB66A00A08D9F /* Infection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693303411917857300EBB876 /* Infection.cpp */; };
+		69BEDEB01A1AB66A00A08D9F /* ImmuneHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A421541917D4D70081DA06 /* ImmuneHistory.cpp */; };
+		69BEDEB11A1AB66A00A08D9F /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
+		69BEDEB21A1AB66A00A08D9F /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
+		69BEDEB31A1AB66A00A08D9F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381318B9468E0085986A /* main.cpp */; };
+		69BEDEB41A1AB66A00A08D9F /* Population.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEE5C81905A30D00E39AA1 /* Population.cpp */; };
+		69BEDEB51A1AB66A00A08D9F /* Host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 692A381918B949590085986A /* Host.cpp */; };
+		69BEDEB61A1AB66A00A08D9F /* Infection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693303411917857300EBB876 /* Infection.cpp */; };
+		69BEDEB71A1AB66A00A08D9F /* ImmuneHistory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A421541917D4D70081DA06 /* ImmuneHistory.cpp */; };
+		69BEDEB81A1AB66A00A08D9F /* Strain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 693F00F518BCFC63000F31C7 /* Strain.cpp */; };
+		69BEDEB91A1AB66A00A08D9F /* Gene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 694E202418EF70AD0000D563 /* Gene.cpp */; };
+		69BEDEBB1A1BBF4B00A08D9F /* SimParameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */; };
+		69BEDEBC1A1BBF4F00A08D9F /* SimParameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */; };
+		69BEDEBF1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBE1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -64,10 +69,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		691F741218EDC9DE001A1DE4 /* Database.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Database.cpp; path = zppdata/src/Database.cpp; sourceTree = "<group>"; };
-		691F741318EDC9DE001A1DE4 /* Database.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Database.hpp; path = zppdata/src/Database.hpp; sourceTree = "<group>"; };
-		691F741418EDC9DE001A1DE4 /* zppdata_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zppdata_util.cpp; path = zppdata/src/zppdata_util.cpp; sourceTree = "<group>"; };
-		691F741518EDC9DE001A1DE4 /* zppdata_util.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = zppdata_util.hpp; path = zppdata/src/zppdata_util.hpp; sourceTree = "<group>"; };
 		691F743D18EDCB12001A1DE4 /* EventQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EventQueue.cpp; path = zppsim/src/EventQueue.cpp; sourceTree = "<group>"; };
 		691F743E18EDCB12001A1DE4 /* EventQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = EventQueue.hpp; path = zppsim/src/EventQueue.hpp; sourceTree = "<group>"; };
 		691F743F18EDCB12001A1DE4 /* IndexedPriorityQueue.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = IndexedPriorityQueue.hpp; path = zppsim/src/IndexedPriorityQueue.hpp; sourceTree = "<group>"; };
@@ -89,18 +90,43 @@
 		693B771918B94655009D10D4 /* malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
 		693F00F518BCFC63000F31C7 /* Strain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Strain.cpp; sourceTree = "<group>"; };
 		693F00F618BCFC63000F31C7 /* Strain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Strain.h; sourceTree = "<group>"; };
+		69410D131A192B2C00AB306C /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
+		69410D141A192B2C00AB306C /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json.h; sourceTree = "<group>"; };
+		69410D171A192B3900AB306C /* Array.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Array.hpp; sourceTree = "<group>"; };
+		69410D181A192B3900AB306C /* Bool.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Bool.hpp; sourceTree = "<group>"; };
+		69410D191A192B3900AB306C /* Double.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Double.hpp; sourceTree = "<group>"; };
+		69410D1A1A192B3900AB306C /* Int64.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Int64.hpp; sourceTree = "<group>"; };
+		69410D1B1A192B3900AB306C /* JsonElement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JsonElement.cpp; sourceTree = "<group>"; };
+		69410D1C1A192B3900AB306C /* JsonElement.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = JsonElement.hpp; sourceTree = "<group>"; };
+		69410D1D1A192B3900AB306C /* Map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Map.hpp; sourceTree = "<group>"; };
+		69410D1E1A192B3900AB306C /* Optional.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Optional.hpp; sourceTree = "<group>"; };
+		69410D1F1A192B3900AB306C /* String.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = String.hpp; sourceTree = "<group>"; };
+		69410D201A192B3900AB306C /* zppjson_macros.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zppjson_macros.hpp; sourceTree = "<group>"; };
+		69410D211A192B3900AB306C /* zppjson_parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zppjson_parse.cpp; sourceTree = "<group>"; };
+		69410D221A192B3900AB306C /* zppjson_parse.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zppjson_parse.hpp; sourceTree = "<group>"; };
+		69410D231A192B3900AB306C /* zppjson.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zppjson.hpp; sourceTree = "<group>"; };
+		69410D281A192B4C00AB306C /* Database.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Database.cpp; sourceTree = "<group>"; };
+		69410D291A192B4C00AB306C /* Database.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Database.hpp; sourceTree = "<group>"; };
+		69410D2A1A192B4C00AB306C /* Field.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Field.hpp; sourceTree = "<group>"; };
+		69410D2B1A192B4C00AB306C /* Integer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Integer.hpp; sourceTree = "<group>"; };
+		69410D2C1A192B4C00AB306C /* Query.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Query.hpp; sourceTree = "<group>"; };
+		69410D2D1A192B4C00AB306C /* Real.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Real.hpp; sourceTree = "<group>"; };
+		69410D2E1A192B4C00AB306C /* Table.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Table.hpp; sourceTree = "<group>"; };
+		69410D2F1A192B4C00AB306C /* Text.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Text.hpp; sourceTree = "<group>"; };
+		69410D301A192B4C00AB306C /* zppdb_macros.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zppdb_macros.hpp; sourceTree = "<group>"; };
+		69410D311A192B4C00AB306C /* zppdb.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = zppdb.hpp; sourceTree = "<group>"; };
 		694E202418EF70AD0000D563 /* Gene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Gene.cpp; sourceTree = "<group>"; };
 		694E202518EF70AD0000D563 /* Gene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
 		694E202818EF7C0A0000D563 /* TestGene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestGene.cpp; sourceTree = "<group>"; };
 		694E202B18EF83550000D563 /* TestStrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestStrain.cpp; sourceTree = "<group>"; };
 		69A421541917D4D70081DA06 /* ImmuneHistory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImmuneHistory.cpp; sourceTree = "<group>"; };
 		69A421551917D4D70081DA06 /* ImmuneHistory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImmuneHistory.h; sourceTree = "<group>"; };
+		69BEDEA21A1A9CA300A08D9F /* DatabaseTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DatabaseTypes.h; sourceTree = "<group>"; };
+		69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SimParameters.cpp; sourceTree = "<group>"; };
+		69BEDEBD1A1BD8C700A08D9F /* DiscretizedDistribution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscretizedDistribution.h; sourceTree = "<group>"; };
+		69BEDEBE1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DiscretizedDistribution.cpp; sourceTree = "<group>"; };
 		69BEE5C81905A30D00E39AA1 /* Population.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Population.cpp; sourceTree = "<group>"; };
 		69BEE5C91905A30D00E39AA1 /* Population.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Population.h; sourceTree = "<group>"; };
-		69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PtreeObject.cpp; path = zppdata/src/PtreeObject.cpp; sourceTree = "<group>"; };
-		69C4AD6C18EC755D00AEB45B /* PtreeObject.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = PtreeObject.hpp; path = zppdata/src/PtreeObject.hpp; sourceTree = "<group>"; };
-		69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = zppdata_ptree.cpp; path = zppdata/src/zppdata_ptree.cpp; sourceTree = "<group>"; };
-		69C4AD6E18EC755D00AEB45B /* zppdata_ptree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = zppdata_ptree.hpp; path = zppdata/src/zppdata_ptree.hpp; sourceTree = "<group>"; };
 		69C4AD7318EC77D300AEB45B /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = catch.hpp; path = catch/single_include/catch.hpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -143,6 +169,8 @@
 			children = (
 				692A381318B9468E0085986A /* main.cpp */,
 				692A381E18B949590085986A /* SimParameters.h */,
+				69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */,
+				69BEDEA21A1A9CA300A08D9F /* DatabaseTypes.h */,
 				692A382018B949590085986A /* Simulation.h */,
 				692A381F18B949590085986A /* Simulation.cpp */,
 				69BEE5C91905A30D00E39AA1 /* Population.h */,
@@ -157,6 +185,8 @@
 				693F00F518BCFC63000F31C7 /* Strain.cpp */,
 				694E202518EF70AD0000D563 /* Gene.h */,
 				694E202418EF70AD0000D563 /* Gene.cpp */,
+				69BEDEBD1A1BD8C700A08D9F /* DiscretizedDistribution.h */,
+				69BEDEBE1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -177,7 +207,9 @@
 			children = (
 				692A381218B9468E0085986A /* src */,
 				692A383E18B94A700085986A /* test */,
-				69C4AD6A18EC754F00AEB45B /* zppdata */,
+				69410D121A192AA600AB306C /* libjson */,
+				69410D111A192A6B00AB306C /* zppjson */,
+				69410D101A192A6500AB306C /* zppdb */,
 				691F743C18EDCB05001A1DE4 /* zppsim */,
 				693B771A18B94655009D10D4 /* Products */,
 				692A382F18B94A060085986A /* libsqlite3.0.dylib */,
@@ -193,20 +225,54 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		69C4AD6A18EC754F00AEB45B /* zppdata */ = {
+		69410D101A192A6500AB306C /* zppdb */ = {
 			isa = PBXGroup;
 			children = (
-				69C4AD6B18EC755D00AEB45B /* PtreeObject.cpp */,
-				69C4AD6C18EC755D00AEB45B /* PtreeObject.hpp */,
-				69C4AD6D18EC755D00AEB45B /* zppdata_ptree.cpp */,
-				69C4AD6E18EC755D00AEB45B /* zppdata_ptree.hpp */,
-				691F741318EDC9DE001A1DE4 /* Database.hpp */,
-				691F741218EDC9DE001A1DE4 /* Database.cpp */,
-				691F741518EDC9DE001A1DE4 /* zppdata_util.hpp */,
-				691F741418EDC9DE001A1DE4 /* zppdata_util.cpp */,
+				69410D281A192B4C00AB306C /* Database.cpp */,
+				69410D291A192B4C00AB306C /* Database.hpp */,
+				69410D2A1A192B4C00AB306C /* Field.hpp */,
+				69410D2B1A192B4C00AB306C /* Integer.hpp */,
+				69410D2C1A192B4C00AB306C /* Query.hpp */,
+				69410D2D1A192B4C00AB306C /* Real.hpp */,
+				69410D2E1A192B4C00AB306C /* Table.hpp */,
+				69410D2F1A192B4C00AB306C /* Text.hpp */,
+				69410D301A192B4C00AB306C /* zppdb_macros.hpp */,
+				69410D311A192B4C00AB306C /* zppdb.hpp */,
 			);
-			name = zppdata;
-			sourceTree = "<group>";
+			name = zppdb;
+			path = zppdb/src;
+			sourceTree = SOURCE_ROOT;
+		};
+		69410D111A192A6B00AB306C /* zppjson */ = {
+			isa = PBXGroup;
+			children = (
+				69410D171A192B3900AB306C /* Array.hpp */,
+				69410D181A192B3900AB306C /* Bool.hpp */,
+				69410D191A192B3900AB306C /* Double.hpp */,
+				69410D1A1A192B3900AB306C /* Int64.hpp */,
+				69410D1B1A192B3900AB306C /* JsonElement.cpp */,
+				69410D1C1A192B3900AB306C /* JsonElement.hpp */,
+				69410D1D1A192B3900AB306C /* Map.hpp */,
+				69410D1E1A192B3900AB306C /* Optional.hpp */,
+				69410D1F1A192B3900AB306C /* String.hpp */,
+				69410D201A192B3900AB306C /* zppjson_macros.hpp */,
+				69410D211A192B3900AB306C /* zppjson_parse.cpp */,
+				69410D221A192B3900AB306C /* zppjson_parse.hpp */,
+				69410D231A192B3900AB306C /* zppjson.hpp */,
+			);
+			name = zppjson;
+			path = zppjson/src;
+			sourceTree = SOURCE_ROOT;
+		};
+		69410D121A192AA600AB306C /* libjson */ = {
+			isa = PBXGroup;
+			children = (
+				69410D131A192B2C00AB306C /* json.c */,
+				69410D141A192B2C00AB306C /* json.h */,
+			);
+			name = libjson;
+			path = zppjson/libjson;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -277,22 +343,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				69BEE5CB1905A30F00E39AA1 /* Population.cpp in Sources */,
-				694E202718EF70AD0000D563 /* Gene.cpp in Sources */,
+				69BEDEB91A1AB66A00A08D9F /* Gene.cpp in Sources */,
+				69410D251A192B3900AB306C /* JsonElement.cpp in Sources */,
+				69BEDEB41A1AB66A00A08D9F /* Population.cpp in Sources */,
+				69410D161A192B2C00AB306C /* json.c in Sources */,
+				69BEDEB31A1AB66A00A08D9F /* main.cpp in Sources */,
+				69410D331A192B4C00AB306C /* Database.cpp in Sources */,
 				694E202A18EF7C0A0000D563 /* TestGene.cpp in Sources */,
 				691F744518EDCB12001A1DE4 /* EventQueue.cpp in Sources */,
+				69BEDEBC1A1BBF4F00A08D9F /* SimParameters.cpp in Sources */,
+				69BEDEB51A1AB66A00A08D9F /* Host.cpp in Sources */,
 				691F744918EDCB12001A1DE4 /* zppsim_util.cpp in Sources */,
+				69410D271A192B3900AB306C /* zppjson_parse.cpp in Sources */,
 				694E202D18EF83550000D563 /* TestStrain.cpp in Sources */,
 				692A384318B94A700085986A /* test.cpp in Sources */,
-				691F741718EDC9DE001A1DE4 /* Database.cpp in Sources */,
 				691F744718EDCB12001A1DE4 /* zppsim_random.cpp in Sources */,
-				691F741918EDC9DE001A1DE4 /* zppdata_util.cpp in Sources */,
-				69C4AD7218EC755D00AEB45B /* zppdata_ptree.cpp in Sources */,
-				692A384918B94B4C0085986A /* Simulation.cpp in Sources */,
-				693F00F818BCFC63000F31C7 /* Strain.cpp in Sources */,
-				693303441917857300EBB876 /* Infection.cpp in Sources */,
-				69C4AD7018EC755D00AEB45B /* PtreeObject.cpp in Sources */,
-				692A384618B94B380085986A /* Host.cpp in Sources */,
+				69BEDEB61A1AB66A00A08D9F /* Infection.cpp in Sources */,
+				69BEDEA41A1AB65500A08D9F /* Simulation.cpp in Sources */,
+				69BEDEB81A1AB66A00A08D9F /* Strain.cpp in Sources */,
+				69BEDEB71A1AB66A00A08D9F /* ImmuneHistory.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,21 +369,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				694E202618EF70AD0000D563 /* Gene.cpp in Sources */,
-				69BEE5CA1905A30D00E39AA1 /* Population.cpp in Sources */,
+				69BEDEAD1A1AB66A00A08D9F /* Population.cpp in Sources */,
+				69BEDEAF1A1AB66A00A08D9F /* Infection.cpp in Sources */,
+				69BEDEB11A1AB66A00A08D9F /* Strain.cpp in Sources */,
 				691F744418EDCB12001A1DE4 /* EventQueue.cpp in Sources */,
+				69410D241A192B3900AB306C /* JsonElement.cpp in Sources */,
+				69410D261A192B3900AB306C /* zppjson_parse.cpp in Sources */,
+				69BEDEB01A1AB66A00A08D9F /* ImmuneHistory.cpp in Sources */,
 				691F744818EDCB12001A1DE4 /* zppsim_util.cpp in Sources */,
-				69C4AD6F18EC755D00AEB45B /* PtreeObject.cpp in Sources */,
-				691F741618EDC9DE001A1DE4 /* Database.cpp in Sources */,
-				69A421561917D4D70081DA06 /* ImmuneHistory.cpp in Sources */,
+				69410D151A192B2C00AB306C /* json.c in Sources */,
+				69BEDEB21A1AB66A00A08D9F /* Gene.cpp in Sources */,
+				69BEDEBF1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp in Sources */,
 				691F744618EDCB12001A1DE4 /* zppsim_random.cpp in Sources */,
-				691F741818EDC9DE001A1DE4 /* zppdata_util.cpp in Sources */,
-				692A381418B9468E0085986A /* main.cpp in Sources */,
-				693F00F718BCFC63000F31C7 /* Strain.cpp in Sources */,
-				69C4AD7118EC755D00AEB45B /* zppdata_ptree.cpp in Sources */,
-				692A382A18B949590085986A /* Simulation.cpp in Sources */,
-				692A382818B949590085986A /* Host.cpp in Sources */,
-				693303431917857300EBB876 /* Infection.cpp in Sources */,
+				69BEDEAC1A1AB66A00A08D9F /* Simulation.cpp in Sources */,
+				69BEDEAE1A1AB66A00A08D9F /* Host.cpp in Sources */,
+				69BEDEAB1A1AB66A00A08D9F /* main.cpp in Sources */,
+				69410D321A192B4C00AB306C /* Database.cpp in Sources */,
+				69BEDEBB1A1BBF4B00A08D9F /* SimParameters.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

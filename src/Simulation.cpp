@@ -1,4 +1,6 @@
 #include "Simulation.h"
+#include "zppdb.hpp"
+#include "zppjson.hpp"
 #include "zppsim_util.hpp"
 
 // 100-millisecond delay between database commit retries
@@ -7,18 +9,9 @@
 // 10-second maximum database retry before failure
 #define DB_TIMEOUT 10000000
 
-#define INITIALIZE_TABLE(tableName, columns) \
-if(parPtr->dbTablesEnabled[#tableName]) { \
-	tableName ## TablePtr = unique_ptr<DBTable>(new DBTable( \
-		dbPtr, \
-		#tableName, \
-		columns \
-	)); \
-	(tableName ## TablePtr)->create(); \
-}
-
 using namespace std;
-using namespace zppdata;
+using namespace zppjson;
+using namespace zppdb;
 using namespace zppsim;
 
 static float elapsed(clock_t clockStart, clock_t clockEnd)
@@ -26,8 +19,7 @@ static float elapsed(clock_t clockStart, clock_t clockEnd)
 	return float(clockEnd - clockStart) / CLOCKS_PER_SEC;
 }
 
-template<typename T>
-T getEntry(vector<T> vals, size_t index, size_t size)
+static double getEntry(Array<Double> & vals, size_t index, size_t size)
 {
 	if(vals.size() == 1) {
 		return vals[0];
@@ -42,22 +34,35 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	parPtr(parPtr),
 	dbPtr(dbPtr),
 	rng(parPtr->randomSeed),
+	hostLifetimeDist(
+		parPtr->hostLifetimeDistribution.pdf.toDoubleVector(),
+		parPtr->hostLifetimeDistribution.dx
+	),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
 	hostStateSamplingEvent(this, 0.0, parPtr->sampleHostsEvery),
 	nextHostId(0),
 	nextStrainId(0),
-	transmissionCount(0)
+	transmissionCount(0),
+	genesTable("genes"),
+	strainsTable("strains"),
+	hostsTable("hosts"),
+	sampledHostsTable("sampledHosts"),
+	sampledHostInfectionTable("sampledHostInfections"),
+	sampledHostImmunityTable("sampledHostImmunity"),
+	sampledHostClinicalImmunityTable("sampledHostClinicalImmunity"),
+	sampledTransmissionTable("sampledTransmissions"),
+	sampledTransmissionInfectionTable("sampledTransmissionInfections"),
+	sampledTransmissionImmunityTable("sampledTransmissionImmunity"),
+	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity")
 {
 	// Construct transition probability distributions for genes
 	if(parPtr->genes.mutationWeights.size() > 1) {
 		assert(parPtr->genes.mutationWeights.size() == parPtr->genePoolSize);
 		for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
 			assert(parPtr->genes.mutationWeights[i].size() == parPtr->genePoolSize);
-			mutationDistributions.emplace_back(
-				parPtr->genes.mutationWeights[i].begin(),
-				parPtr->genes.mutationWeights[i].end()
-			);
+			vector<double> mwi = parPtr->genes.mutationWeights[i].toDoubleVector();
+			mutationDistributions.emplace_back(mwi.begin(), mwi.end());
 		}
 	}
 	
@@ -86,7 +91,9 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 			transmissibility,
 			immunityLossRate,
 			clinicalImmunityLossRate,
-			genesTablePtr.get()
+			parPtr->outputGenes,
+			*dbPtr,
+			genesTable
 		));
 	}
 	
@@ -103,74 +110,17 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 
 void Simulation::initializeDatabaseTables()
 {
-	// INITIALIZE_TABLE is a macro that checks if the table is enabled;
-	// and if it is creates a table object and calls xTablePtr->create(),
-	// and otherwise leaves xTablePtr == nullptr.
-	
-	// GENES
-	vector<DBColumn> genesColumns = {
-		{"geneId", DBType::INTEGER},
-		{"transmissibility", DBType::REAL},
-		{"immunityLossRate", DBType::REAL},
-		{"clinicalImmunityLossRate", DBType::REAL}
-	};
-	INITIALIZE_TABLE(genes, genesColumns);
-	
-	// STRAINS
-	vector<DBColumn> strainsColumns = {
-		{"strainId", DBType::INTEGER},
-		{"geneIndex", DBType::INTEGER},
-		{"geneId", DBType::INTEGER}
-	};
-	INITIALIZE_TABLE(strains, strainsColumns);
-	
-	// HOSTS
-	vector<DBColumn> hostsColumns = {
-		{"hostId", DBType::INTEGER},
-		{"birthTime", DBType::REAL},
-		{"deathTime", DBType::REAL}
-	};
-	INITIALIZE_TABLE(hosts, hostsColumns);
-	
-	// SAMPLED HOSTS
-	vector<DBColumn> sampledHostsColumns = {
-		{"time", DBType::REAL},
-		{"hostId", DBType::INTEGER}
-	};
-	INITIALIZE_TABLE(sampledHosts, sampledHostsColumns);
-	
-	// SAMPLED TRANSMISSION EVENTS
-	vector<DBColumn> sampledTransmissionsColumns = {
-		{"time", DBType::REAL},
-		{"transmissionId", DBType::INTEGER},
-		{"sourceHostId", DBType::INTEGER},
-		{"targetHostId", DBType::INTEGER}
-	};
-	INITIALIZE_TABLE(sampledTransmissions, sampledTransmissionsColumns);
-	
-	// SAMPLED HOSTS & TRANSMISSIONS: INFECTIONS
-	vector<DBColumn> infectionColumns = {
-		{"time", DBType::REAL},
-		{"hostId", DBType::INTEGER},
-		{"infectionId", DBType::INTEGER},
-		{"strainId", DBType::INTEGER},
-		{"geneIndex", DBType::INTEGER},
-		{"active", DBType::INTEGER}
-	};
-	INITIALIZE_TABLE(sampledHostInfections, infectionColumns);
-	INITIALIZE_TABLE(sampledTransmissionInfections, infectionColumns);
-	
-	// SAMPLED HOSTS AND TRANSMISSIONS: IMMUNITY
-	vector<DBColumn> immunityColumns = {
-		{"time", DBType::REAL},
-		{"hostId", DBType::INTEGER},
-		{"geneId", DBType::INTEGER},
-		{"lossRate", DBType::REAL}
-	};
-	INITIALIZE_TABLE(sampledHostImmunity, immunityColumns);
-	INITIALIZE_TABLE(sampledHostClinicalImmunity, immunityColumns);
-	INITIALIZE_TABLE(sampledTransmissionImmunity, immunityColumns);
-	INITIALIZE_TABLE(sampledTransmissionClinicalImmunity, immunityColumns);
+	dbPtr->createTable(genesTable);
+	dbPtr->createTable(strainsTable);
+	dbPtr->createTable(hostsTable);
+	dbPtr->createTable(sampledHostsTable);
+	dbPtr->createTable(sampledHostInfectionTable);
+	dbPtr->createTable(sampledHostImmunityTable);
+	dbPtr->createTable(sampledHostClinicalImmunityTable);
+	dbPtr->createTable(sampledTransmissionTable);
+	dbPtr->createTable(sampledTransmissionInfectionTable);
+	dbPtr->createTable(sampledTransmissionImmunityTable);
+	dbPtr->createTable(sampledTransmissionClinicalImmunityTable);
 }
 
 void Simulation::run()
@@ -229,7 +179,7 @@ double Simulation::getTime()
 
 double Simulation::drawHostLifetime()
 {
-	return parPtr->hostLifetimeDistribution.draw(rng);
+	return hostLifetimeDist.draw(rng);
 }
 
 void Simulation::addEvent(Event * event)
@@ -252,17 +202,12 @@ void Simulation::setEventRate(zppsim::RateEvent * event, double rate)
 	event->setRate(*queuePtr, rate);
 }
 
-double Simulation::getSeasonality()
-{
-	return sin(2 * M_PI * getTime() / parPtr->tYear);
-}
-
 
 
 double Simulation::distanceWeightFunction(double d)
 {
 	assert(d > 0.0);
-	return pow(d, -parPtr->distanceFunction.power);
+	return pow(d, -parPtr->distancePower);
 }
 
 Host * Simulation::drawDestinationHost(int64_t srcPopId)
@@ -387,13 +332,13 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 		strainPtr = strains.back();
 		geneVecToStrainIndexMap[strainGenes] = strains.size() - 1;
 		
-		if(strainsTablePtr != nullptr) {
-			DBRow row;
-			row.setInteger("strainId", int64_t(strainPtr->id));
+		if(parPtr->outputStrains) {
+			StrainRow row;
+			row.strainId = strainPtr->id;
 			for(int64_t i = 0; i < strainPtr->size(); i++) {
-				row.setInteger("geneIndex", int64_t(i));
-				row.setInteger("geneId", int64_t(strainPtr->getGene(i)->id));
-				strainsTablePtr->insert(row);
+				row.geneIndex = i;
+				row.geneId = strainPtr->getGene(i)->id;
+				dbPtr->insert(strainsTable, row);
 			}
 		}
 	}

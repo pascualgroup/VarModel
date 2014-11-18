@@ -14,7 +14,6 @@
 #include "Gene.h"
 
 class Host;
-
 class ImmuneHistory;
 
 class ImmunityLossEvent : public zppsim::RateEvent
@@ -38,7 +37,8 @@ public:
 	bool isImmune(GenePtr genePtr);
 	
 	void prepareToDie();
-	void write(zppdata::DBTable * table);
+	
+	void write(Database & db, Table<ImmunityRow> & table);
 	
 	zppsim::unordered_set_bh<GenePtr> genes;
 	zppsim::unordered_map_bh<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;

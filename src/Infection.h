@@ -12,6 +12,8 @@
 #include "EventQueue.hpp"
 #include "zppsim_util.hpp"
 #include "Strain.h"
+#include "zppdb.hpp"
+#include "DatabaseTypes.h"
 
 class Infection;
 class Host;
@@ -84,7 +86,7 @@ public:
 	
 	std::string toString();
 	
-	void write(zppdata::DBTable * table);
+	void write(Database & db, Table<InfectionRow> & table);
 	
 private:
 	double activationRate();

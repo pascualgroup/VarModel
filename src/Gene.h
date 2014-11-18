@@ -12,8 +12,9 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include "Database.hpp"
+#include "zppdb.hpp"
 #include "zppsim_random.hpp"
+#include "DatabaseTypes.h"
 
 class Gene;
 typedef std::shared_ptr<Gene> GenePtr;
@@ -27,7 +28,10 @@ public:
 	double const immunityLossRate;
 	double const clinicalImmunityLossRate;
 	
-	Gene(int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate, zppdata::DBTable * table);
+	Gene(
+		int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
+		bool writeToDatabase, Database & db, Table<GeneRow> & table
+	);
 	
 	std::string toString();
 };

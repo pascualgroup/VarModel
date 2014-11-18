@@ -7,15 +7,14 @@
 #include "Population.h"
 #include "Strain.h"
 #include "Gene.h"
+#include "DiscretizedDistribution.h"
 
-#include "Database.hpp"
+#include "zppdb.hpp"
 #include "zppsim_random.hpp"
 
 #include <boost/array.hpp>
-#include "zppdata_util.hpp"
 #include "EventQueue.hpp"
 
-#define DECLARE_TABLE(tableName) std::unique_ptr<zppdata::DBTable> tableName ## TablePtr
 
 class Simulation;
 
@@ -43,7 +42,7 @@ friend class Population;
 friend class BitingEvent;
 friend class Host;
 public:
-	Simulation(SimParameters * parPtr, zppdata::Database * dbPtr);
+	Simulation(SimParameters * parPtr, zppdb::Database * dbPtr);
 	
 	void run();
 	void runUntil(double time);
@@ -52,12 +51,11 @@ public:
 	double getTime();
 	double drawHostLifetime();
 	
-	void addEvent(Event * event);
-	void removeEvent(Event * event);
+	void addEvent(zppsim::Event * event);
+	void removeEvent(zppsim::Event * event);
 	void setEventTime(zppsim::Event * event, double time);
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
-	double getSeasonality();
 	double distanceWeightFunction(double d);
 	
 	GenePtr drawRandomGene();
@@ -78,8 +76,10 @@ public:
 	bool verifyState();
 private:
 	SimParameters * parPtr;
-	zppdata::Database * dbPtr;
+	zppdb::Database * dbPtr;
 	zppsim::rng_t rng;
+	
+	DiscretizedDistribution hostLifetimeDist;
 	
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
 	RateUpdateEvent rateUpdateEvent;
@@ -101,23 +101,20 @@ private:
 	
 	int64_t transmissionCount;
 	
-	// DECLARE_TABLE is a macro mapping e.g.,
-	// DECLARE_TABLE(genes);
-	// -->
-	// std::unique_ptr<zppdata::DBTable> genesTablePtr;
-	DECLARE_TABLE(genes);
-	DECLARE_TABLE(strains);
-	DECLARE_TABLE(hosts);
+	// Database tables
+	zppdb::Table<GeneRow> genesTable;
+	zppdb::Table<StrainRow> strainsTable;
+	zppdb::Table<HostRow> hostsTable;
 	
-	DECLARE_TABLE(sampledHosts);
-	DECLARE_TABLE(sampledHostInfections);
-	DECLARE_TABLE(sampledHostImmunity);
-	DECLARE_TABLE(sampledHostClinicalImmunity);
+	zppdb::Table<SampledHostRow> sampledHostsTable;
+	zppdb::Table<InfectionRow> sampledHostInfectionTable;
+	zppdb::Table<ImmunityRow> sampledHostImmunityTable;
+	zppdb::Table<ImmunityRow> sampledHostClinicalImmunityTable;
 	
-	DECLARE_TABLE(sampledTransmissions);
-	DECLARE_TABLE(sampledTransmissionInfections);
-	DECLARE_TABLE(sampledTransmissionImmunity);
-	DECLARE_TABLE(sampledTransmissionClinicalImmunity);
+	zppdb::Table<SampledTransmissionRow> sampledTransmissionTable;
+	zppdb::Table<InfectionRow> sampledTransmissionInfectionTable;
+	zppdb::Table<ImmunityRow> sampledTransmissionImmunityTable;
+	zppdb::Table<ImmunityRow> sampledTransmissionClinicalImmunityTable;
 	
 	void initializeDatabaseTables();
 };

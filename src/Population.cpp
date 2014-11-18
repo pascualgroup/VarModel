@@ -10,6 +10,7 @@
 #include "Simulation.h"
 #include "SimParameters.h"
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace zppsim;
@@ -26,7 +27,13 @@ Population::Population(Simulation * simPtr, int64_t id) :
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
 		
-		hosts.emplace_back(new Host(this, hostId, birthTime, deathTime, simPtr->hostsTablePtr.get()));
+		bool writeToDatabase = simPtr->parPtr->outputHosts;
+		hosts.emplace_back(new Host(
+			this, hostId, birthTime, deathTime,
+			writeToDatabase,
+			*(simPtr->dbPtr),
+			simPtr->hostsTable
+		));
 		hostIdIndexMap[hostId] = hosts.size() - 1;
 	}
 	
@@ -85,7 +92,11 @@ Host * Population::createNewHost()
 	double deathTime = birthTime + lifetime;
 	
 	int64_t hostId = simPtr->nextHostId++;
-	hosts.emplace_back(new Host(this, hostId, birthTime, deathTime, simPtr->hostsTablePtr.get()));
+	bool writeToDatabase = simPtr->parPtr->outputHosts;
+	hosts.emplace_back(new Host(
+		this, hostId, birthTime, deathTime,
+		writeToDatabase, *(simPtr->dbPtr), simPtr->hostsTable
+	));
 	hostIdIndexMap[hostId] = hosts.size() - 1;
 	
 	// In the future, need to update rates
@@ -101,8 +112,7 @@ double Population::getTime()
 
 double Population::getBitingRate()
 {
-	BitingRate brObj = parPtr->bitingRate;
-	double perHostBitingRate = brObj.mean + brObj.amplitude * simPtr->getSeasonality();
+	double perHostBitingRate = evaluateSinusoid(parPtr->bitingRate, getTime());
 	return hosts.size() * perHostBitingRate;
 }
 
@@ -177,26 +187,28 @@ void Population::updateRates()
 
 void Population::sampleHosts()
 {
+	Database * dbPtr = simPtr->dbPtr;
+	
 	vector<size_t> hostIndices = drawUniformIndices(
 		*rngPtr, hosts.size(), size_t(parPtr->sampleSize), true
 	);
 	for(size_t index : hostIndices) {
-		if(simPtr->sampledHostsTablePtr != nullptr) {
-			DBRow row;
-			row.setReal("time", getTime());
-			row.setInteger("hostId", int64_t(hosts[index]->id));
-			simPtr->sampledHostsTablePtr->insert(row);
-		}
+		SampledHostRow row;
+		row.time = getTime();
+		row.hostId = hosts[index]->id;
+		dbPtr->insert(simPtr->sampledHostsTable, row);
 		
-		hosts[index]->writeInfections(simPtr->sampledHostInfectionsTablePtr.get());
-		hosts[index]->immunity.write(simPtr->sampledHostImmunityTablePtr.get());
-		hosts[index]->clinicalImmunity.write(simPtr->sampledHostClinicalImmunityTablePtr.get());
+		hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable);
+		hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
+		hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
 	}
 }
 
 std::string Population::toString()
 {
-	return strprintf("p%u", id);
+	stringstream ss;
+	ss << "p" << id;
+	return ss.str();
 }
 
 void Population::countTransmission()
