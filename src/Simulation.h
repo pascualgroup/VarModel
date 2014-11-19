@@ -12,7 +12,6 @@
 #include "zppdb.hpp"
 #include "zppsim_random.hpp"
 
-#include <boost/array.hpp>
 #include "EventQueue.hpp"
 
 
@@ -34,6 +33,24 @@ public:
 	virtual void performEvent(zppsim::EventQueue & queue);
 private:
 	Simulation * simPtr;
+};
+
+class HashGenePtrVec
+{
+public:
+	size_t operator()(std::vector<GenePtr> const & genePtrVec) const
+	{
+		if(genePtrVec.size() == 0) {
+			return 0;
+		}
+		size_t hashVal = _hash(genePtrVec[0]);
+		for(size_t i = 0; i < genePtrVec.size(); i++) {
+			hashVal ^= _hash(genePtrVec[i]) + 0x9e3779b9 + (hashVal << 6) + (hashVal >> 2);
+		}
+		return hashVal;
+	}
+private:
+	std::hash<GenePtr> _hash;
 };
 
 class Simulation
@@ -92,7 +109,7 @@ private:
 	int64_t nextStrainId;
 	std::vector<StrainPtr> strains;
 	std::unordered_map<StrainPtr, int64_t> strainPtrToIndexMap;
-	zppsim::unordered_map_bh<std::vector<GenePtr>, int64_t> geneVecToStrainIndexMap;
+	std::unordered_map<std::vector<GenePtr>, int64_t, HashGenePtrVec> geneVecToStrainIndexMap;
 	
 	// Gene tracking: right now genes comprise a fixed pool, so no complicated
 	// tracking to perform

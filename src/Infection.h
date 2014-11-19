@@ -9,6 +9,8 @@
 #ifndef __malariamodel__Infection__
 #define __malariamodel__Infection__
 
+#include <list>
+
 #include "EventQueue.hpp"
 #include "zppsim_util.hpp"
 #include "Strain.h"

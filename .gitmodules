@@ -13,3 +13,6 @@
 [submodule "libjson"]
 	path = libjson
 	url = https://github.com/vincenthz/libjson.git
+[submodule "preprocessor"]
+	path = preprocessor
+	url = https://github.com/boostorg/preprocessor

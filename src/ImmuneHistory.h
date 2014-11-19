@@ -11,6 +11,8 @@
 
 #include "EventQueue.hpp"
 #include "zppsim_util.hpp"
+#include <unordered_map>
+#include <unordered_set>
 #include "Gene.h"
 
 class Host;
@@ -40,8 +42,8 @@ public:
 	
 	void write(Database & db, Table<ImmunityRow> & table);
 	
-	zppsim::unordered_set_bh<GenePtr> genes;
-	zppsim::unordered_map_bh<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
+	std::unordered_set<GenePtr> genes;
+	std::unordered_map<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
 private:
 	Host * hostPtr;
 	bool clinical;
