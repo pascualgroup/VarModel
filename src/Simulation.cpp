@@ -63,6 +63,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 		for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
 			assert(parPtr->genes.mutationWeights[i].size() == parPtr->genePoolSize);
 			vector<double> mwi = parPtr->genes.mutationWeights[i].toDoubleVector();
+			mwi[i] = 0.0;
 			mutationDistributions.emplace_back(mwi.begin(), mwi.end());
 		}
 	}
@@ -307,12 +308,18 @@ GenePtr Simulation::drawRandomGene()
 	return genes[geneIndex];
 }
 
+GenePtr Simulation::drawRandomGeneExcept(int64_t geneId)
+{
+	int64_t newGeneId = drawUniformIndexExcept(rng, (int64_t)genes.size(), geneId);
+	return genes[newGeneId];
+}
+
 GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 	int64_t srcGeneId = srcGenePtr->id;
 	
 	if(mutationDistributions.size() == 0) {
 //		cerr << "not using mutation distributions" << '\n';
-		return drawRandomGene();
+		return drawRandomGeneExcept(srcGeneId);
 	}
 	else {
 		assert(mutationDistributions.size() == genes.size());

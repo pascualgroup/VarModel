@@ -128,7 +128,7 @@
 		
 		// Relative mutation rates from each gene to each other gene;
 		// mutationWeights[i] is the relative probability of different mutations from
-		// gene i
+		// gene i. mutationWeights[i][i] are set to 0 before normalizing.
 		//"mutationWeights" : [[1, 5], [5, 1]]
 		"mutationWeights" : [[1]]
 	},

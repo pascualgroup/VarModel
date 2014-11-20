@@ -76,6 +76,7 @@ public:
 	double distanceWeightFunction(double d);
 	
 	GenePtr drawRandomGene();
+	GenePtr drawRandomGeneExcept(int64_t geneId);
 	GenePtr mutateGene(GenePtr const & srcGene);
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
