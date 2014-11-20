@@ -7,7 +7,8 @@ EXEC_NAME = 'malariamodel'
 
 # Compilers in preference order: tuple (cCompiler, cppCompiler, flags)
 COMPILERS = [
-	('icc', 'icpc', ''),
+#Intel compiler does not currently work
+#	('icc', 'icpc', ''),
 	('clang', 'clang++', '-stdlib=libc++'),
 	('gcc', 'g++', '')
 ]
