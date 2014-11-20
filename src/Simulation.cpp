@@ -2,6 +2,8 @@
 #include "zppdb.hpp"
 #include "zppjson.hpp"
 #include "zppsim_util.hpp"
+#include <sys/time.h>
+#include <sys/resource.h>
 
 // 100-millisecond delay between database commit retries
 #define DB_RETRY_DELAY 100000
@@ -33,7 +35,7 @@ static double getEntry(Array<Double> & vals, size_t index, size_t size)
 Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	parPtr(parPtr),
 	dbPtr(dbPtr),
-	rng(parPtr->randomSeed),
+	rng(int64_t(parPtr->randomSeed)),
 	hostLifetimeDist(
 		parPtr->hostLifetimeDistribution.pdf.toDoubleVector(),
 		parPtr->hostLifetimeDistribution.x0,
