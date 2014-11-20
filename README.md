@@ -88,7 +88,7 @@ You can build code documentation by running
 ./makedoc.py
 ```
 
-in the root directory.
+in the root directory. You can then view `doxygen/index.html` in your web browser.
 
 ## Running the model
 
@@ -216,6 +216,38 @@ Abstractly, the simulation proceeds by repeating these two steps:
 
 The first step is handled by the underlying event queue implementation: the priority heap always has the lowest-time event ready to be accessed. The second step may include requests to the event queue to update rates for certain events, add events, or remove events.
 
-## Detailed description of simulation
+## Simulation Details
 
+### Simulation loop
+
+A simulation follows these steps:
+* Load all parameters from parameters file.
+* Initialize population size with `initialPopulationSize` hosts. Sample `nInitialStrains` strains and assign each of them to `nInitialInfections` hosts.
+* Set `t = 0`.
+* Repeat until `t >= tEnd`:
+	* Choose and perform the next event via the Gillespie algorithm (or probabilistic equivalent, e.g. next-reaction method), either:
+		* Biting events, with rate `currentBitingRate * currentPopulationSize`, where `currentBitingRate` is a sinusoidal function of time:
+			* Choose a random transmitting host.
+			* Calculate which strains should be transmitted from the transmitting host (see description below).
+			* Modify strains to be transmitted via mutation and/or recombination, possibly with extra circulating strains.
+			* Choose destination host, and transmit strains into host
+		* Immigration (introduction) events, with rate `currentIntroductionRate * currentPopulationSize`, where `currentIntroductionRate` is a sinusoidal function of time.
+		* Birth events (if birth-death processes are uncoupled; demography details to be worked out)
+		* Death events (if birth-death processes are uncoupled)
+		* Within-host expression steps (TODO: expand this)
+
+Individual var genes may be assigned different attributes:
+
+* transmissibility
+* mean duration of infection
+* duration of immunity
+
+###
+
+* Calculate P(transmission) of each active strain based on currently expressed var. To begin with, the probability of transmission will be inversely proportional to the number of concurrent infections.
+* Select strains to be transmitted based on their probability of transmission.
+* Randomly mutate transmitted strains: each gene in each strain has a constant probability of being sampled from the pool.
+* Reassort var genes between strains:
+	* Select pairs of strains to recombine, so that each pair has a constant probability of recombining. For each chosen pair, generate a daughter strain as a random reassortment of parent strains' genes.
+	* If `n` strains were picked up from source host, transmit `n` strains randomly sampled from the original strains and all generated daughter strains.
 

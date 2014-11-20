@@ -18,9 +18,6 @@
 	// Random seed: if 0, seed is generated from system random generator
 	"randomSeed" : 0,
 	
-	// Length of a year in simulation units (used to define seasonal period)
-	"tYear" : 360.0,
-	
 	// End time of simulation
 	"tEnd" : 360.0,
 	
@@ -31,7 +28,7 @@
 	"sampleHostsEvery" : 30.0,
 	
 	// Number of var genes in pool
-	"genePoolSize" : 100,
+	"genePoolSize" : 1000,
 	
 	// Number of genes in each strain
 	"genesPerStrain" : 50,
@@ -85,7 +82,7 @@
 		// First population
 		{
 			// Population size
-			"size" : 1000,
+			"size" : 10000,
 			
 			// Number of hosts to sample at sampling interval
 			"sampleSize" : 100,
@@ -93,8 +90,7 @@
 			// Number of initial infections in the population
 			"nInitialInfections" : 100,
 			
-			// Biting rate mean/amplitude (question: should amplitude be done as a fraction
-			// of mean (0.0 to 1.0) rather than absolute?)
+			// Biting rate mean/amplitude
 			"bitingRate" : {
 				"mean" : 1.0,
 				"relativeAmplitude" : 0.05,
