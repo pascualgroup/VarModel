@@ -36,6 +36,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	rng(parPtr->randomSeed),
 	hostLifetimeDist(
 		parPtr->hostLifetimeDistribution.pdf.toDoubleVector(),
+		parPtr->hostLifetimeDistribution.x0,
 		parPtr->hostLifetimeDistribution.dx
 	),
 	queuePtr(new EventQueue(rng)),

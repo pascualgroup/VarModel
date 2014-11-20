@@ -34,7 +34,12 @@ if __name__ == '__main__':
 		zppdb_doxygen.processFile(filename, outFile)
 		outFile.close()
 	
-	os.system('doxygen')
+	osxDoxygenApp = '/Applications/Doxygen.app/Contents/Resources/doxygen'
+	if os.path.exists(osxDoxygenApp):
+		os.system(osxDoxygenApp)
+	else:
+		os.system('doxygen')
+	
 	for filename in jsonFilenames:
 		os.remove(jsonOutFilename(filename))
 	

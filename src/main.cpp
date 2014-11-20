@@ -65,6 +65,13 @@ int main(int argc, char **argv)
 		params.printJsonToStream(paramsStrStream);
 		
 		// Set up database
+		if(params.overwriteDatabase.present() && params.overwriteDatabase) {
+			string dbFilename = params.dbFilename;
+			remove(dbFilename.c_str());
+			string journalFilename = dbFilename + "-journal";
+			remove(journalFilename.c_str());
+		}
+		
 		Database db(params.dbFilename);
 		
 		// Write parameters to meta table

@@ -2,33 +2,18 @@
 	// Output filename.
 	"dbFilename" : "output.sqlite",
 	
+	// Overwrite database
+	// (if false, exception will be thrown)
+	"overwriteDatabase" : true,
+	
 	// How often to commit the database, in simulation time
 	// (prevents database from becoming bottleneck).
 	"dbCommitPeriod" : 30,
 	
-	// Enable/disable database tables
-	"dbTablesEnabled" : {
-		// Genes and attributes
-		"genes" : true,
-		
-		// Strains (lists of genes)
-		"strains" : true,
-		
-		// Hosts: incl. birth and death time
-		"hosts" : true,
-		
-		// Sampled hosts: list of hosts sampled over time
-		"sampledHosts" : true,
-		
-		// Sampled hosts: list of infections
-		"sampledHostInfections" : true,
-		
-		// Sampled hosts: list of immunities
-		"sampledHostImmunity" : true,
-		
-		// Sampled hosts: list of "clinical" immunities
-		"sampledHostClinicalImmunity" : true
-	},
+	// Whether to output hosts, genes, strains
+	"outputHosts" : true,
+	"outputGenes" : true,
+	"outputStrains" : true,
 	
 	// Random seed: if 0, seed is generated from system random generator
 	"randomSeed" : 0,
@@ -49,7 +34,7 @@
 	"genePoolSize" : 100,
 	
 	// Number of genes in each strain
-	"genesPerStrain" : 100,
+	"genesPerStrain" : 50,
 	
 	// Probability of mutation, per locus, per transmission events
 	"pMutation" : 0.01,
@@ -62,23 +47,20 @@
 	// Parameter used to determine effective distance, and thus contact rate,
 	// for different populations. The relative weight of populations is given by
 	// d^(-power)
-	"distanceFunction" : {
-		"power" : 1.0
-	},
+	"distancePower" : 1.0,
 	
 	// Host-lifetime distribution, specified as a discrete PDF,
 	// with uniform density within each discrete chunk
 	"hostLifetimeDistribution" : {
-		"dt" : 365.0,
-		"pdf" : [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]
+		"x0" : 0.0,
+		"dx" : 3650.0, // 10 year discrete chunks
+		"pdf" : [0.3, 0.3, 0.4] // 30% 0-10, 30% 10-20, 40% 20-30
 	},
 	
 	// Transmission parameters (will probably change)
-	"transmission" : {
-		// If true, the probability of transmission is reduced by the number of active
-		// infections
-		"coinfectionReducesTransmission" : true
-	},
+	// If true, the probability of transmission is reduced by the number of active
+	// infections
+	"coinfectionReducesTransmission" : true,
 	
 	// Within-host parameters (will definitely change)
 	"withinHost" : {
@@ -115,7 +97,9 @@
 			// of mean (0.0 to 1.0) rather than absolute?)
 			"bitingRate" : {
 				"mean" : 1.0,
-				"amplitude" : 0.0
+				"relativeAmplitude" : 0.05,
+				"period" : 365.0,
+				"phase" : 0.0
 			},
 			
 			// Rate of appearance of new strains
@@ -129,7 +113,7 @@
 			// within-population contact rate
 			"selfDistance" : 0.5
 		}
-		// Additional populations can appear here (separate {} sections with commas)
+		// Additional populations can appear here (separate {} sections with commas between them)
 	],
 	
 	// Gene parameters

@@ -1,5 +1,12 @@
 # Malaria Var-Gene Evolution-Transmission Model
 
+## Requirements
+
+* git
+* Python 2.7.x (for build scripts)
+* C++11-compliant compiler (Intel C++ compiler, LLVM/Clang, or GCC)
+* Doxygen (to build code documentation)
+
 ## Getting and updating the soure code/Git primer
 
 The most straightforward way to get the code is at the command line:
@@ -55,9 +62,125 @@ git log
 
 Bitbucket also has a graphical view of commit history.
 
-## Building the code
+## Building the executable
 
-TODO
+To build the executable, simply run
+
+```{bash}
+./make.py
+```
+
+in the root directory of the repository. This will create the executable in
+
+```
+bin/malariamodel
+```
+
+The build script chooses a compiler based on availability, preferring the Intel C++ compiler if available, then LLVM/Clang, and finally GCC.
+
+## Building code documentation
+
+There is some code documentation, mostly for parameters and database tables, written in the Doxygen format. To build the code documentation, you need to install [Doxygen](http://www.stack.nl/~dimitri/doxygen/). On Mac OS X, you can install the Doxygen app (binary) in the Applications folder and the script will find it. Otherwise, e.g. on Linux, make sure the `doxygen` command is in your path.
+
+You can build code documentation by running
+
+```{bash}
+./makedoc.py
+```
+
+in the root directory.
+
+## Running the model
+
+The model requires a parameters file, in JSON format (see the next section). The recommended way to run the model is to create a working directory containing just, e.g., `parameters.json`, and running the executable in that directory:
+
+```{bash}
+cd [path-to]/output
+[path-to]/bin/malariamodel parameters.json
+```
+
+It's often useful to redirect standard error and standard output into files for later examination:
+
+```{bash}
+cd [path-to]/output
+[path-to]/bin/malariamodel parameters.json 1> stdout.txt 2> stderr.txt
+```
+
+This works well for parameter sweeps if a different directory is created for each model
+run using a custom script, and also works in a straightforward way with [runm](https://github.com/edbaskerville/runm).
+
+The run will create a single SQLite database as output, whose filename is specified in the parameters file (see "Output database" below).
+
+## Parameters file
+
+The parameters file contains all output control and model parameters in [JSON](http://json.org) format. In order to prevent confusion, the code contains no default values whatsoever: every parameter used in the simulation must be present in the parameters file, or the program will throw an exception.
+
+Parameters are defined and documented in the file `SimParameters.h`, using a strange-looking but simple macro format that allows symbol names in the defined type to be used directly as keys in the JSON file. E.g.,
+
+```{c++}
+ZPPJSON_DEFINE_TYPE(
+	MySubJsonType,
+	( (Double)(a) )
+	( (Double)(b) )
+)
+
+ZPPJSON_DEFINE_TYPE(
+	MyJsonType,
+	( (Double)(x) )
+	( (Double)(y) )
+	( (MySubJsonType)(z) )
+)
+```
+
+defines a JSON object type that can be directly mapped from this JSON:
+
+```{javascript}
+{
+	"x" : 5.3,
+	"y" : 3.8,
+	"z" : {
+		"a" : 100,
+		"b" : 88.1
+	}
+}
+```
+
+Fields can be declared as type `Double`, `Int64`, `String`, `Array<T>`, where `T` is any allowed type; `Map<T>`, which maps strings to any allowed type; or can be declared using a custom type (e.g., `MySubJsonType` above).
+
+This mechanism is implemented in the [zppjson](https://github.com/edbaskerville/zppjson) library.
+
+The file `example/example_parameters.json` should currently contain all parameters defined in `SimParameters.h`, and should be kept in sync with that file to be a valid, working example. `SimParameters.h` also includes documentation on parameters in Doxygen format.
+
+## Output database
+
+The output database is in SQLite 3 format, which can be easily accessed from R using the `RSQLite` library or from Python using the built-in `sqlite3` library. Databases
+
+Output database tables are defined using a similar macro format to parameters, e.g.,
+
+```{c++}
+ZPPDB_DEFINE_ROW_TYPE(
+	MyDbRowType,
+	( (Integer)(penguinId) )
+	( (Text)(name) )
+	( (Real)(height) )
+	( (Real)(weight) )
+)
+```
+
+Database fields can be only `Integer` (64-bit integer), `Text` (string), or `Real` (double), with names taken from the SQLite conventions for database types.
+
+Current database tables include:
+* `genes`: a table of all var genes, including characteristics that affect dynamics
+* `hosts`: a table of hosts, including birth and death time
+* `strains`: a table of all strains generated in the simulation
+* `sampledHosts`: a list of hosts sampled at different sampling times
+* `sampledHostInfections`: a list of all the infections of sampled hosts, including progression of var expression
+* `sampledHostImmunity`: a list of immunity held by all sampled hosts
+* `sampledTransmissions`: a list of sampled transmission events
+* `sampledTransmissionInfections`: infection state of hosts involved in sampled transmission events
+* `sampledTransmissionImmunity`: immunity state of hosts involved in sampled transmission events
+
+(and corresponding tables for "clinical immunity").
 
 ## Code organization
 
@@ -95,5 +218,4 @@ The first step is handled by the underlying event queue implementation: the prio
 
 ## Detailed description of simulation
 
-## Summary of C++ features used
 

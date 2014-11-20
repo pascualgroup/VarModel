@@ -208,6 +208,11 @@ ZPPJSON_DEFINE_TYPE(
 	( (String)(dbFilename) )
 	
 	/**
+		\brief Whether or not to overwrite database if present
+	*/
+	( (Bool)(overwriteDatabase) )
+	
+	/**
 		\brief How often, in simulation time units, to commit the database.
 		
 		Too-frequent commits can cause database maintenance to become a

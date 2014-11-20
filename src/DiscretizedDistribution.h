@@ -8,11 +8,12 @@
 class DiscretizedDistribution
 {
 public:
-	DiscretizedDistribution(std::vector<double> const & pdf, double dx);
+	DiscretizedDistribution(std::vector<double> const & pdf, double x0, double dx);
 	double draw(zppsim::rng_t & rng);
 private:
 	std::discrete_distribution<> discDist;
 	std::uniform_real_distribution<> realDist;
+	double x0;
 	double dx;
 };
 
