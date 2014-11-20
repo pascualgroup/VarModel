@@ -170,6 +170,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 Database fields can be only `Integer` (64-bit integer), `Text` (string), or `Real` (double), with names taken from the SQLite conventions for database types.
 
 Current database tables include:
+
 * `genes`: a table of all var genes, including characteristics that affect dynamics
 * `hosts`: a table of hosts, including birth and death time
 * `strains`: a table of all strains generated in the simulation
