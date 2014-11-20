@@ -221,6 +221,7 @@ The first step is handled by the underlying event queue implementation: the prio
 ### Simulation loop
 
 A simulation follows these steps:
+
 * Load all parameters from parameters file.
 * Initialize population size with `initialPopulationSize` hosts. Sample `nInitialStrains` strains and assign each of them to `nInitialInfections` hosts.
 * Set `t = 0`.
@@ -242,7 +243,7 @@ Individual var genes may be assigned different attributes:
 * mean duration of infection
 * duration of immunity
 
-###
+### Transmission process
 
 * Calculate P(transmission) of each active strain based on currently expressed var. To begin with, the probability of transmission will be inversely proportional to the number of concurrent infections.
 * Select strains to be transmitted based on their probability of transmission.
