@@ -5,6 +5,8 @@
 
 using namespace zppdb;
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 /**
 	\brief Row type for meta table.
 */
@@ -203,5 +205,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 	*/
 	( (Real)(lossRate) )
 )
+
+#endif // #define DOXYGEN_SHOULD_SKIP_THIS
 
 #endif // #ifndef __malariamodel__DatabaseTypes__

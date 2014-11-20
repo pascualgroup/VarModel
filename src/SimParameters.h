@@ -5,6 +5,8 @@
 
 using namespace zppjson;
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 /**
 	\brief Type for defining sinusoidal variable (e.g., seasonal biting rate).
 	
@@ -314,5 +316,7 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (Bool)(trackClinicalImmunity) )
 )
+
+#endif // #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #endif /* defined(__malariamodel__SimParameters__) */

@@ -150,8 +150,8 @@
 		// mutationWeights[i] is the relative probability of different mutations from
 		// gene i
 		//"mutationWeights" : [[1, 5], [5, 1]]
-		"mutationWeights" : [1]
+		"mutationWeights" : [[1]]
 	},
 	
-	"trackClinicalImmunity" : true
+	"trackClinicalImmunity" : false
 }

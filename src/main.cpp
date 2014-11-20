@@ -1,3 +1,13 @@
+/**
+	\mainpage malariamodel
+	
+	Code documentation for malaria var-gene evolution model.
+	
+	Useful sections:
+	- Parameters: SimParameters_jsontypes.h
+	- Database tables: DatabaseTypes_dbtypes.h: database table types
+*/
+
 #include <iostream>
 #include <sstream>
 
