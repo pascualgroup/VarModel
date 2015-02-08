@@ -81,6 +81,7 @@ public:
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
+	StrainPtr generateRandomStrain(int64_t nNewGenes);
 	StrainPtr mutateStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
@@ -99,7 +100,9 @@ private:
 	
 	DiscretizedDistribution hostLifetimeDist;
 	
+	// MAIN EVENT QUEUE
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
+	
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
 	
@@ -112,8 +115,7 @@ private:
 	std::unordered_map<StrainPtr, int64_t> strainPtrToIndexMap;
 	std::unordered_map<std::vector<GenePtr>, int64_t, HashGenePtrVec> geneVecToStrainIndexMap;
 	
-	// Gene tracking: right now genes comprise a fixed pool, so no complicated
-	// tracking to perform
+	// Gene tracking
 	std::vector<GenePtr> genes;
 	std::vector<std::discrete_distribution<>> mutationDistributions;
 	
@@ -133,6 +135,8 @@ private:
 	zppdb::Table<InfectionRow> sampledTransmissionInfectionTable;
 	zppdb::Table<ImmunityRow> sampledTransmissionImmunityTable;
 	zppdb::Table<ImmunityRow> sampledTransmissionClinicalImmunityTable;
+	
+	GenePtr createGene();
 	
 	void initializeDatabaseTables();
 };

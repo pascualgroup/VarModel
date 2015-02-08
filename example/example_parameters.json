@@ -82,7 +82,7 @@
 		// First population
 		{
 			// Population size
-			"size" : 10000,
+			"size" : 1000,
 			
 			// Number of hosts to sample at sampling interval
 			"sampleSize" : 100,
@@ -99,7 +99,13 @@
 			},
 			
 			// Rate of appearance of new strains
-			"immigrationRate" : 0.01,
+			"immigrationRate" : 0.1,
+			
+			// Probability that immigration event includes new genes
+			"pImmigrationIncludesNewGenes" : 0.1,
+			
+			// Number of new genes included in new-gene immigration event
+			"nImmigrationNewGenes" : 10,
 			
 			// Location in space, used to calculate contact rates between populations
 			"x" : 0,

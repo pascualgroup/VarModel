@@ -112,6 +112,30 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	cerr << "# events: " << queuePtr->size() << '\n';
 }
 
+GenePtr Simulation::createGene()
+{
+	assert(parPtr->genes.transmissibility.size() == 1);
+	double transmissibility = parPtr->genes.transmissibility[0];
+	
+	assert(parPtr->genes.immunityLossRate.size() == 1);
+	double immunityLossRate = parPtr->genes.immunityLossRate[0];
+	
+	assert(parPtr->genes.clinicalImmunityLossRate.size() == 1);
+	double clinicalImmunityLossRate = parPtr->genes.clinicalImmunityLossRate[0];
+	
+	int64_t index = genes.size();
+	genes.emplace_back(new Gene(
+		index,
+		transmissibility,
+		immunityLossRate,
+		clinicalImmunityLossRate,
+		dbPtr->tableExists(genesTable),
+		*dbPtr,
+		genesTable
+	));
+	return genes.back();
+}
+
 void Simulation::initializeDatabaseTables()
 {
 	dbPtr->createTable(genesTable);
@@ -242,6 +266,39 @@ StrainPtr Simulation::generateRandomStrain()
 	for(int64_t i = 0; i < genesPerStrain; i++) {
 		strainGenes[i] = drawRandomGene();
 	}
+	
+	return getStrain(strainGenes);
+}
+
+StrainPtr Simulation::generateRandomStrain(int64_t nNewGenes)
+{
+	cerr << "generating random strain with new genes " << endl;
+	
+	int64_t genesPerStrain = parPtr->genesPerStrain;
+	
+	// Generate shuffled list of the locations of the new genes within the strain
+	vector<bool> newGeneLocations(genesPerStrain);
+	for(int64_t i = 0; i < nNewGenes; i++) {
+		newGeneLocations[i] = true;
+	}
+	for(int64_t i = nNewGenes; i < genesPerStrain; i++) {
+		newGeneLocations[i] = false;
+	}
+	shuffle(newGeneLocations.begin(), newGeneLocations.end(), rng);
+	
+	// Assemble strain: old genes at false entries; new genes at true entries
+	std::vector<GenePtr> strainGenes(genesPerStrain);
+	int64_t nNewGenesCheck = 0;
+	for(int64_t i = 0; i < genesPerStrain; i++) {
+		if(newGeneLocations[i]) {
+			nNewGenesCheck++;
+			strainGenes[i] = createGene();
+		}
+		else {
+			strainGenes[i] = drawRandomGene();
+		}
+	}
+	assert(nNewGenes == nNewGenesCheck);
 	
 	return getStrain(strainGenes);
 }
