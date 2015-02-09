@@ -145,11 +145,15 @@ double Infection::activationRate()
 	assert(!std::isinf(constant));
 	assert(constant > 0.0);
 	double power = simParPtr->withinHost.activationRatePower;
+	assert(activationRatePower <= 0.0);
 	assert(!std::isnan(power));
 	assert(!std::isinf(power));
 	
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
 	
+	if(nActiveInfections == 0) {
+		return std::numeric_limits<double>::infinity();
+	}
 	return constant * std::pow(nActiveInfections, power);
 }
 
