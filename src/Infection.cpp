@@ -139,7 +139,18 @@ double Infection::activationRate()
 //	int64_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
 	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	return simParPtr->withinHost.activationRate;
+	
+	double constant = simParPtr->withinHost.activationRateConstant;
+	assert(!std::isnan(constant));
+	assert(!std::isinf(constant));
+	assert(constant > 0.0);
+	double power = simParPtr->withinHost.activationRatePower;
+	assert(!std::isnan(power));
+	assert(!std::isinf(power));
+	
+	double nActiveInfections = hostPtr->getActiveInfectionCount();
+	
+	return constant * std::pow(nActiveInfections, power);
 }
 
 double Infection::deactivationRate()
@@ -148,12 +159,17 @@ double Infection::deactivationRate()
 	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
-	if(isImmune()) {
-		return simParPtr->withinHost.deactivationRateImmune;
-	}
-	else {
-		return simParPtr->withinHost.deactivationRateNotImmune;
-	}
+	double constant = simParPtr->withinHost.deactivationRateConstant;
+	assert(!std::isnan(constant));
+	assert(!std::isinf(constant));
+	assert(constant > 0.0);
+	double power = simParPtr->withinHost.deactivationRatePower;
+	assert(!std::isnan(power));
+	assert(!std::isinf(power));
+	
+	double nActiveInfections = hostPtr->getActiveInfectionCount();
+	
+	return constant * std::pow(nActiveInfections, power);
 }
 
 double Infection::clearanceRate()
@@ -164,18 +180,27 @@ double Infection::clearanceRate()
 	if(geneIndex == WAITING_STAGE) {
 		return 0.0;
 	}
-	// Gene active
+	// Gene active: clearance rate depends on immunity
 	else if(!active) {
-		// Before first activation
-		if(geneIndex == 0) {
-			return simParPtr->withinHost.clearanceRateInitial;
+		double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
+		assert(!std::isnan(clearanceRatePower));
+		assert(!std::isinf(clearanceRatePower));
+		
+		double nActiveInfections = hostPtr->getActiveInfectionCount();
+		double clearanceRateConstant;
+		if(isImmune()) {
+			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
 		}
-		// Between activations
 		else {
-			return simParPtr->withinHost.clearanceRateMidCourse;
+			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
 		}
+		assert(!std::isnan(clearanceRateConstant));
+		assert(!std::isinf(clearanceRateConstant));
+		assert(clearanceRateConstant > 0.0);
+		
+		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
 	}
-	// Gene active
+	// Gene active: clearance rate = 0
 	else {
 		return 0.0;
 	}

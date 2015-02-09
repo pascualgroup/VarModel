@@ -139,30 +139,63 @@ ZPPJSON_DEFINE_TYPE(
 	WithinHostParameters,
 	
 	/**
-		\brief The clearance rate of an infection in the latent delay period.
+		\brief Whether or not to divide transmissibility by #infections ("cost")
 	*/
-	( (Double)(clearanceRateInitial) )
+	( (Bool)(coinfectionsReduceTransmission) )
 
 	/**
-		\brief The clearance rate of an infection between activations (??).
+		\brief The constant controlling the relationship between # active infections
+		and activation rate.
+		
+		activationRate = activationRateConstant * nActiveInfections^activationRatePower
 	*/
-	( (Double)(clearanceRateMidCourse) )
+	( (Double)(activationRateConstant) )
 
 	/**
-		\brief The rate at which alleles are activated.
+		\brief The power controlling the relationship between # active infections
+		and activation rate.
 	*/
-	( (Double)(activationRate) )
-	
+	( (Double)(activationRatePower) )
+
 	/**
-		\brief The rate at which alleles are deactivated if the host is immune.
+		\brief The constant controlling the relationship between # active infections
+		and activation rate.
+		
+		deactivationRate = deactivationRateConstant * nActiveInfections^deactivationRatePower
 	*/
-	( (Double)(deactivationRateImmune) )
-	
+	( (Double)(deactivationRateConstant) )
+
 	/**
-		\brief The rate at which alleles are deactivated if the host is not
-		immune.
+		\brief The power controlling the relationship between # active infections
+		and deactivation rate.
 	*/
-	( (Double)(deactivationRateNotImmune) )
+	( (Double)(deactivationRatePower) )
+
+	/**
+		\brief The constant controlling the relationship between # active infections
+		and clearance rate when not immune.
+		
+		If inactive, clearanceRate = 0.
+		If active and not immune:
+		clearanceRate = clearanceRateConstantNotImmune * nActiveInfections^clearanceRatePower
+	*/
+	( (Double)(clearanceRateConstantNotImmune) )
+
+	/**
+		\brief The power controlling the relationship between # active infections
+		and clearance rate when immune.
+		
+		If inactive, clearanceRate = 0.
+		If active and immune:
+		clearanceRate = clearanceRateConstantImmune * nActiveInfections^clearanceRatePower
+	*/
+	( (Double)(clearanceRateConstantImmune) )
+
+	/**
+		\brief The power controlling the relationship between # active infections
+		and clearance rate.
+	*/
+	( (Double)(clearanceRatePower) )
 )
 
 /**

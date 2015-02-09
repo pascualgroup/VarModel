@@ -59,22 +59,15 @@
 	// infections
 	"coinfectionReducesTransmission" : true,
 	
-	// Within-host parameters (will definitely change)
+	// Within-host parameters
 	"withinHost" : {
-		// Clearance rate before first activation
-		"clearanceRateInitial" : 0.001,
-		
-		// Clearance rate between activations
-		"clearanceRateMidCourse" : 0.01,
-		
-		// Infection activation rate
-		"activationRate" : 100,
-		
-		// Infection deactivation rate if host is immune
-		"deactivationRateImmune" : 100,
-		
-		// Infection deactivation rate if host is not immune
-		"deactivationRateNotImmune" : 0.02
+		"activationRateConstant" : 1.0,
+		"activationRatePower" : 0.0,
+		"deactivationRateConstant" : 1.0,
+		"deactivationRatePower" : 0.0,
+		"clearanceRateConstantNotImmune" : 1.0,
+		"clearanceRateConstantImmune" : 1.0,
+		"clearanceRatePower" : 0.0
 	},
 	
 	// Array of population parameters
@@ -82,7 +75,7 @@
 		// First population
 		{
 			// Population size
-			"size" : 1000,
+			"size" : 1000000,
 			
 			// Number of hosts to sample at sampling interval
 			"sampleSize" : 100,
