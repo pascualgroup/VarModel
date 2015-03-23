@@ -80,7 +80,8 @@ The build script chooses a compiler based on availability, preferring the Intel 
 
 ## Building code documentation
 
-There is some code documentation, mostly for parameters and database tables, written in the Doxygen format. To build the code documentation, you need to install [Doxygen](http://www.stack.nl/~dimitri/doxygen/). On Mac OS X, you can install the Doxygen app (binary) in the Applications folder and the script will find it. Otherwise, e.g. on Linux, make sure the `doxygen` command is in your path.
+There is some code documentation, mostly for parameters and database tables, written in the Doxygen format. To build the code documentation, you need to install [Doxygen](http://www.stack.nl/~dimitri/doxygen/). On Mac OS X, you can install the Doxygen app (binary) in the Applications folder and the script will find it. Otherwise, e.g. on Linux, make sure the `doxygen` command is in your path--if you install using your package
+manager, then this should happen automatically.
 
 You can build code documentation by running
 
@@ -89,6 +90,7 @@ You can build code documentation by running
 ```
 
 in the root directory. You can then view `doxygen/index.html` in your web browser.
+Descriptions of the parameter and database types are linked from the index page.
 
 ## Running the model
 
@@ -109,7 +111,7 @@ cd [path-to]/output
 This works well for parameter sweeps if a different directory is created for each model
 run using a custom script, and also works in a straightforward way with [runm](https://github.com/edbaskerville/runm).
 
-The run will create a single SQLite database as output, whose filename is specified in the parameters file (see "Output database" below).
+Each run will create a single SQLite database as output, whose filename is specified in the parameters file (see "Output database" below).
 
 ## Parameters file
 
@@ -183,6 +185,11 @@ Current database tables include:
 
 (and corresponding tables for "clinical immunity").
 
+Hosts are sampled every `sampleHostsEvery` units of simulation time.
+
+Transmission events are sampled every `sampleTransmissionEventEvery` *transmission events*: so if `sampleTransmissionEventEvery = 100`, the 100th, 200th, 300th, ...
+transmission events will be sampled.
+
 ## Code organization
 
 The code is object-oriented and mostly hierarchical. At the top level is an instance of the `Simulation` class, which contains collections of `Gene`, `Strain`, and `Population` objects. Each `Population` object contains a collection of `Host` objects, each of which contains current infections and immune history through `Infection` and `ImmuneHistory` objects. In other words, the simulation hierarchy is organized like this:
@@ -200,6 +207,10 @@ Simulation
 The relationships are not strictly hierarchical, since `Infection` and `ImmuneHistory` contain references to strains and genes, and during the simulation, interactions happen at multiple levels.
 
 Interactions are generally mediated using member function calls, but in some cases internal state may be accessed directly. That is, data hiding/encapsulation is not strictly enforced.
+
+Raw pointers are used in a number of places in the code. The code would use a bit more
+memory, but would be safer going forward, if they were entirely replaced with
+`shared_ptr` or `unique_ptr` in all cases.
 
 ## Event-based simulation architecture
 
@@ -236,7 +247,7 @@ A simulation follows these steps:
 		* Immigration (introduction) events, with rate `currentIntroductionRate * currentPopulationSize`, where `currentIntroductionRate` is a sinusoidal function of time.
 		* Birth events (if birth-death processes are uncoupled; demography details to be worked out)
 		* Death events (if birth-death processes are uncoupled)
-		* Within-host expression steps (TODO: expand this)
+		* Within-host events (see below)
 
 Individual var genes may be assigned different attributes:
 
@@ -252,4 +263,60 @@ Individual var genes may be assigned different attributes:
 * Reassort var genes between strains:
 	* Select pairs of strains to recombine, so that each pair has a constant probability of recombining. For each chosen pair, generate a daughter strain as a random reassortment of parent strains' genes.
 	* If `n` strains were picked up from source host, transmit `n` strains randomly sampled from the original strains and all generated daughter strains.
+
+
+### Within-host dynamics
+
+The within-host dynamics for a single infection look like this:
+
+```
+[LIVER STAGE] -> [VAR A INACTIVE] -> [VAR A ACTIVE] -> [VAR B INACTIVE] -> [VAR B ACTIVE] -> ...
+```
+
+
+#### Liver Stage
+
+The liver stage is always a fixed time period. During that period, the infection cannot be cleared.
+
+#### Activation
+
+During inactive stages, the activation rate is a function of the number of active infections in the host:
+
+activationRate = activationRateConstant * nActiveInfections^activationRatePower
+
+where activationRatePower <= 0.
+
+If activationRatePower == 0, then the activation rate is a constant.
+
+If activationRatePower < 0, then the activation rate is a monotonically decreasing function of nActiveInfections, with activationRate = infinity (immediate activation) if there are no active infections.
+
+#### Deactivation
+
+During active (expressed) stages, the deactivation rate is similarly a function of the number of active infections in the host, including this one:
+
+```
+deactivationRate = deactivationRateConstant * nActiveInfections^deactivationRatePower
+```
+
+where deactivationRatePower may be positive, negative, or zero.
+
+Not understanding the biology fully, I suspect `deactivationRatePower = 0` (constant deactivation rate) is probably the most sensible?
+
+#### Clearance
+
+Currently, clearance--which ends the infection course completely--can happen only when a var gene is active (expressed). The clearance rate varies with immunity to the var gene being expressed.
+
+If immune:
+
+```
+clearanceRateImmune = clearanceRateConstantImmune * nActiveInfections^clearanceRatePower
+```
+
+If not immune:
+
+```
+clearanceRateNotImmune = clearanceRateConstantNotImmune * nActiveInfections^clearanceRatePower
+```
+
+Presumably it would make sense for `clearanceRateConstantImmune` to be much larger than `clearanceRateConstantNotImmune`.
 
