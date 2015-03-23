@@ -324,3 +324,24 @@ clearanceRateNotImmune = clearanceRateConstantNotImmune * nActiveInfections^clea
 
 Presumably it would make sense for `clearanceRateConstantImmune` to be much larger than `clearanceRateConstantNotImmune`.
 
+
+## Modifying transmission and within-host dynamics
+
+The events related to within-host infection dynamics are handled by the `Infection` class, implemented in the `Infection.cpp` file.
+
+In order to modify the assumptions of the dynamics, it should be sufficient to modify
+the rate calculations in:
+* `Infection::transitionRate()`
+* `Infection::activationRate()`
+* `Infection::deactivationRate()`
+* `Infection::clearanceRate()`
+
+There are commented-out lines of code in the `activationRate()` function showing how to
+retrieve various state variables (host age, number of active infections, etc.) that might
+be useful for different assumptions of the dynamics.
+
+If significant changes are desired, it will probably be necessary to modify
+`SimParameters.h` as well.
+
+The calculation for transmission probability can similarly be modified:
+* `Infection::transmissionProbability()`
