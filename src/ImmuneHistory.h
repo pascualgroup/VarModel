@@ -41,6 +41,7 @@ public:
 	void prepareToDie();
 	
 	void write(Database & db, Table<ImmunityRow> & table);
+	void write(int64_t transmissionId, Database & db, Table<TransmissionImmunityRow> & table);
 	
 	std::unordered_set<GenePtr> genes;
 	std::unordered_map<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;

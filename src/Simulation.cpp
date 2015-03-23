@@ -55,6 +55,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	sampledHostImmunityTable("sampledHostImmunity"),
 	sampledHostClinicalImmunityTable("sampledHostClinicalImmunity"),
 	sampledTransmissionTable("sampledTransmissions"),
+	sampledTransmissionStrainTable("sampledTransmissionStrains"),
 	sampledTransmissionInfectionTable("sampledTransmissionInfections"),
 	sampledTransmissionImmunityTable("sampledTransmissionImmunity"),
 	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity")
@@ -146,6 +147,7 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledHostImmunityTable);
 	dbPtr->createTable(sampledHostClinicalImmunityTable);
 	dbPtr->createTable(sampledTransmissionTable);
+	dbPtr->createTable(sampledTransmissionStrainTable);
 	dbPtr->createTable(sampledTransmissionInfectionTable);
 	dbPtr->createTable(sampledTransmissionImmunityTable);
 	dbPtr->createTable(sampledTransmissionClinicalImmunityTable);
@@ -356,8 +358,32 @@ void Simulation::sampleHosts()
 	}
 }
 
-void Simulation::countTransmission()
+void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<StrainPtr> &strains)
 {
+	if((transmissionCount + 1) % parPtr->sampleTransmissionEventEvery == 0) {
+		TransmissionRow row;
+		row.time = getTime();
+		row.transmissionId = transmissionCount;
+		row.sourceHostId = srcHost.id;
+		row.targetHostId = dstHost.id;
+		dbPtr->insert(sampledTransmissionTable, row);
+		
+		for(auto & strainPtr : strains) {
+			TransmissionStrainRow row;
+			row.transmissionId = transmissionCount;
+			row.strainId = strainPtr->id;
+			dbPtr->insert(sampledTransmissionStrainTable, row);
+		}
+		
+		srcHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
+		dstHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
+		
+		srcHost.immunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
+		srcHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
+		dstHost.immunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
+		dstHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
+	}
+	
 	transmissionCount++;
 }
 

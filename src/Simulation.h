@@ -90,7 +90,7 @@ public:
 	void updateRates();
 	void sampleHosts();
 	
-	void countTransmission();
+	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
 	
 	bool verifyState();
 private:
@@ -131,10 +131,11 @@ private:
 	zppdb::Table<ImmunityRow> sampledHostImmunityTable;
 	zppdb::Table<ImmunityRow> sampledHostClinicalImmunityTable;
 	
-	zppdb::Table<SampledTransmissionRow> sampledTransmissionTable;
-	zppdb::Table<InfectionRow> sampledTransmissionInfectionTable;
-	zppdb::Table<ImmunityRow> sampledTransmissionImmunityTable;
-	zppdb::Table<ImmunityRow> sampledTransmissionClinicalImmunityTable;
+	zppdb::Table<TransmissionRow> sampledTransmissionTable;
+	zppdb::Table<TransmissionStrainRow> sampledTransmissionStrainTable;
+	zppdb::Table<TransmissionInfectionRow> sampledTransmissionInfectionTable;
+	zppdb::Table<TransmissionImmunityRow> sampledTransmissionImmunityTable;
+	zppdb::Table<TransmissionImmunityRow> sampledTransmissionClinicalImmunityTable;
 	
 	GenePtr createGene();
 	

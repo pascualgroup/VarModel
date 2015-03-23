@@ -116,7 +116,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 	\brief Type defining rows in `sampledTransmissions` table
 */
 ZPPDB_DEFINE_ROW_TYPE(
-	SampledTransmissionRow,
+	TransmissionRow,
 	
 	/**
 		\brief Time of sampled transmission
@@ -137,6 +137,88 @@ ZPPDB_DEFINE_ROW_TYPE(
 		\brief ID of target host
 	*/
 	( (Integer)(targetHostId) )
+)
+
+/**
+	\brief Type defining rows in `sampledTransmissionStrains` table
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+	TransmissionStrainRow,
+	
+	/**
+		\brief ID of sampled transmission
+	*/
+	( (Integer)(transmissionId) )
+
+	/**
+		\brief ID of transmitted strain
+	*/
+	( (Integer)(strainId) )
+)
+
+/**
+	\brief Type defining rows in `sampledTransmissionInfections` table
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+	TransmissionInfectionRow,
+	
+	/**
+		\brief Time of infection sampling
+	*/
+	( (Integer)(transmissionId) )
+	
+	/**
+		\brief Host ID
+	*/
+	( (Integer)(hostId) )
+	
+	/**
+		\brief Infection ID
+	*/
+	( (Integer)(infectionId) )
+	
+	/**
+		\brief Strain ID
+	*/
+	( (Integer)(strainId) )
+	
+	/**
+		\brief Index of gene within strain
+	*/
+	( (Integer)(geneIndex) )
+	
+	/**
+		Whether or not the gene is currently active
+	*/
+	( (Integer)(active) )
+)
+
+/**
+	\brief Type defining rows in `sampledTransmissionImmunity and
+	`sampledTransmissionClinicalImmunity` tables.
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+	TransmissionImmunityRow,
+	
+	/**
+		Transmission ID
+	*/
+	( (Integer)(transmissionId) )
+	
+	/**
+		Host ID
+	*/
+	( (Integer)(hostId) )
+	
+	/**
+		Gene ID
+	*/
+	( (Integer)(geneId) )
+	
+	/**
+		Loss rate of immunity
+	*/
+	( (Real)(lossRate) )
 )
 
 /**

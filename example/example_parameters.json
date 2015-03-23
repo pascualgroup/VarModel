@@ -19,13 +19,16 @@
 	"randomSeed" : 0,
 	
 	// End time of simulation
-	"tEnd" : 360.0,
+	"tEnd" : 360.0, // "year" that's divisible by 12 and 30
 	
 	// How often to update seasonal rates
 	"seasonalUpdateEvery" : 1.0,
 	
 	// How often to sample hosts
-	"sampleHostsEvery" : 30.0,
+	"sampleHostsEvery" : 5.0,
+	
+    // How often to sample a transmission event, in number of transmission events
+    "sampleTransmissionEventEvery" : 100,
 	
 	// Number of var genes in pool
 	"genePoolSize" : 1000,
@@ -38,7 +41,9 @@
 	
 	// Probability that a transmitted strain will be a recombinant
 	// (non-recombinant strains will be a random subset of original strains)
-	"pRecombinant" : 0.0,
+	"pRecombinant" : 0.05,
+	
+	
 	"tLiverStage" : 7.0,
 	
 	// Parameter used to determine effective distance, and thus contact rate,
@@ -50,7 +55,7 @@
 	// with uniform density within each discrete chunk
 	"hostLifetimeDistribution" : {
 		"x0" : 0.0,
-		"dx" : 3650.0, // 10 year discrete chunks
+		"dx" : 3600.0, // 10-"year" discrete chunks
 		"pdf" : [0.3, 0.3, 0.4] // 30% 0-10, 30% 10-20, 40% 20-30
 	},
 	
@@ -75,19 +80,19 @@
 		// First population
 		{
 			// Population size
-			"size" : 1000000,
+			"size" : 100000,
 			
 			// Number of hosts to sample at sampling interval
-			"sampleSize" : 100,
+			"sampleSize" : 1000,
 			
 			// Number of initial infections in the population
-			"nInitialInfections" : 100,
+			"nInitialInfections" : 1000,
 			
-			// Biting rate mean/amplitude
+			// Biting rate mean/amplitude (as fraction)/period/phase
 			"bitingRate" : {
-				"mean" : 1.0,
+				"mean" : 1.4,
 				"relativeAmplitude" : 0.05,
-				"period" : 365.0,
+				"period" : 360.0,
 				"phase" : 0.0
 			},
 			

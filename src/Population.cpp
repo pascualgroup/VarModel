@@ -17,7 +17,8 @@ using namespace zppsim;
 
 Population::Population(Simulation * simPtr, int64_t id) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
-	parPtr(&(simPtr->parPtr->populations[id]))
+	parPtr(&(simPtr->parPtr->populations[id])),
+	transmissionCount(0)
 {
 	// Create hosts
 	hosts.reserve(parPtr->size);
@@ -157,7 +158,7 @@ void Population::performBitingEvent()
 
 void Population::performImmigrationEvent()
 {
-	cerr << getTime() << ": immigration event, pop " << id << '\n';
+//	cerr << getTime() << ": immigration event, pop " << id << '\n';
 	int64_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
 	
 	bernoulli_distribution flipCoin(parPtr->pImmigrationIncludesNewGenes);
@@ -165,11 +166,11 @@ void Population::performImmigrationEvent()
 	
 	StrainPtr strain;
 	if(includesNewGenes) {
-		cerr << "Generating strain with new genes" << endl;
+//		cerr << "Generating strain with new genes" << endl;
 		strain = simPtr->generateRandomStrain(parPtr->nImmigrationNewGenes);
 	}
 	else {
-		cerr << "Generating strain with all old genes" << endl;
+//		cerr << "Generating strain with all old genes" << endl;
 		strain = simPtr->generateRandomStrain();
 	}
 	hosts[hostIndex]->receiveInfection(strain);
@@ -221,11 +222,6 @@ std::string Population::toString()
 	stringstream ss;
 	ss << "p" << id;
 	return ss.str();
-}
-
-void Population::countTransmission()
-{
-	simPtr->countTransmission();
 }
 
 /*** BITING EVENT ***/

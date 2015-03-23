@@ -89,6 +89,7 @@ public:
 	std::string toString();
 	
 	void write(Database & db, Table<InfectionRow> & table);
+	void write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
 	
 private:
 	double activationRate();

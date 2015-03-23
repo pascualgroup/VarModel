@@ -93,3 +93,15 @@ void ImmuneHistory::write(Database & db, Table<ImmunityRow> & table)
 		db.insert(table, row);
 	}
 }
+
+void ImmuneHistory::write(int64_t transmissionId, Database & db, Table<TransmissionImmunityRow> & table)
+{
+	TransmissionImmunityRow row;
+	row.transmissionId = transmissionId;
+	row.hostId = hostPtr->id;
+	for(auto & genePtr : genes) {
+		row.geneId = genePtr->id;
+		row.lossRate = lossEvents[genePtr]->getRate();
+		db.insert(table, row);
+	}
+}

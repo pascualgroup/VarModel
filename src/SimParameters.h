@@ -75,12 +75,12 @@ ZPPJSON_DEFINE_TYPE(
 		\brief Number of individuals in the population.
 	*/
 	( (Int64)(size) )
-
+	
 	/**
 		\brief Number of hosts to sample from population.
 	*/
 	( (Int64)(sampleSize) )
-
+	
 	/**
 		\brief Number of initial infections in population.
 	*/
@@ -303,6 +303,11 @@ ZPPJSON_DEFINE_TYPE(
 		\brief How often to sample hosts
 	*/
 	( (Double)(sampleHostsEvery) )
+	
+	/**
+		\brief How often to sample a transmission event, in number of transmission events.
+	*/
+	( (Int64)(sampleTransmissionEventEvery) )
 	
 	/**
 		\brief Number of genes in the global pool.

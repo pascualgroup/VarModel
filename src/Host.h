@@ -31,6 +31,7 @@ public:
 
 class Host
 {
+friend class Simulation;
 friend class Population;
 friend class DeathEvent;
 friend class Infection;
@@ -75,6 +76,7 @@ public:
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
 	void writeInfections(Database & db, Table<InfectionRow> & table);
+	void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
 	
 	std::string toString();
 private:

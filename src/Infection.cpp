@@ -145,11 +145,15 @@ double Infection::activationRate()
 	assert(!std::isinf(constant));
 	assert(constant > 0.0);
 	double power = simParPtr->withinHost.activationRatePower;
-	assert(activationRatePower <= 0.0);
+	assert(power <= 0.0);
 	assert(!std::isnan(power));
 	assert(!std::isinf(power));
 	
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
+	
+	if(power == 0.0) {
+		return constant;
+	}
 	
 	if(nActiveInfections == 0) {
 		return std::numeric_limits<double>::infinity();
@@ -229,6 +233,7 @@ double Infection::transmissionProbability()
 	if(simParPtr->coinfectionReducesTransmission) {
 		p /= hostPtr->getActiveInfectionCount();
 	}
+	
 	return p;
 }
 
@@ -243,6 +248,24 @@ void Infection::write(Database & db, Table<InfectionRow> & table)
 {
 	InfectionRow row;
 	row.time = hostPtr->getTime();
+	row.hostId = hostPtr->id;
+	row.infectionId = id;
+	row.strainId = strainPtr->id;
+	if(geneIndex == WAITING_STAGE) {
+		row.geneIndex.setNull();
+		row.active.setNull();
+	}
+	else {
+		row.geneIndex = geneIndex;
+		row.active = active;
+	}
+	db.insert(table, row);
+}
+
+void Infection::write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table)
+{
+	TransmissionInfectionRow row;
+	row.transmissionId = transmissionId;
 	row.hostId = hostPtr->id;
 	row.infectionId = id;
 	row.strainId = strainPtr->id;

@@ -134,6 +134,10 @@ void Host::transmitTo(Host & dstHost)
 		}
 	}
 	
+	if(originalStrains.size() == 0) {
+		return;
+	}
+	
 	vector<StrainPtr> strainsToTransmit;
 	if(originalStrains.size() > 1) {
 		// Take each original strain with probability 1.0 - pRecombinant
@@ -165,13 +169,12 @@ void Host::transmitTo(Host & dstHost)
 	for(auto & strainPtr : strainsToTransmit) {
 		dstHost.receiveInfection(strainPtr);
 	}
+	popPtr->simPtr->recordTransmission(*this, dstHost, strainsToTransmit);
 }
 
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
 	assert(strainPtr->size() > 0);
-	
-	popPtr->countTransmission();
 	
 	rng_t * rngPtr = getRngPtr();
 	double time = popPtr->getTime();
@@ -298,6 +301,13 @@ void Host::writeInfections(Database & db, Table<InfectionRow> & table)
 {
 	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
 		itr->write(db, table);
+	}
+}
+
+void Host::writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table)
+{
+	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
+		itr->write(transmissionId, db, table);
 	}
 }
 

@@ -73,7 +73,7 @@ public:
 	
 	std::string toString();
 	
-	void countTransmission();
+	void recordTransmission(Host & srcHost, Host & dstHost, Strain & strain);
 	
 private:
 	Simulation * simPtr;
@@ -87,6 +87,8 @@ private:
 	std::unique_ptr<ImmigrationEvent> immigrationEvent;
 	
 	int64_t drawSourcePopulation();
+	
+	int64_t transmissionCount;
 };
 
 #endif /* defined(__malariamodel__Population__) */
