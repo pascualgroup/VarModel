@@ -155,7 +155,11 @@ The file `example/example_parameters.json` should currently contain all paramete
 
 ## Output database
 
-The output database is in SQLite 3 format, which can be easily accessed from R using the `RSQLite` library or from Python using the built-in `sqlite3` library. Databases
+The output database is in SQLite 3 format, which can be easily accessed from R using the `RSQLite` library or from Python using the built-in `sqlite3` library. In Matlab, the
+[`mksqlite`](http://sourceforge.net/projects/mksqlite/) package does the trick: 
+
+I also recommend using this graphical SQLite browser, especially while testing, to
+visually see what's going on: [http://sourceforge.net/projects/mksqlite/](http://sqlitebrowser.org)
 
 Output database tables are defined using a similar macro format to parameters, e.g.,
 
