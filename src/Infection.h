@@ -47,6 +47,24 @@ public:
 	virtual void performEvent(zppsim::EventQueue & queue);
 };
 
+//adding mutation event for each infection
+class MutationEvent : public InfectionProcessEvent
+{
+public:
+	MutationEvent(std::list<Infection>::iterator infectionItr,
+                   double rate, double initTime, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
+};
+
+//adding ectopic recombination event for each infection
+class RecombinationEvent : public InfectionProcessEvent
+{
+public:
+	RecombinationEvent(std::list<Infection>::iterator infectionItr,
+                  double rate, double initTime, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
+};
+
 class Infection
 {
 public:
@@ -65,7 +83,9 @@ public:
 	
 	std::unique_ptr<TransitionEvent> transitionEvent;
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
-	
+    std::unique_ptr<MutationEvent> mutationEvent;
+    std::unique_ptr<RecombinationEvent> recombinationEvent;
+    
 	bool isActive();
 	GenePtr getCurrentGene();
 	int64_t getCurrentGeneId();
@@ -75,7 +95,7 @@ public:
 	double getAgeAtTransitionTime();
 	
 	void performTransition();
-	
+    
 	void updateTransitionRate();
 	bool transitionAffectsAllInfections();
 	

@@ -48,6 +48,34 @@ ZPPDB_DEFINE_ROW_TYPE(
 		\brief Rate of loss of "clinical immunity"
 	*/
 	( (Real)(clinicalImmunityLossRate) )
+    
+)
+
+/**
+ \brief Type defining rows in `loci` table
+ */
+ZPPDB_DEFINE_ROW_TYPE(
+    LociRow,
+                      
+   /**
+   \brief Unique identifier of the gene
+   */
+   ( (Integer)(geneId) )
+
+   /**
+   \brief Functional gene or not
+   */
+   ( (Integer)(functionality) )
+                      
+    /**
+    Expression index of a locus identified by this row
+    */
+    ( (Integer)(alleleIndex) )
+    
+    /**
+    Unique identifier of the allele at this index
+    */
+    ( (Integer)(alleleId) )
 )
 
 /**

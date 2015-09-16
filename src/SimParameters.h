@@ -53,9 +53,9 @@ ZPPJSON_DEFINE_TYPE(
 	( (Double)(x0) )
 	
 	/**
-		\brief Discretization of PDF.
+		\brief Discretization of PDF, vector of intervals of dx.
 	*/
-	( (Double)(dx) )
+	( (Array<Double>)(dx) )
 	
 	/**
 		\brief Relative probability of each discrete segment of PDF.
@@ -140,8 +140,8 @@ ZPPJSON_DEFINE_TYPE(
 	
 	/**
 		\brief Whether or not to divide transmissibility by #infections ("cost")
-	*/
-	( (Bool)(coinfectionsReduceTransmission) )
+	found not used
+	( (Bool)(coinfectionsReduceTransmission) )*/
 
 	/**
 		\brief The constant controlling the relationship between # active infections
@@ -203,7 +203,16 @@ ZPPJSON_DEFINE_TYPE(
 */
 ZPPJSON_DEFINE_TYPE(
 	GeneParameters,
-	
+	/**
+        \brief number of loci per gene
+    */
+     ( (Int64)(locusNumber) )
+    
+    /**
+        \brief number of alleles per locus
+     */
+     ( (Array<Double>)(alleleNumber) )
+    
 	/**
 		\brief Transmissibility of genes.
 		
@@ -234,8 +243,14 @@ ZPPJSON_DEFINE_TYPE(
 		`mutationWeights` is normalized so that
 		
 		`sum(mutationWeights[i][...])` = 1.
-	*/
+
 	( (Array<Array<Double>>)(mutationWeights) )
+    */
+    /**
+      \brief Relative probabilities of mutation rates of each locus within a gene
+     */
+     ( (Array<Double>)(mutationWeights) )
+     
 )
 
 /**
@@ -293,6 +308,10 @@ ZPPJSON_DEFINE_TYPE(
 		\brief Whether or not to write out all genes to database
 	*/
 	( (Bool)(outputGenes) )
+    /**
+     \brief Whether or not to write out all loci profiles to database
+    */
+    ( (Bool)(outputLoci) )
 	
 	/**
 		\brief Whether or not to write out all strains to database
@@ -324,6 +343,16 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (Double)(pMutation) )
 	
+    /**
+     \brief Probability mitotic gene conversion/recombination, per transmission events
+    */
+    ( (Double)(pIntraRecomb) )
+    
+    /**
+     \brief percentage of gene conversion in mitotic recombination
+    */
+    ( (Double)(percConversion))
+                   
 	/**
 		\brief Probability that a transmitted strain will be a recombinant.
 	*/

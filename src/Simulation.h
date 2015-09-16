@@ -7,8 +7,9 @@
 #include "Population.h"
 #include "Strain.h"
 #include "Gene.h"
+#include "Loci.h"
 #include "DiscretizedDistribution.h"
-
+#include "random"
 #include "zppdb.hpp"
 #include "zppsim_random.hpp"
 
@@ -78,11 +79,16 @@ public:
 	GenePtr drawRandomGene();
 	GenePtr drawRandomGeneExcept(int64_t geneId);
 	GenePtr mutateGene(GenePtr const & srcGene);
+	//GenePtr mutateGene2(GenePtr const & srcGene);
+    int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
+    double parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2);
+    std::vector<GenePtr> ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion);
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr generateRandomStrain(int64_t nNewGenes);
 	StrainPtr mutateStrain(StrainPtr & strain);
+    StrainPtr ectopicRecStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
 	Host * drawDestinationHost(int64_t srcPopId);
@@ -117,12 +123,22 @@ private:
 	
 	// Gene tracking
 	std::vector<GenePtr> genes;
-	std::vector<std::discrete_distribution<>> mutationDistributions;
+	//std::vector<std::discrete_distribution<>> mutationDistributions; hqx change
+    // get mutation weight distribution of each locus within a gene
+    std::vector<double> mutationDistributions = parPtr->genes.mutationWeights.toDoubleVector();
 	
+    // Loci tracking
+    std::vector<LociPtr> lociVec;
+    size_t locusNumber = parPtr->genes.locusNumber;
+    std::vector<int64_t> alleleNumber;
+
+    
 	int64_t transmissionCount;
+    int64_t mutationCount;
 	
 	// Database tables
 	zppdb::Table<GeneRow> genesTable;
+	zppdb::Table<LociRow> lociTable;
 	zppdb::Table<StrainRow> strainsTable;
 	zppdb::Table<HostRow> hostsTable;
 	

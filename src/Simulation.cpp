@@ -39,7 +39,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	hostLifetimeDist(
 		parPtr->hostLifetimeDistribution.pdf.toDoubleVector(),
 		parPtr->hostLifetimeDistribution.x0,
-		parPtr->hostLifetimeDistribution.dx
+		parPtr->hostLifetimeDistribution.dx.toDoubleVector()
 	),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
@@ -47,7 +47,9 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	nextHostId(0),
 	nextStrainId(0),
 	transmissionCount(0),
+    mutationCount(0),
 	genesTable("genes"),
+    lociTable("loci"),
 	strainsTable("strains"),
 	hostsTable("hosts"),
 	sampledHostsTable("sampledHosts"),
@@ -61,6 +63,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity")
 {
 	// Construct transition probability distributions for genes
+    /** turned off by hqx, new way of mutation, transition prob dist no use
 	if(parPtr->genes.mutationWeights.size() > 1) {
 		assert(parPtr->genes.mutationWeights.size() == parPtr->genePoolSize);
 		for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
@@ -69,8 +72,9 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 			mwi[i] = 0.0;
 			mutationDistributions.emplace_back(mwi.begin(), mwi.end());
 		}
-	}
+	}*/
 	
+   
 	dbPtr->beginTransaction();
 	
 	initializeDatabaseTables();
@@ -97,11 +101,64 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 			immunityLossRate,
 			clinicalImmunityLossRate,
 			parPtr->outputGenes,
-			*dbPtr,
+            *dbPtr,
 			genesTable
 		));
 	}
+
+
 	
+    // Create loci for each gene in the gene pool, hqx
+    lociVec.reserve(parPtr->genePoolSize);
+    Array<Double> vals = parPtr->genes.alleleNumber;
+	if(vals.size() == 1) {
+        for(size_t i =0; i<locusNumber; ++i) {
+            alleleNumber.push_back((int64_t)(vals[0]));
+        }
+	}
+	else {
+		assert(vals.size() == locusNumber);
+        for(size_t i =0; i<locusNumber; ++i) {
+            alleleNumber.push_back((int64_t)(vals[i]));
+        }
+	}
+    assert(alleleNumber.size()==size_t(locusNumber));
+    std::vector<int64_t> Alleles(locusNumber);
+    for(int64_t j = 0; j < locusNumber; j++) {
+        std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
+        Alleles[j] = unif(rng);
+        //cout<<Alleles[j]<<" ";
+    }
+    //cout<<"\n";
+    lociVec.emplace_back(new Loci(int64_t(0),
+                                  Alleles,true,
+                                  parPtr->outputLoci,
+                                  *dbPtr,
+                                  lociTable));
+    int64_t i =0;
+    while(i<parPtr->genePoolSize-1) {
+
+        std::vector<int64_t> Alleles(locusNumber);
+        for(int64_t j = 0; j < locusNumber; j++) {
+            std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
+            Alleles[j] = unif(rng);
+            //cout<<Alleles[j]<<" ";
+        }
+        //cout<<"\n";
+        int64_t checkId = recLociId(Alleles);
+        if (checkId > i) {
+            i++;
+            lociVec.emplace_back(new Loci(i,
+                                          Alleles,true,
+                                          parPtr->outputLoci,
+                                          *dbPtr,
+                                          lociTable));
+            
+        }
+    }
+
+    
+                
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
 	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
@@ -140,6 +197,7 @@ GenePtr Simulation::createGene()
 void Simulation::initializeDatabaseTables()
 {
 	dbPtr->createTable(genesTable);
+	dbPtr->createTable(lociTable);
 	dbPtr->createTable(strainsTable);
 	dbPtr->createTable(hostsTable);
 	dbPtr->createTable(sampledHostsTable);
@@ -325,21 +383,31 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 	return getStrain(daughterGenes);
 }
 
+//new mutation mode -> change function "mutateGene"
+//select one gene from the strain to mutate
 StrainPtr Simulation::mutateStrain(StrainPtr & strain)
 {
-	vector<int64_t> indices = drawMultipleBernoulli(rng, strain->size(), parPtr->pMutation);
-	if(indices.size() == 0) {
-		return strain;
-	}
-	else {
-		vector<GenePtr> genes = strain->getGenes();
-		for(int64_t index : indices) {
-//			cerr << "start gene: " << genes[index]->id << '\n';
-			genes[index] = mutateGene(genes[index]);
-//			cerr << "end gene: " << genes[index]->id << '\n';
-		}
-		return getStrain(genes);
-	}
+	int64_t index = drawUniformIndex(rng,strain->size());
+    vector<GenePtr> genes = strain->getGenes();
+    genes[index] = mutateGene(genes[index]);
+    mutationCount++;
+    return getStrain(genes);
+}
+
+// randomly select two genes in the strain, and recombine
+StrainPtr Simulation::ectopicRecStrain(StrainPtr & strain)
+{
+    vector<int64_t> indices = drawUniformIndices(rng,strain->size(),int64_t(2),false);
+    std::vector<GenePtr> curStrainGenes = strain->getGenes();
+    bernoulli_distribution flipCoin(parPtr->percConversion);
+    bool isConversion = flipCoin(rng);
+    //if(!isConversion) {
+    //    cout<<"not conversion"<<endl;
+    //}
+    vector<GenePtr> genesPtrAfterEctopicRecomb = ectopicRecomb(curStrainGenes[indices[0]], curStrainGenes[indices[1]],isConversion);
+    curStrainGenes[indices[0]] = genesPtrAfterEctopicRecomb[0];
+    curStrainGenes[indices[1]] = genesPtrAfterEctopicRecomb[1];
+    return getStrain(curStrainGenes);
 }
 
 void Simulation::updateRates()
@@ -389,7 +457,12 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 
 GenePtr Simulation::drawRandomGene()
 {
-	int64_t geneIndex = drawUniformIndex(rng, genes.size());
+    bool func = false;
+    int64_t geneIndex;
+    while(!func) {
+        geneIndex = drawUniformIndex(rng, genes.size());
+        func = lociVec[geneIndex]->functionality;
+    }
 	return genes[geneIndex];
 }
 
@@ -399,6 +472,117 @@ GenePtr Simulation::drawRandomGeneExcept(int64_t geneId)
 	return genes[newGeneId];
 }
 
+GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
+    //cout<<"mutate gene\n";
+    int64_t srcLociId = srcGenePtr->id;
+    std::vector<int64_t> srcLociAlleles = lociVec[srcLociId]->Alleles;
+    //not using mutationDistributions anymore, mutation weights are locus specific weight, sum(weight) = 1
+    //to do: redefine mutationDistributions
+    size_t mutateLocusId;
+    if(mutationDistributions.size() == 0) {
+        mutateLocusId = drawUniformIndex(rng, srcLociAlleles.size());
+    }else{
+        assert(mutationDistributions.size()==srcLociAlleles.size());
+        mutateLocusId = sampleDiscreteLinearSearch(rng, mutationDistributions);
+        //cout<<mutateLocusId<<endl;
+    }
+    //mutate allele
+    alleleNumber[mutateLocusId]++;
+    std::vector<int64_t> newLoci = srcLociAlleles;
+    newLoci[mutateLocusId] = alleleNumber[mutateLocusId]-1;
+    //cout<<newLoci[mutateLocusId]<<endl;
+    int64_t newGeneId = genes.size();
+    lociVec.emplace_back(new Loci(newGeneId,
+                                  newLoci,true,parPtr->outputLoci,*dbPtr,lociTable));
+    return createGene();
+}
+
+//test whether a new allele vector already exist in the lociVec
+//return the id number of the vector, all the new gene id
+int64_t Simulation::recLociId(std::vector<int64_t> & recGeneAlleles) {
+    for (LociPtr j : lociVec) {
+        if (recGeneAlleles == j->Alleles) {
+            return j->id;
+        }
+    }
+    return lociVec.size();
+}
+
+double Simulation::parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2) {
+    double pSim = 0;
+    std::vector<int64_t> pGene1Alleles = lociVec[pGene1->id]->Alleles;
+    std::vector<int64_t> pGene2Alleles = lociVec[pGene2->id]->Alleles;
+    for (int64_t i=0; i<locusNumber; ++i) {
+        if (pGene1Alleles[i] == pGene2Alleles[i]) {
+            pSim += 1./locusNumber;
+        }
+    }
+    //cout<<pSim<<endl;
+    return pSim>0 ? pSim:0.01;
+}
+
+//recombine or conversion of two parent genes, return gene pointers of the two new genes
+std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion) {
+    //cout<<"ectopic recombine gene\n";
+    std::vector<GenePtr> returnGenes;
+    returnGenes.push_back(pGene1);
+    returnGenes.push_back(pGene2);
+    int64_t breakPoint = 1 + drawUniformIndex(rng,locusNumber-2);
+    std::vector<int64_t> pGene1Alleles = lociVec[pGene1->id]->Alleles;
+    std::vector<int64_t> pGene2Alleles = lociVec[pGene2->id]->Alleles;
+    bernoulli_distribution flipCoin(parentsSimilarity(pGene1,pGene2));
+    bool recFunction[] = {flipCoin(rng),flipCoin(rng)};//whether functional for the two recombinants;
+    std::vector<int64_t> recGene1Alleles(locusNumber);
+    std::vector<int64_t> recGene2Alleles(locusNumber);
+    for (int64_t i=0; i<locusNumber; ++i) {
+        if (i<breakPoint) {
+            recGene1Alleles[i] = pGene1Alleles[i];
+            recGene2Alleles[i] = pGene2Alleles[i];
+        } else {
+            recGene1Alleles[i] = pGene2Alleles[i];
+            recGene2Alleles[i] = pGene1Alleles[i];
+        }
+    }
+    //test whether the new recombinant is already in lociVec matrix
+    int64_t recId[] = {recLociId(recGene1Alleles),recLociId(recGene2Alleles)};
+    if (recId[0] == lociVec.size()) {
+    //get whether the new recombinant is functional
+        lociVec.emplace_back(new Loci(recId[0],
+                                      recGene1Alleles,recFunction[0],parPtr->outputLoci,*dbPtr,lociTable));
+        GenePtr recGenePtr = createGene();
+        recId[1]++;
+        if (recFunction[0]) {
+           returnGenes[0] = recGenePtr;
+        }
+    } else {
+        if (lociVec[recId[0]]->functionality) {
+            returnGenes[0] = genes[recId[0]];
+        }
+    }
+    if (isConversion) {
+        return returnGenes;
+        //cout<<returnGenes[0]->id<<endl;
+        //cout<<returnGenes[1]->id<<endl;
+    }else{
+        if(recId[1] == lociVec.size()) {
+            lociVec.emplace_back(new Loci(recId[1],
+                                          recGene2Alleles,recFunction[1],parPtr->outputLoci,*dbPtr,lociTable));
+            GenePtr recGenePtr = createGene();
+            if (recFunction[1]) {
+                returnGenes[1] = recGenePtr;
+            }
+        } else {
+            if (lociVec[recId[1]]->functionality) {
+                returnGenes[1] = genes[recId[1]];
+            }
+        }
+        //cout<<returnGenes[0]->id<<endl;
+        //cout<<returnGenes[1]->id<<endl;
+        
+        return returnGenes;
+    }
+}
+/**
 GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 	int64_t srcGeneId = srcGenePtr->id;
 	
@@ -414,7 +598,7 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 		return genes[mutationDistributions[srcGeneId](rng)];
 	}
 }
-
+*/
 
 StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 {
@@ -440,6 +624,7 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 	}
 	return strainPtr;
 }
+
 
 RateUpdateEvent::RateUpdateEvent(Simulation * simPtr, double initialTime, double period) :
 	PeriodicEvent(initialTime, period), simPtr(simPtr)

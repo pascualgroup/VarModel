@@ -25,6 +25,7 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	for(int64_t i = 0; i < parPtr->size; i++) {
 		int64_t hostId = simPtr->nextHostId++;
 		double lifetime = simPtr->drawHostLifetime();
+        //cout<<lifetime<<endl;
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
 		
@@ -156,6 +157,7 @@ void Population::performBitingEvent()
 	srcHostPtr->transmitTo(*dstHostPtr);
 }
 
+//disable immigration first
 void Population::performImmigrationEvent()
 {
 //	cerr << getTime() << ": immigration event, pop " << id << '\n';

@@ -24,6 +24,10 @@ void Infection::prepareToEnd()
 {
 	hostPtr->removeEvent(transitionEvent.get());
 	hostPtr->removeEvent(clearanceEvent.get());
+    //now also remove the mutation Events
+    hostPtr->removeEvent(mutationEvent.get());
+    //now also remove the recombination events
+    hostPtr->removeEvent(recombinationEvent.get());
 }
 
 GenePtr Infection::getCurrentGene()
@@ -189,7 +193,9 @@ double Infection::clearanceRate()
 		return 0.0;
 	}
 	// Gene active: clearance rate depends on immunity
-	else if(!active) {
+    // ??Ed's bug??
+	//else if(!active) {
+    else if(active) {
 		double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
 		assert(!std::isnan(clearanceRatePower));
 		assert(!std::isinf(clearanceRatePower));
@@ -208,7 +214,7 @@ double Infection::clearanceRate()
 		
 		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
 	}
-	// Gene active: clearance rate = 0
+	// Gene inactive: clearance rate = 0
 	else {
 		return 0.0;
 	}
@@ -318,6 +324,20 @@ ClearanceEvent::ClearanceEvent(
 {
 }
 
+MutationEvent::MutationEvent(
+                               std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+                               ) :
+InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
+RecombinationEvent::RecombinationEvent(
+                             std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+                             ) :
+InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
 void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
 	// If this is the final deactivation, then it's equivalent to clearing
@@ -337,3 +357,14 @@ void ClearanceEvent::performEvent(zppsim::EventQueue &queue)
 	infectionItr->hostPtr->clearInfection(infectionItr);
 }
 
+void MutationEvent::performEvent(zppsim::EventQueue &queue)
+{
+    infectionItr->hostPtr->hstMutateStrain(infectionItr);
+    //cout<<"mutated"<<endl;
+}
+
+void RecombinationEvent::performEvent(zppsim::EventQueue &queue)
+{
+    infectionItr->hostPtr->RecombineStrain(infectionItr);
+    //cout<<"recomb"<<endl;
+}

@@ -45,6 +45,7 @@
 		69BEDEBB1A1BBF4B00A08D9F /* SimParameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */; };
 		69BEDEBC1A1BBF4F00A08D9F /* SimParameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */; };
 		69BEDEBF1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69BEDEBE1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp */; };
+		99A06D1D1B8BD4B300B0AF7F /* Loci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 99A06D1B1B8BD4B300B0AF7F /* Loci.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -129,6 +130,8 @@
 		69BEE5C91905A30D00E39AA1 /* Population.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Population.h; sourceTree = "<group>"; };
 		69C4AD7318EC77D300AEB45B /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = catch.hpp; path = catch/single_include/catch.hpp; sourceTree = SOURCE_ROOT; };
 		69CA59191A1D54BB00BF7F27 /* HashPair.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = HashPair.hpp; path = zppsim/src/HashPair.hpp; sourceTree = "<group>"; };
+		99A06D1B1B8BD4B300B0AF7F /* Loci.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Loci.cpp; sourceTree = "<group>"; };
+		99A06D1C1B8BD4B300B0AF7F /* Loci.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Loci.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -189,6 +192,8 @@
 				694E202418EF70AD0000D563 /* Gene.cpp */,
 				69BEDEBD1A1BD8C700A08D9F /* DiscretizedDistribution.h */,
 				69BEDEBE1A1BD8DE00A08D9F /* DiscretizedDistribution.cpp */,
+				99A06D1B1B8BD4B300B0AF7F /* Loci.cpp */,
+				99A06D1C1B8BD4B300B0AF7F /* Loci.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -370,6 +375,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99A06D1D1B8BD4B300B0AF7F /* Loci.cpp in Sources */,
 				69BEDEAD1A1AB66A00A08D9F /* Population.cpp in Sources */,
 				69BEDEAF1A1AB66A00A08D9F /* Infection.cpp in Sources */,
 				69BEDEB11A1AB66A00A08D9F /* Strain.cpp in Sources */,

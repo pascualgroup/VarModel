@@ -128,8 +128,7 @@ void Host::transmitTo(Host & dstHost)
 			bernoulli_distribution flipCoin(infItr->transmissionProbability());
 			if(flipCoin(*rngPtr)) {
 				originalStrains.push_back(
-					popPtr->simPtr->mutateStrain(infItr->strainPtr)
-				);
+					infItr->strainPtr);
 			}
 		}
 	}
@@ -212,6 +211,15 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 		addEvent(infectionItr->transitionEvent.get());
 	}
 	
+    //Create a mutation event, rate equals pMutation * genesPerStrain
+    infectionItr->mutationEvent = unique_ptr<MutationEvent>(new MutationEvent(infectionItr,popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain,time,*rngPtr));
+    addEvent(infectionItr->mutationEvent.get());
+
+    //Create a ectopic recombination event, rate equals pIntraRecomb * C(genesPerStrain,2)
+    int64_t numGenes = popPtr->simPtr->parPtr->genesPerStrain;
+    infectionItr->recombinationEvent = unique_ptr<RecombinationEvent>(new RecombinationEvent(infectionItr,popPtr->simPtr->parPtr->pIntraRecomb * numGenes * (numGenes -1)/2,time,*rngPtr));
+    addEvent(infectionItr->recombinationEvent.get());
+
 	// Create a clearance event
 	// (rate will depend on state as determined in clearanceRate()
 	// and may be zero)
@@ -260,6 +268,15 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	if(shouldUpdateAllRates) {
 		updateInfectionRates();
 	}
+}
+
+void Host::hstMutateStrain(std::list<Infection>::iterator infectionItr)
+{
+    infectionItr->strainPtr = popPtr->simPtr->mutateStrain(infectionItr->strainPtr);
+}
+
+void Host::RecombineStrain(std::list<Infection>::iterator infectionItr) {
+    infectionItr->strainPtr = popPtr->simPtr->ectopicRecStrain(infectionItr->strainPtr);
 }
 
 double Host::getTime()
