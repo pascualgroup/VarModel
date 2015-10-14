@@ -189,7 +189,7 @@ double Infection::clearanceRate()
 		return 0.0;
 	}
 	// Gene active: clearance rate depends on immunity
-	else if(!active) {
+	else if(active) {
 		double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
 		assert(!std::isnan(clearanceRatePower));
 		assert(!std::isinf(clearanceRatePower));
@@ -208,7 +208,7 @@ double Infection::clearanceRate()
 		
 		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
 	}
-	// Gene active: clearance rate = 0
+	// Gene inactive: clearance rate = 0
 	else {
 		return 0.0;
 	}
