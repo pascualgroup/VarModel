@@ -6,6 +6,8 @@
 //  Copyright (c) 2014 Ed Baskerville. All rights reserved.
 //
 
+//  change to immunity based on epitope/alleles, hqx
+
 #include "ImmuneHistory.h"
 #include "Host.h"
 
@@ -27,10 +29,23 @@ void ImmunityLossEvent::performEvent(zppsim::EventQueue & queue)
 	immHistPtr->loseImmunity(genePtr);
 }
 
+/*** AlleleImmuneLossEvent function implementations ***/
+/*
+AlleleImmuneLossEvent::AlleleImmuneLossEvent(ImmuneHistory * immHistPtr, int64_t & locusId, int64_t & AlleleId,
+                                     double rate, double initTime) :
+RateEvent(rate, initTime, *immHistPtr->hostPtr->getRngPtr()),
+immHistPtr(immHistPtr), locusId(locusId),AlleleId(AlleleId)
+{
+}
 
+void AlleleImmuneLossEvent::performEvent(zppsim::EventQueue & queue)
+{
+	immHistPtr->loseAlleleImmune(locusId,AlleleId);
+}
+*/
 /*** ImmuneHistory function implementations ***/
 
-ImmuneHistory::ImmuneHistory(Host * hostPtr, bool clinical) : hostPtr(hostPtr), clinical(clinical)
+ImmuneHistory::ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber) : hostPtr(hostPtr), clinical(clinical),locusNumber(locusNumber)
 {
 }
 
@@ -53,6 +68,64 @@ void ImmuneHistory::gainImmunity(GenePtr genePtr)
 	}
 }
 
+void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr, LociPtr lociPtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table)
+{
+    vector<int64_t> geneAlleles = lociPtr->Alleles;
+    if(immuneAlleles.empty()) { //construct a list with immuned alleles
+        for (int64_t i=0; i<locusNumber;i++) {
+            std::unordered_map<int64_t,int64_t> tempMap({{geneAlleles[i],1}});
+            immuneAlleles.push_back(tempMap);
+        }
+    }else{
+        for (int64_t i=0; i<locusNumber;i++) {
+            if(immuneAlleles[i].find(geneAlleles[i])==immuneAlleles[i].end()) {
+                immuneAlleles[i][geneAlleles[i]] = 1;
+                if(writeToDatabase) {
+                    AlleleImmunityRow row;
+                    row.time = hostPtr->getTime();
+                    row.hostId = hostPtr->id;
+                    row.locusIndex = i;
+                    row.alleleId = geneAlleles[i];
+                    db.insert(table, row);
+                }
+                    
+            }else{
+                immuneAlleles[i][geneAlleles[i]] ++;
+            }
+        }
+    }
+    hostPtr->updateInfectionRates();
+    
+}
+
+/*
+void ImmuneHistory::setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate) {
+    assert(alleleLossEvents[locusId].find(AlleleId) == alleleLossEvents[locusId].end());
+    AlleleImmuneLossEvent * ilEvent = new AlleleImmuneLossEvent(
+                                                        this, locusId, AlleleId,lossrate, hostPtr->getTime());
+    alleleLossEvents[locusId][AlleleId] = unique_ptr<AlleleImmuneLossEvent>(ilEvent);
+    hostPtr->addEvent(ilEvent);
+    
+}
+ */
+
+double ImmuneHistory::checkGeneImmunity(LociPtr lociPtr) {
+    vector<int64_t> geneAlleles = lociPtr->Alleles;
+    int64_t immuneLevel = locusNumber;
+    if(immuneAlleles.empty()) {
+        return 0;
+    }else{
+        for (int64_t i=0; i<locusNumber;i++) {
+            if(immuneAlleles[i].find(geneAlleles[i])==immuneAlleles[i].end()) {
+                immuneLevel--;
+            }
+        }
+        double immuneFraction = (double)immuneLevel/(double)locusNumber;
+        //cout<<immuneFraction<<endl;
+        return immuneFraction;
+    }
+}
+
 void ImmuneHistory::loseImmunity(GenePtr genePtr)
 {
 	// Remove immunity
@@ -70,6 +143,25 @@ void ImmuneHistory::loseImmunity(GenePtr genePtr)
 	hostPtr->updateInfectionRates();
 }
 
+/*
+void ImmuneHistory::loseAlleleImmune(int64_t & locusId,int64_t & AlleleId)
+{
+	// Remove allele immunity
+	auto itr1 = immuneAlleles[locusId].find(AlleleId);
+	assert(itr1 != immuneAlleles[locusId].end());
+	immuneAlleles[locusId].erase(itr1);
+	
+	// Remove immunity loss event
+	auto itr2 = alleleLossEvents[locusId].find(AlleleId);
+	assert(itr2 != alleleLossEvents[locusId].end());
+	AlleleImmuneLossEvent * ilEvent = itr2->second.get();
+	hostPtr->removeEvent(ilEvent);
+	alleleLossEvents[locusId].erase(itr2);
+	
+	hostPtr->updateInfectionRates();
+}
+*/
+
 bool ImmuneHistory::isImmune(GenePtr genePtr)
 {
 	return genes.find(genePtr) != genes.end();
@@ -80,6 +172,7 @@ void ImmuneHistory::prepareToDie()
 	for(auto itr = lossEvents.begin(); itr != lossEvents.end(); itr++) {
 		hostPtr->removeEvent(itr->second.get());
 	}
+    
 }
 
 void ImmuneHistory::write(Database & db, Table<ImmunityRow> & table)

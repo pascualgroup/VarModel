@@ -111,6 +111,10 @@ ZPPDB_DEFINE_ROW_TYPE(
 	*/
 	( (Integer)(hostId) )
 
+    /**
+    Population id for the host
+    */
+    ( (Integer)(popId) )
 	/**
 		Host birth time
 	*/
@@ -147,11 +151,6 @@ ZPPDB_DEFINE_ROW_TYPE(
 	TransmissionRow,
 	
 	/**
-		\brief Time of sampled transmission
-	*/
-	( (Real)(time) )
-
-	/**
 		\brief ID of sampled transmission
 	*/
 	( (Integer)(transmissionId) )
@@ -172,7 +171,10 @@ ZPPDB_DEFINE_ROW_TYPE(
 */
 ZPPDB_DEFINE_ROW_TYPE(
 	TransmissionStrainRow,
-	
+	/**
+        \brief time
+    */
+     ((Real)(time))
 	/**
 		\brief ID of sampled transmission
 	*/
@@ -314,6 +316,28 @@ ZPPDB_DEFINE_ROW_TYPE(
 		Loss rate of immunity
 	*/
 	( (Real)(lossRate) )
+)
+
+/**
+ \brief Type defining rows `alleleImmunity` columns.
+ */
+ZPPDB_DEFINE_ROW_TYPE(
+    AlleleImmunityRow,
+    /** Time of immunity occurred
+     */
+    ((Real)(time))
+    /**
+    Host ID
+    */
+    ((Integer)(hostId))
+    /**
+     Index of the locus in a gene
+     */
+    ((Integer)(locusIndex))
+    /**
+     Allele id of the locus
+     */
+    ((Integer)(alleleId))
 )
 
 #endif // #define DOXYGEN_SHOULD_SKIP_THIS

@@ -52,6 +52,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     lociTable("loci"),
 	strainsTable("strains"),
 	hostsTable("hosts"),
+    alleleImmunityTable("hostsAlleleImmunityHistory"),
 	sampledHostsTable("sampledHosts"),
 	sampledHostInfectionTable("sampledHostInfections"),
 	sampledHostImmunityTable("sampledHostImmunity"),
@@ -200,6 +201,7 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(lociTable);
 	dbPtr->createTable(strainsTable);
 	dbPtr->createTable(hostsTable);
+	dbPtr->createTable(alleleImmunityTable);
 	dbPtr->createTable(sampledHostsTable);
 	dbPtr->createTable(sampledHostInfectionTable);
 	dbPtr->createTable(sampledHostImmunityTable);
@@ -326,7 +328,6 @@ StrainPtr Simulation::generateRandomStrain()
 	for(int64_t i = 0; i < genesPerStrain; i++) {
 		strainGenes[i] = drawRandomGene();
 	}
-	
 	return getStrain(strainGenes);
 }
 
@@ -352,7 +353,7 @@ StrainPtr Simulation::generateRandomStrain(int64_t nNewGenes)
 	for(int64_t i = 0; i < genesPerStrain; i++) {
 		if(newGeneLocations[i]) {
 			nNewGenesCheck++;
-			strainGenes[i] = createGene();
+			strainGenes[i] = mutateGene(drawRandomGene());
 		}
 		else {
 			strainGenes[i] = drawRandomGene();
@@ -385,17 +386,17 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 
 //new mutation mode -> change function "mutateGene"
 //select one gene from the strain to mutate
-StrainPtr Simulation::mutateStrain(StrainPtr & strain)
+std::vector<GenePtr> Simulation::mutateStrain(StrainPtr & strain)
 {
 	int64_t index = drawUniformIndex(rng,strain->size());
     vector<GenePtr> genes = strain->getGenes();
     genes[index] = mutateGene(genes[index]);
     mutationCount++;
-    return getStrain(genes);
+    return genes;
 }
 
 // randomly select two genes in the strain, and recombine
-StrainPtr Simulation::ectopicRecStrain(StrainPtr & strain)
+std::vector<GenePtr> Simulation::ectopicRecStrain(StrainPtr & strain)
 {
     vector<int64_t> indices = drawUniformIndices(rng,strain->size(),int64_t(2),false);
     std::vector<GenePtr> curStrainGenes = strain->getGenes();
@@ -407,7 +408,7 @@ StrainPtr Simulation::ectopicRecStrain(StrainPtr & strain)
     vector<GenePtr> genesPtrAfterEctopicRecomb = ectopicRecomb(curStrainGenes[indices[0]], curStrainGenes[indices[1]],isConversion);
     curStrainGenes[indices[0]] = genesPtrAfterEctopicRecomb[0];
     curStrainGenes[indices[1]] = genesPtrAfterEctopicRecomb[1];
-    return getStrain(curStrainGenes);
+    return curStrainGenes;
 }
 
 void Simulation::updateRates()
@@ -426,23 +427,33 @@ void Simulation::sampleHosts()
 	}
 }
 
+void Simulation::recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId) {
+    AlleleImmunityRow row;
+    row.time = getTime();
+    row.hostId = host.id;
+    row.locusIndex = locusIndex;
+    row.alleleId = alleleId;
+    dbPtr->insert(alleleImmunityTable,row);
+}
+
 void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<StrainPtr> &strains)
 {
+    for(auto & strainPtr : strains) {
+        TransmissionStrainRow row;
+        row.time = getTime();
+        row.transmissionId = transmissionCount;
+        row.strainId = strainPtr->id;
+        dbPtr->insert(sampledTransmissionStrainTable, row);
+    }
+
 	if((transmissionCount + 1) % parPtr->sampleTransmissionEventEvery == 0) {
 		TransmissionRow row;
-		row.time = getTime();
 		row.transmissionId = transmissionCount;
 		row.sourceHostId = srcHost.id;
 		row.targetHostId = dstHost.id;
 		dbPtr->insert(sampledTransmissionTable, row);
 		
-		for(auto & strainPtr : strains) {
-			TransmissionStrainRow row;
-			row.transmissionId = transmissionCount;
-			row.strainId = strainPtr->id;
-			dbPtr->insert(sampledTransmissionStrainTable, row);
-		}
-		
+		/**
 		srcHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
 		dstHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
 		
@@ -450,6 +461,7 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 		srcHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
 		dstHost.immunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
 		dstHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
+        */
 	}
 	
 	transmissionCount++;
@@ -600,9 +612,12 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 }
 */
 
-StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
+StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
 {
 	StrainPtr strainPtr;
+    std::vector<GenePtr> strainGenes = oriStrainGenes;
+    std::sort (strainGenes.begin(),strainGenes.end());
+
 	auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
 	if(strainItr == geneVecToStrainIndexMap.end()) {
 		strains.emplace_back(new Strain(nextStrainId++, strainGenes));

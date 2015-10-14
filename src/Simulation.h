@@ -59,6 +59,7 @@ class Simulation
 friend class Population;
 friend class BitingEvent;
 friend class Host;
+friend class ImmuneHistory;
 public:
 	Simulation(SimParameters * parPtr, zppdb::Database * dbPtr);
 	
@@ -87,8 +88,8 @@ public:
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr generateRandomStrain(int64_t nNewGenes);
-	StrainPtr mutateStrain(StrainPtr & strain);
-    StrainPtr ectopicRecStrain(StrainPtr & strain);
+	std::vector<GenePtr> mutateStrain(StrainPtr & strain);
+    std::vector<GenePtr> ectopicRecStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	
 	Host * drawDestinationHost(int64_t srcPopId);
@@ -96,6 +97,7 @@ public:
 	void updateRates();
 	void sampleHosts();
 	
+    void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
 	
 	bool verifyState();
@@ -141,6 +143,8 @@ private:
 	zppdb::Table<LociRow> lociTable;
 	zppdb::Table<StrainRow> strainsTable;
 	zppdb::Table<HostRow> hostsTable;
+    
+    zppdb::Table<AlleleImmunityRow> alleleImmunityTable;
 	
 	zppdb::Table<SampledHostRow> sampledHostsTable;
 	zppdb::Table<InfectionRow> sampledHostInfectionTable;

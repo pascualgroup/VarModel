@@ -28,6 +28,7 @@ class Loci
 {
 friend class Gene;
 friend class Simulation;
+friend class ImmuneHistory;
 public:
     int64_t const id;
     bool const functionality;

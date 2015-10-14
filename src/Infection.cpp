@@ -18,6 +18,11 @@ Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t 
 	geneIndex(initialGeneIndex), active(false),
 	transitionTime(initialTime)
 {
+    for (int64_t i=0; i<strainPtr->size(); i++) {
+        expressionOrder.push_back(i);
+    }
+    std::random_shuffle(expressionOrder.begin(),expressionOrder.end());
+    expressionIndex = 0;
 }
 
 void Infection::prepareToEnd()
@@ -63,22 +68,27 @@ double Infection::getAgeAtTransitionTime()
 
 void Infection::performTransition()
 {
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	transitionTime = hostPtr->getTime();
 	
 	bool shouldUpdateAllInfections = transitionAffectsAllInfections();
 	
 	if(geneIndex == WAITING_STAGE) {
 		assert(!active);
-		geneIndex = 0;
+		geneIndex = expressionOrder[expressionIndex];
 	}
 	else if(active) {
-		assert(geneIndex != strainPtr->size() - 1);
+		assert(expressionIndex != strainPtr->size() - 1);
 		GenePtr genePtr = strainPtr->getGene(geneIndex);
-		hostPtr->immunity.gainImmunity(genePtr);
-		if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
-			hostPtr->clinicalImmunity.gainImmunity(genePtr);
-		}
-		geneIndex++;
+        if(!simParPtr->withinHost.useAlleleImmunity) {
+            hostPtr->immunity.gainImmunity(genePtr);
+            if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
+                hostPtr->clinicalImmunity.gainImmunity(genePtr);
+            }
+        }else{
+            hostPtr->gainAlleleImmunity(genePtr);
+        }
+		expressionIndex++;
 		active = false;
 	}
 	else {
@@ -202,12 +212,26 @@ double Infection::clearanceRate()
 		
 		double nActiveInfections = hostPtr->getActiveInfectionCount();
 		double clearanceRateConstant;
-		if(isImmune()) {
-			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
-		}
-		else {
-			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
-		}
+        if(!simParPtr->withinHost.useAlleleImmunity){
+            if(isImmune()) {
+                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
+            }
+        else {
+                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
+            }
+        }else{
+            double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(hostPtr->getlociPtr(strainPtr->getGene(geneIndex)));
+            double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
+            double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune / geneImmuneLevel;
+            if(geneImmuneLevel==1.0) {
+                clearanceRateConstant = r1;
+            }else if (geneImmuneLevel==0) {
+                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
+            }else{
+                clearanceRateConstant = r2;
+            }
+            //cout<<"clearRate "<<clearanceRateConstant<<endl;
+        }
 		assert(!std::isnan(clearanceRateConstant));
 		assert(!std::isinf(clearanceRateConstant));
 		assert(clearanceRateConstant > 0.0);
@@ -342,7 +366,7 @@ void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
 	// If this is the final deactivation, then it's equivalent to clearing
 	if(infectionItr->active
-		&& infectionItr->geneIndex == infectionItr->strainPtr->size() - 1
+		&& infectionItr->expressionIndex == infectionItr->strainPtr->size() - 1
 	) {
 		infectionItr->hostPtr->clearInfection(infectionItr);
 	}

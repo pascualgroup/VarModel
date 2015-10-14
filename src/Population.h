@@ -42,6 +42,8 @@ class Population
 {
 friend class Simulation;
 friend class Host;
+friend class Infection;
+friend class ImmuneHistory;
 public:
 	int64_t const id;
 	

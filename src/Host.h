@@ -35,7 +35,7 @@ friend class Simulation;
 friend class Population;
 friend class DeathEvent;
 friend class Infection;
-friend class Immunity;
+friend class ImmuneHistory;
 public:
 	int64_t const id;
 	
@@ -63,6 +63,7 @@ public:
 	int64_t getActiveInfectionImmunityCount();
 	int64_t getActiveInfectionClinicalImmunityCount();
 	
+    void gainAlleleImmunity(GenePtr genePtr);
 	void clearInfection(std::list<Infection>::iterator infectionItr);
     void hstMutateStrain(std::list<Infection>::iterator infectionItr);
     void RecombineStrain(std::list<Infection>::iterator infectionItr);
@@ -70,6 +71,8 @@ public:
 	double getTime();
 	zppsim::rng_t * getRngPtr();
 	
+    LociPtr getlociPtr(GenePtr genePtr);
+    
 	SimParameters * getSimulationParametersPtr();
 	PopulationParameters * getPopulationParametersPtr();
 	

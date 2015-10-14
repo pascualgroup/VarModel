@@ -7,6 +7,22 @@
 using namespace std;
 using namespace zppsim;
 
+template <typename T>
+std::unordered_map<size_t,size_t> ordered(std::vector<T> const& values) {
+    std::vector<size_t> indices(values.size());
+    std::iota(begin(indices), end(indices), static_cast<size_t>(0));
+    
+    std::sort(
+              begin(indices), end(indices),
+              [&](size_t a, size_t b) { return values[a] < values[b]; }
+              );
+    std::unordered_map<size_t,size_t> reorderIndexMap;
+    for(size_t i = 0; i<values.size(); i++) {
+        reorderIndexMap.insert({indices[i],i});
+    }
+    return reorderIndexMap;
+}
+
 Host::Host(
 	Population * popPtr, int64_t id, double birthTime, double deathTime,
 	bool writeToDatabase,
@@ -16,14 +32,15 @@ Host::Host(
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
-	immunity(this, false),
-	clinicalImmunity(this, true)
+	immunity(this, false,popPtr->simPtr->locusNumber),
+	clinicalImmunity(this, true,popPtr->simPtr->locusNumber)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
 	if(writeToDatabase) {
 		HostRow row;
 		row.hostId = id;
+        row.popId = popPtr->id;
 		row.birthTime = birthTime;
 		row.deathTime = deathTime;
 		db.insert(table, row);
@@ -95,6 +112,10 @@ int64_t Host::getActiveInfectionClinicalImmunityCount()
 		}
 	}
 	return count;
+}
+
+void Host::gainAlleleImmunity(GenePtr genePtr) {
+    immunity.gainAlleleImmunity(genePtr,getlociPtr(genePtr),true,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
 }
 
 void Host::prepareToDie()
@@ -212,7 +233,7 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	}
 	
     //Create a mutation event, rate equals pMutation * genesPerStrain
-    infectionItr->mutationEvent = unique_ptr<MutationEvent>(new MutationEvent(infectionItr,popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain,time,*rngPtr));
+    infectionItr->mutationEvent = unique_ptr<MutationEvent>(new MutationEvent(infectionItr,popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->locusNumber,time,*rngPtr));
     addEvent(infectionItr->mutationEvent.get());
 
     //Create a ectopic recombination event, rate equals pIntraRecomb * C(genesPerStrain,2)
@@ -243,6 +264,11 @@ void Host::updateInfectionRates()
 	}
 }
 
+LociPtr Host::getlociPtr(GenePtr genePtr) {
+    LociPtr lociPtr = popPtr->simPtr->lociVec[genePtr->id];
+    return lociPtr;
+}
+
 void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 {
 	assert(infectionItr != infections.end());
@@ -255,10 +281,14 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	// Gain immunity to active gene
 	if(infectionItr->active) {
 		GenePtr genePtr = infectionItr->getCurrentGene();
-		immunity.gainImmunity(genePtr);
-		if(getSimulationParametersPtr()->trackClinicalImmunity) {
-			clinicalImmunity.gainImmunity(genePtr);
-		}
+        if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
+            immunity.gainImmunity(genePtr);
+            if(getSimulationParametersPtr()->trackClinicalImmunity) {
+                clinicalImmunity.gainImmunity(genePtr);
+            }
+        }else{
+            gainAlleleImmunity(genePtr);
+        }
 	}
 	
 	// Remove infection
@@ -272,11 +302,21 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 
 void Host::hstMutateStrain(std::list<Infection>::iterator infectionItr)
 {
-    infectionItr->strainPtr = popPtr->simPtr->mutateStrain(infectionItr->strainPtr);
+    std::vector<GenePtr> newStrainGenes = popPtr->simPtr->mutateStrain(infectionItr->strainPtr);
+    std::unordered_map<size_t,size_t> reorderIndexMap = ordered(newStrainGenes);
+    for (size_t i=0; i<newStrainGenes.size();i++) {
+        infectionItr->expressionOrder[i] = reorderIndexMap[infectionItr->expressionOrder[i]];
+    }
+    infectionItr->strainPtr = popPtr->simPtr->getStrain(newStrainGenes);
 }
 
 void Host::RecombineStrain(std::list<Infection>::iterator infectionItr) {
-    infectionItr->strainPtr = popPtr->simPtr->ectopicRecStrain(infectionItr->strainPtr);
+    std::vector<GenePtr> newStrainGenes = popPtr->simPtr->ectopicRecStrain(infectionItr->strainPtr);
+    std::unordered_map<size_t,size_t> reorderIndexMap = ordered(newStrainGenes);
+    for (size_t i=0; i<newStrainGenes.size();i++) {
+        infectionItr->expressionOrder[i] = reorderIndexMap[infectionItr->expressionOrder[i]];
+    }
+    infectionItr->strainPtr = popPtr->simPtr->getStrain(newStrainGenes);
 }
 
 double Host::getTime()

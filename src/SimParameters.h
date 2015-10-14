@@ -143,6 +143,13 @@ ZPPJSON_DEFINE_TYPE(
 	found not used
 	( (Bool)(coinfectionsReduceTransmission) )*/
 
+    /**
+    \brief whether immunity should be stored as allele level instead of gene level. if true, storeClinicalImmunity must be false
+                     
+    activationRate = activationRateConstant * nActiveInfections^activationRatePower
+                     */
+    ( (Bool)(useAlleleImmunity) )
+
 	/**
 		\brief The constant controlling the relationship between # active infections
 		and activation rate.

@@ -24,7 +24,8 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	hosts.reserve(parPtr->size);
 	for(int64_t i = 0; i < parPtr->size; i++) {
 		int64_t hostId = simPtr->nextHostId++;
-		double lifetime = simPtr->drawHostLifetime();
+		//double lifetime = simPtr->drawHostLifetime();
+        double lifetime = exponential_distribution<>(1.0/5400.0)(*rngPtr);
         //cout<<lifetime<<endl;
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
@@ -89,7 +90,8 @@ void Population::removeHost(Host * hostPtr)
 
 Host * Population::createNewHost()
 {
-	double lifetime = simPtr->drawHostLifetime();
+	//double lifetime = simPtr->drawHostLifetime();
+    double lifetime = exponential_distribution<>(1.0/5400.0)(*rngPtr);
 	double birthTime = getTime();
 	double deathTime = birthTime + lifetime;
 	
@@ -214,8 +216,8 @@ void Population::sampleHosts()
 		dbPtr->insert(simPtr->sampledHostsTable, row);
 		
 		hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable);
-		hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
-		hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
+		//hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
+		//hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
 	}
 }
 
