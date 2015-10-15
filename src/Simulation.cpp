@@ -416,9 +416,11 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 }
 
 
-StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
+StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
 {
 	StrainPtr strainPtr;
+    std::vector<GenePtr> strainGenes = oriStrainGenes;
+    std::sort (strainGenes.begin(),strainGenes.end());
 	auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
 	if(strainItr == geneVecToStrainIndexMap.end()) {
 		strains.emplace_back(new Strain(nextStrainId++, strainGenes));

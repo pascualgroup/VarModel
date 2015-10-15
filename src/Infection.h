@@ -90,10 +90,12 @@ public:
 	
 	void write(Database & db, Table<InfectionRow> & table);
 	void write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
+    int expressionIndex;
 	
 private:
 	double activationRate();
 	double deactivationRate();
+    std::vector<int64_t> expressionOrder;
 };
 
 #endif /* defined(__malariamodel__Infection__) */
