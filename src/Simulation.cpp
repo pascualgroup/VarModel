@@ -438,15 +438,15 @@ void Simulation::recordImmunity(Host & host, int64_t locusIndex, int64_t alleleI
 
 void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<StrainPtr> &strains)
 {
-    for(auto & strainPtr : strains) {
-        TransmissionStrainRow row;
-        row.time = getTime();
-        row.transmissionId = transmissionCount;
-        row.strainId = strainPtr->id;
-        dbPtr->insert(sampledTransmissionStrainTable, row);
-    }
 
 	if((transmissionCount + 1) % parPtr->sampleTransmissionEventEvery == 0) {
+        for(auto & strainPtr : strains) {
+            TransmissionStrainRow row;
+            row.time = getTime();
+            row.transmissionId = transmissionCount;
+            row.strainId = strainPtr->id;
+            dbPtr->insert(sampledTransmissionStrainTable, row);
+        }
 		TransmissionRow row;
 		row.transmissionId = transmissionCount;
 		row.sourceHostId = srcHost.id;
