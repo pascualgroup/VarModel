@@ -27,12 +27,13 @@ public:
 	double const transmissibility;
 	double const immunityLossRate;
 	double const clinicalImmunityLossRate;
+    bool const functionality;
+    std::vector<int64_t> Alleles;
 	
 	Gene(
 		int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
-		bool writeToDatabase, Database & db, Table<GeneRow> & table
+		    bool functionality, std::vector<int64_t> knownAlleles,bool writeToDatabaseGene, bool writeToDatabaseLoci, Database & db, Table<GeneRow> & GeneTable,Table<LociRow> & LociTable
 	);
-	
 	std::string toString();
 };
 

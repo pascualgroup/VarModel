@@ -48,6 +48,11 @@ ZPPDB_DEFINE_ROW_TYPE(
 		\brief Rate of loss of "clinical immunity"
 	*/
 	( (Real)(clinicalImmunityLossRate) )
+    /**
+    \brief Functional gene or not
+    */
+    ( (Integer)(functionality) )
+                      
     
 )
 
@@ -62,11 +67,6 @@ ZPPDB_DEFINE_ROW_TYPE(
    */
    ( (Integer)(geneId) )
 
-   /**
-   \brief Functional gene or not
-   */
-   ( (Integer)(functionality) )
-                      
     /**
     Expression index of a locus identified by this row
     */

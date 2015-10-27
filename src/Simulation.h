@@ -7,7 +7,6 @@
 #include "Population.h"
 #include "Strain.h"
 #include "Gene.h"
-#include "Loci.h"
 #include "DiscretizedDistribution.h"
 #include "random"
 #include "zppdb.hpp"
@@ -130,7 +129,6 @@ private:
     std::vector<double> mutationDistributions = parPtr->genes.mutationWeights.toDoubleVector();
 	
     // Loci tracking
-    std::vector<LociPtr> lociVec;
     size_t locusNumber = parPtr->genes.locusNumber;
     std::vector<int64_t> alleleNumber;
 
@@ -157,7 +155,7 @@ private:
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionImmunityTable;
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionClinicalImmunityTable;
 	
-	GenePtr createGene();
+	GenePtr createGene(std::vector<int64_t> Alleles,bool const functionality);
 	
 	void initializeDatabaseTables();
 };

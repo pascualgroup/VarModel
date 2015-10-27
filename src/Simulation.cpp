@@ -82,35 +82,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
-	
-	// Create gene pool
-	genes.reserve(parPtr->genePoolSize);
-	for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
-		double transmissibility = getEntry(
-			parPtr->genes.transmissibility, i, parPtr->genePoolSize
-		);
-		double immunityLossRate = getEntry(
-			parPtr->genes.immunityLossRate, i, parPtr->genePoolSize
-		);
-		double clinicalImmunityLossRate = getEntry(
-			parPtr->genes.clinicalImmunityLossRate, i, parPtr->genePoolSize
-		);
-		
-		genes.emplace_back(new Gene(
-			i,
-			transmissibility,
-			immunityLossRate,
-			clinicalImmunityLossRate,
-			parPtr->outputGenes,
-            *dbPtr,
-			genesTable
-		));
-	}
 
-
-	
-    // Create loci for each gene in the gene pool, hqx
-    lociVec.reserve(parPtr->genePoolSize);
+    //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
 	if(vals.size() == 1) {
         for(size_t i =0; i<locusNumber; ++i) {
@@ -124,41 +97,57 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
         }
 	}
     assert(alleleNumber.size()==size_t(locusNumber));
-    std::vector<int64_t> Alleles(locusNumber);
-    for(int64_t j = 0; j < locusNumber; j++) {
-        std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
-        Alleles[j] = unif(rng);
-        //cout<<Alleles[j]<<" ";
-    }
-    //cout<<"\n";
-    lociVec.emplace_back(new Loci(int64_t(0),
-                                  Alleles,true,
-                                  parPtr->outputLoci,
-                                  *dbPtr,
-                                  lociTable));
-    int64_t i =0;
-    while(i<parPtr->genePoolSize-1) {
+    
+	// Create gene pool
+	genes.reserve(parPtr->genePoolSize);
+	for(int64_t i = 0; i < parPtr->genePoolSize; i++) {
+		double transmissibility = getEntry(
+			parPtr->genes.transmissibility, i, parPtr->genePoolSize
+		);
+		double immunityLossRate = getEntry(
+			parPtr->genes.immunityLossRate, i, parPtr->genePoolSize
+		);
+		double clinicalImmunityLossRate = getEntry(
+			parPtr->genes.clinicalImmunityLossRate, i, parPtr->genePoolSize
+		);
 
         std::vector<int64_t> Alleles(locusNumber);
-        for(int64_t j = 0; j < locusNumber; j++) {
-            std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
-            Alleles[j] = unif(rng);
-            //cout<<Alleles[j]<<" ";
+        if (i== 0) {
+            for(int64_t j = 0; j < locusNumber; j++) {
+                std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
+                Alleles[j] = unif(rng);
+                //cout<<Alleles[j]<<" ";
+            }
+        }else{
+            int64_t checkId = 0;
+            while(checkId < i) {
+                for(int64_t j = 0; j < locusNumber; j++) {
+                    std::uniform_int_distribution<int64_t> unif(0, alleleNumber[j]-1);
+                    Alleles[j] = unif(rng);
+                    //cout<<Alleles[j]<<" ";
+                }
+                //cout<<"\n";
+                checkId = recLociId(Alleles);
+            }
         }
-        //cout<<"\n";
-        int64_t checkId = recLociId(Alleles);
-        if (checkId > i) {
-            i++;
-            lociVec.emplace_back(new Loci(i,
-                                          Alleles,true,
-                                          parPtr->outputLoci,
-                                          *dbPtr,
-                                          lociTable));
-            
-        }
-    }
+        
 
-    
+		genes.emplace_back(new Gene(
+			i,
+			transmissibility,
+			immunityLossRate,
+			clinicalImmunityLossRate,
+            true,
+            Alleles,
+			parPtr->outputGenes,
+            parPtr->outputLoci,
+            *dbPtr,
+			genesTable,
+            lociTable
+		));
+	}
+
+   
                 
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
@@ -171,7 +160,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	cerr << "# events: " << queuePtr->size() << '\n';
 }
 
-GenePtr Simulation::createGene()
+GenePtr Simulation::createGene(std::vector<int64_t> Alleles,bool const functionality)
 {
 	assert(parPtr->genes.transmissibility.size() == 1);
 	double transmissibility = parPtr->genes.transmissibility[0];
@@ -183,15 +172,19 @@ GenePtr Simulation::createGene()
 	double clinicalImmunityLossRate = parPtr->genes.clinicalImmunityLossRate[0];
 	
 	int64_t index = genes.size();
-	genes.emplace_back(new Gene(
-		index,
-		transmissibility,
-		immunityLossRate,
-		clinicalImmunityLossRate,
-		dbPtr->tableExists(genesTable),
-		*dbPtr,
-		genesTable
-	));
+    genes.emplace_back(new Gene(
+                                index,
+                                transmissibility,
+                                immunityLossRate,
+                                clinicalImmunityLossRate,
+                                functionality,
+                                Alleles,
+                                parPtr->outputGenes,
+                                parPtr->outputLoci,
+                                *dbPtr,
+                                genesTable,
+                                lociTable
+                                ));
 	return genes.back();
 }
 
@@ -473,7 +466,7 @@ GenePtr Simulation::drawRandomGene()
     int64_t geneIndex;
     while(!func) {
         geneIndex = drawUniformIndex(rng, genes.size());
-        func = lociVec[geneIndex]->functionality;
+        func = genes[geneIndex]->functionality;
     }
 	return genes[geneIndex];
 }
@@ -486,8 +479,7 @@ GenePtr Simulation::drawRandomGeneExcept(int64_t geneId)
 
 GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     //cout<<"mutate gene\n";
-    int64_t srcLociId = srcGenePtr->id;
-    std::vector<int64_t> srcLociAlleles = lociVec[srcLociId]->Alleles;
+    std::vector<int64_t> srcLociAlleles = srcGenePtr->Alleles;
     //not using mutationDistributions anymore, mutation weights are locus specific weight, sum(weight) = 1
     //to do: redefine mutationDistributions
     size_t mutateLocusId;
@@ -503,27 +495,24 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     std::vector<int64_t> newLoci = srcLociAlleles;
     newLoci[mutateLocusId] = alleleNumber[mutateLocusId]-1;
     //cout<<newLoci[mutateLocusId]<<endl;
-    int64_t newGeneId = genes.size();
-    lociVec.emplace_back(new Loci(newGeneId,
-                                  newLoci,true,parPtr->outputLoci,*dbPtr,lociTable));
-    return createGene();
+    return createGene(newLoci,true);
 }
 
-//test whether a new allele vector already exist in the lociVec
+//test whether a new allele vector already exist in the genes allele vectors
 //return the id number of the vector, all the new gene id
 int64_t Simulation::recLociId(std::vector<int64_t> & recGeneAlleles) {
-    for (LociPtr j : lociVec) {
+    for (GenePtr j : genes) {
         if (recGeneAlleles == j->Alleles) {
             return j->id;
         }
     }
-    return lociVec.size();
+    return genes.size();
 }
 
 double Simulation::parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2) {
     double pSim = 0;
-    std::vector<int64_t> pGene1Alleles = lociVec[pGene1->id]->Alleles;
-    std::vector<int64_t> pGene2Alleles = lociVec[pGene2->id]->Alleles;
+    std::vector<int64_t> pGene1Alleles = pGene1->Alleles;
+    std::vector<int64_t> pGene2Alleles = pGene2->Alleles;
     for (int64_t i=0; i<locusNumber; ++i) {
         if (pGene1Alleles[i] == pGene2Alleles[i]) {
             pSim += 1./locusNumber;
@@ -540,8 +529,8 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
     returnGenes.push_back(pGene1);
     returnGenes.push_back(pGene2);
     int64_t breakPoint = 1 + drawUniformIndex(rng,locusNumber-2);
-    std::vector<int64_t> pGene1Alleles = lociVec[pGene1->id]->Alleles;
-    std::vector<int64_t> pGene2Alleles = lociVec[pGene2->id]->Alleles;
+    std::vector<int64_t> pGene1Alleles = pGene1->Alleles;
+    std::vector<int64_t> pGene2Alleles = pGene2->Alleles;
     bernoulli_distribution flipCoin(parentsSimilarity(pGene1,pGene2));
     bool recFunction[] = {flipCoin(rng),flipCoin(rng)};//whether functional for the two recombinants;
     std::vector<int64_t> recGene1Alleles(locusNumber);
@@ -555,19 +544,17 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
             recGene2Alleles[i] = pGene1Alleles[i];
         }
     }
-    //test whether the new recombinant is already in lociVec matrix
+    //test whether the new recombinant is already in genes matrix
     int64_t recId[] = {recLociId(recGene1Alleles),recLociId(recGene2Alleles)};
-    if (recId[0] == lociVec.size()) {
+    if (recId[0] == genes.size()) {
     //get whether the new recombinant is functional
-        lociVec.emplace_back(new Loci(recId[0],
-                                      recGene1Alleles,recFunction[0],parPtr->outputLoci,*dbPtr,lociTable));
-        GenePtr recGenePtr = createGene();
+        GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0]);
         recId[1]++;
         if (recFunction[0]) {
            returnGenes[0] = recGenePtr;
         }
     } else {
-        if (lociVec[recId[0]]->functionality) {
+        if (genes[recId[0]]->functionality) {
             returnGenes[0] = genes[recId[0]];
         }
     }
@@ -576,15 +563,13 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
         //cout<<returnGenes[0]->id<<endl;
         //cout<<returnGenes[1]->id<<endl;
     }else{
-        if(recId[1] == lociVec.size()) {
-            lociVec.emplace_back(new Loci(recId[1],
-                                          recGene2Alleles,recFunction[1],parPtr->outputLoci,*dbPtr,lociTable));
-            GenePtr recGenePtr = createGene();
+        if(recId[1] == genes.size()) {
+            GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1]);
             if (recFunction[1]) {
                 returnGenes[1] = recGenePtr;
             }
         } else {
-            if (lociVec[recId[1]]->functionality) {
+            if (genes[recId[1]]->functionality) {
                 returnGenes[1] = genes[recId[1]];
             }
         }

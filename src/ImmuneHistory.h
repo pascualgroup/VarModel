@@ -16,7 +16,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "Gene.h"
-#include "Loci.h"
 
 class Host;
 class ImmuneHistory;
@@ -52,9 +51,9 @@ public:
 	ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber);
 	
 	void gainImmunity(GenePtr genePtr);
-	void gainAlleleImmunity(GenePtr genePtr, LociPtr lociPtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
+	void gainAlleleImmunity(GenePtr genePtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
     //void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
-    double checkGeneImmunity(LociPtr lociPtr);
+    double checkGeneImmunity(GenePtr genePtr);
 	void loseImmunity(GenePtr genePtr);
     //void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
 	bool isImmune(GenePtr genePtr);

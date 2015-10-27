@@ -220,7 +220,7 @@ double Infection::clearanceRate()
                 clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
             }
         }else{
-            double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(hostPtr->getlociPtr(strainPtr->getGene(geneIndex)));
+            double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
             double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune / (1-geneImmuneLevel);
             if(geneImmuneLevel==1.0) {

@@ -68,9 +68,9 @@ void ImmuneHistory::gainImmunity(GenePtr genePtr)
 	}
 }
 
-void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr, LociPtr lociPtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table)
+void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr,bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table)
 {
-    vector<int64_t> geneAlleles = lociPtr->Alleles;
+    vector<int64_t> geneAlleles = genePtr->Alleles;
     if(immuneAlleles.empty()) { //construct a list with immuned alleles
         for (int64_t i=0; i<locusNumber;i++) {
             std::unordered_map<int64_t,int64_t> tempMap({{geneAlleles[i],1}});
@@ -109,8 +109,8 @@ void ImmuneHistory::setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double 
 }
  */
 
-double ImmuneHistory::checkGeneImmunity(LociPtr lociPtr) {
-    vector<int64_t> geneAlleles = lociPtr->Alleles;
+double ImmuneHistory::checkGeneImmunity(GenePtr genePtr) {
+    vector<int64_t> geneAlleles = genePtr->Alleles;
     int64_t immuneLevel = locusNumber;
     if(immuneAlleles.empty()) {
         return 0;

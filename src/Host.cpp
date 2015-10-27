@@ -115,7 +115,7 @@ int64_t Host::getActiveInfectionClinicalImmunityCount()
 }
 
 void Host::gainAlleleImmunity(GenePtr genePtr) {
-    immunity.gainAlleleImmunity(genePtr,getlociPtr(genePtr),true,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
+    immunity.gainAlleleImmunity(genePtr,true,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
 }
 
 void Host::prepareToDie()
@@ -262,11 +262,6 @@ void Host::updateInfectionRates()
 			itr->updateTransitionRate();
 		}
 	}
-}
-
-LociPtr Host::getlociPtr(GenePtr genePtr) {
-    LociPtr lociPtr = popPtr->simPtr->lociVec[genePtr->id];
-    return lociPtr;
 }
 
 void Host::clearInfection(std::list<Infection>::iterator infectionItr)

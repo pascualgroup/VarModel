@@ -70,9 +70,7 @@ public:
 	
 	double getTime();
 	zppsim::rng_t * getRngPtr();
-	
-    LociPtr getlociPtr(GenePtr genePtr);
-    
+	  
 	SimParameters * getSimulationParametersPtr();
 	PopulationParameters * getPopulationParametersPtr();
 	
