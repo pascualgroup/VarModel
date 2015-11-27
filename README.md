@@ -12,8 +12,8 @@
 The most straightforward way to get the code is at the command line:
 
 ```sh
-git clone git@bitbucket.org:pascualgroup/malariamodel.git malariamodel
-cd malariamodel
+git clone git@bitbucket.org:pascualgroup/malariamodel.git varmodel
+cd varmodel
 git submodule init
 git submodule update
 ```
