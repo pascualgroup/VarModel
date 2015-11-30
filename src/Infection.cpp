@@ -10,6 +10,7 @@
 #include "SimParameters.h"
 #include "Host.h"
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 

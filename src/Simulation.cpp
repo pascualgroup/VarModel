@@ -4,6 +4,7 @@
 #include "zppsim_util.hpp"
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <algorithm>
 
 // 100-millisecond delay between database commit retries
 #define DB_RETRY_DELAY 100000
