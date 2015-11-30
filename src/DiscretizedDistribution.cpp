@@ -10,5 +10,5 @@ DiscretizedDistribution::DiscretizedDistribution(std::vector<double> const & pdf
 
 double DiscretizedDistribution::draw(zppsim::rng_t & rng)
 {
-	return x0 + discDist(rng) + realDist(rng) * dx;
+	return x0 + (discDist(rng) + realDist(rng)) * dx;
 }

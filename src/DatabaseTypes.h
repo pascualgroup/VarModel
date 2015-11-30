@@ -145,6 +145,10 @@ ZPPDB_DEFINE_ROW_TYPE(
 ZPPDB_DEFINE_ROW_TYPE(
 	TransmissionStrainRow,
 	
+    /**
+    \brief time
+    */
+    ((Real)(time))
 	/**
 		\brief ID of sampled transmission
 	*/

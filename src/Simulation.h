@@ -79,7 +79,7 @@ public:
 	GenePtr drawRandomGeneExcept(int64_t geneId);
 	GenePtr mutateGene(GenePtr const & srcGene);
 	
-	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
+	StrainPtr getStrain(std::vector<GenePtr> const & oriStrainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr generateRandomStrain(int64_t nNewGenes);
 	StrainPtr mutateStrain(StrainPtr & strain);
