@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	
 	os.system('mkdir -p bin')
 	os.system('{0} -O3 -c libjson/json.c -o bin/libjson.o'.format(cCompiler))
-	os.system('{0} -O3 -std=c++11 -lsqlite3 {1} {2} bin/libjson.o {3} -o bin/{4}'.format(
+	os.system('{0} -O3 -std=c++11 {1} {2} bin/libjson.o {3} -o bin/{4} -lsqlite3'.format(
 		cppCompiler,
 		flags,
 		' '.join(['-I{0}'.format(os.path.expanduser(x)) for x in includeDirs]),
