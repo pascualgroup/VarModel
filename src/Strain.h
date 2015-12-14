@@ -16,14 +16,14 @@ class Strain
 {
 friend class Simulation;
 public:
-	int64_t const id;
-	
-	Strain(int64_t id, std::vector<GenePtr> const & genes);
-	int64_t size();
-	std::vector<GenePtr> getGenes();
-	GenePtr getGene(int64_t index);
+    int64_t const id;
+    
+    Strain(int64_t id, std::vector<GenePtr> const & genes);
+    int64_t size();
+    std::vector<GenePtr> getGenes();
+    GenePtr getGene(int64_t index);
 private:
-	std::vector<GenePtr> genes;
+    std::vector<GenePtr> genes;
 };
 
 #endif

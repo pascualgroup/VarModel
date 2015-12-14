@@ -17,27 +17,27 @@ using namespace zppsim;
 using namespace zppdb;
 
 Gene::Gene(
-	int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
-	bool writeToDatabase, Database & db, Table<GeneRow> & table
+    int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
+    bool writeToDatabase, Database & db, Table<GeneRow> & table
 ) :
-	id(id),
-	transmissibility(transmissibility),
-	immunityLossRate(immunityLossRate), clinicalImmunityLossRate(clinicalImmunityLossRate)
+    id(id),
+    transmissibility(transmissibility),
+    immunityLossRate(immunityLossRate), clinicalImmunityLossRate(clinicalImmunityLossRate)
 {
-	if(writeToDatabase) {
-		GeneRow row;
-		row.geneId = id;
-		row.transmissibility = transmissibility;
-		row.immunityLossRate = immunityLossRate;
-		row.clinicalImmunityLossRate = clinicalImmunityLossRate;
-		
-		db.insert(table, row);
-	}
+    if(writeToDatabase) {
+        GeneRow row;
+        row.geneId = id;
+        row.transmissibility = transmissibility;
+        row.immunityLossRate = immunityLossRate;
+        row.clinicalImmunityLossRate = clinicalImmunityLossRate;
+        
+        db.insert(table, row);
+    }
 }
 
 std::string Gene::toString()
 {
-	stringstream ss;
-	ss << id;
-	return ss.str();
+    stringstream ss;
+    ss << id;
+    return ss.str();
 }

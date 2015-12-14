@@ -23,17 +23,17 @@ typedef std::weak_ptr<Gene> GenePtrW;
 class Gene
 {
 public:
-	int64_t const id;
-	double const transmissibility;
-	double const immunityLossRate;
-	double const clinicalImmunityLossRate;
-	
-	Gene(
-		int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
-		bool writeToDatabase, Database & db, Table<GeneRow> & table
-	);
-	
-	std::string toString();
+    int64_t const id;
+    double const transmissibility;
+    double const immunityLossRate;
+    double const clinicalImmunityLossRate;
+    
+    Gene(
+        int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
+        bool writeToDatabase, Database & db, Table<GeneRow> & table
+    );
+    
+    std::string toString();
 };
 
 #endif /* defined(__malariamodel__Gene__) */

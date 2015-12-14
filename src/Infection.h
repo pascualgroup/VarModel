@@ -23,78 +23,78 @@ class Host;
 class InfectionProcessEvent : public zppsim::RateEvent
 {
 public:
-	InfectionProcessEvent(std::list<Infection>::iterator infectionItr, double time);
-	InfectionProcessEvent(std::list<Infection>::iterator infectionItr,
-		double rate, double time, zppsim::rng_t & rng);
-	
-	std::list<Infection>::iterator infectionItr;
+    InfectionProcessEvent(std::list<Infection>::iterator infectionItr, double time);
+    InfectionProcessEvent(std::list<Infection>::iterator infectionItr,
+        double rate, double time, zppsim::rng_t & rng);
+    
+    std::list<Infection>::iterator infectionItr;
 };
 
 class TransitionEvent : public InfectionProcessEvent
 {
 public:
-	TransitionEvent(std::list<Infection>::iterator infectionItr, double time);
-	TransitionEvent(std::list<Infection>::iterator infectionItr,
-		double rate, double initTime, zppsim::rng_t & rng);
-	virtual void performEvent(zppsim::EventQueue & queue);
+    TransitionEvent(std::list<Infection>::iterator infectionItr, double time);
+    TransitionEvent(std::list<Infection>::iterator infectionItr,
+        double rate, double initTime, zppsim::rng_t & rng);
+    virtual void performEvent(zppsim::EventQueue & queue);
 };
 
 class ClearanceEvent : public InfectionProcessEvent
 {
 public:
-	ClearanceEvent(std::list<Infection>::iterator infectionItr,
-		double rate, double initTime, zppsim::rng_t & rng);
-	virtual void performEvent(zppsim::EventQueue & queue);
+    ClearanceEvent(std::list<Infection>::iterator infectionItr,
+        double rate, double initTime, zppsim::rng_t & rng);
+    virtual void performEvent(zppsim::EventQueue & queue);
 };
 
 class Infection
 {
 public:
-	Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime);
-	
-	void prepareToEnd();
-	
-	Host * hostPtr;
-	StrainPtr strainPtr;
-	
-	int64_t id;
-	
-	int64_t geneIndex;
-	bool active;
-	double transitionTime;
-	
-	std::unique_ptr<TransitionEvent> transitionEvent;
-	std::unique_ptr<ClearanceEvent> clearanceEvent;
-	
-	bool isActive();
-	GenePtr getCurrentGene();
-	int64_t getCurrentGeneId();
-	bool isImmune();
-	bool isClinicallyImmune();
-	double getTransitionTime();
-	double getAgeAtTransitionTime();
-	
-	void performTransition();
-	
-	void updateTransitionRate();
-	bool transitionAffectsAllInfections();
-	
-	double transitionRate();
-	
-	void updateClearanceRate();
-	double clearanceRate();
-	
-	double transmissionProbability();
-	
-	std::string toString();
-	
-	void write(Database & db, Table<InfectionRow> & table);
-	void write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
+    Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime);
+    
+    void prepareToEnd();
+    
+    Host * hostPtr;
+    StrainPtr strainPtr;
+    
+    int64_t id;
+    
+    int64_t geneIndex;
+    bool active;
+    double transitionTime;
+    
+    std::unique_ptr<TransitionEvent> transitionEvent;
+    std::unique_ptr<ClearanceEvent> clearanceEvent;
+    
+    bool isActive();
+    GenePtr getCurrentGene();
+    int64_t getCurrentGeneId();
+    bool isImmune();
+    bool isClinicallyImmune();
+    double getTransitionTime();
+    double getAgeAtTransitionTime();
+    
+    void performTransition();
+    
+    void updateTransitionRate();
+    bool transitionAffectsAllInfections();
+    
+    double transitionRate();
+    
+    void updateClearanceRate();
+    double clearanceRate();
+    
+    double transmissionProbability();
+    
+    std::string toString();
+    
+    void write(Database & db, Table<InfectionRow> & table);
+    void write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
     int expressionIndex;
-	
+    
 private:
-	double activationRate();
-	double deactivationRate();
+    double activationRate();
+    double deactivationRate();
     std::vector<int64_t> expressionOrder;
 };
 

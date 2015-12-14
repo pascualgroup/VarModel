@@ -12,7 +12,7 @@
 The most straightforward way to get the code is at the command line:
 
 ```sh
-git clone git@bitbucket.org:pascualgroup/malariamodel.git varmodel
+git clone git@bitbucket.org:pascualgroup/varmodel.git varmodel
 cd varmodel
 git submodule init
 git submodule update
@@ -73,7 +73,7 @@ To build the executable, simply run
 in the root directory of the repository. This will create the executable in
 
 ```
-bin/malariamodel
+bin/varmodel
 ```
 
 The build script chooses a compiler based on availability, preferring the Intel C++ compiler if available, then LLVM/Clang, and finally GCC.
@@ -98,14 +98,14 @@ The model requires a parameters file, in JSON format (see the next section). The
 
 ```{bash}
 cd [path-to]/output
-[path-to]/bin/malariamodel parameters.json
+[path-to]/bin/varmodel parameters.json
 ```
 
 It's often useful to redirect standard error and standard output into files for later examination:
 
 ```{bash}
 cd [path-to]/output
-[path-to]/bin/malariamodel parameters.json 1> stdout.txt 2> stderr.txt
+[path-to]/bin/varmodel parameters.json 1> stdout.txt 2> stderr.txt
 ```
 
 This works well for parameter sweeps if a different directory is created for each model
@@ -345,3 +345,25 @@ If significant changes are desired, it will probably be necessary to modify
 
 The calculation for transmission probability can similarly be modified:
 * `Infection::transmissionProbability()`
+
+## Outstanding questions
+
+### Gene creation
+
+Turn off.
+
+If pImmigrationIncludesNewGenes > 0, then new genes are created on the fly during immigration, and the attributes are taken from the first entry of the attributes vectors.
+
+Yael's version:
+* Certain size of pool, all genes with predefined features
+* Start simulation, only use some fraction e.g. index 0 to 99
+* After start, sample from outside pool
+
+### Burn-in
+
+Don't write any output for first N years
+
+### Save & restore simulation state
+
+### Extra attribute for var genes
+

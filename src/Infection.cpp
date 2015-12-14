@@ -15,9 +15,9 @@
 using namespace std;
 
 Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime) :
-	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
-	geneIndex(initialGeneIndex), active(false),
-	transitionTime(initialTime)
+    hostPtr(hostPtr), id(id), strainPtr(strainPtr),
+    geneIndex(initialGeneIndex), active(false),
+    transitionTime(initialTime)
 {
     for (int64_t i=0; i<strainPtr->size(); i++) {
         expressionOrder.push_back(i);
@@ -28,318 +28,318 @@ Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t 
 
 void Infection::prepareToEnd()
 {
-	hostPtr->removeEvent(transitionEvent.get());
-	hostPtr->removeEvent(clearanceEvent.get());
+    hostPtr->removeEvent(transitionEvent.get());
+    hostPtr->removeEvent(clearanceEvent.get());
 }
 
 GenePtr Infection::getCurrentGene()
 {
-	assert(geneIndex != WAITING_STAGE);
-	return strainPtr->getGene(geneIndex);
+    assert(geneIndex != WAITING_STAGE);
+    return strainPtr->getGene(geneIndex);
 }
 
 int64_t Infection::getCurrentGeneId()
 {
-	return getCurrentGene()->id;
+    return getCurrentGene()->id;
 }
 
 bool Infection::isImmune()
 {
-	return hostPtr->immunity.isImmune(getCurrentGene());
+    return hostPtr->immunity.isImmune(getCurrentGene());
 }
 
 bool Infection::isClinicallyImmune()
 {
-	return hostPtr->clinicalImmunity.isImmune(getCurrentGene());
+    return hostPtr->clinicalImmunity.isImmune(getCurrentGene());
 }
 
 double Infection::getTransitionTime()
 {
-	return transitionTime;
+    return transitionTime;
 }
 
 double Infection::getAgeAtTransitionTime()
 {
-	return transitionTime - hostPtr->birthTime;
+    return transitionTime - hostPtr->birthTime;
 }
 
 void Infection::performTransition()
 {
-	transitionTime = hostPtr->getTime();
-	
-	bool shouldUpdateAllInfections = transitionAffectsAllInfections();
-	
-	if(geneIndex == WAITING_STAGE) {
-		assert(!active);
-		geneIndex = expressionOrder[expressionIndex];
-	}
-	else if(active) {
-		assert(expressionIndex != strainPtr->size() - 1);
-		GenePtr genePtr = strainPtr->getGene(geneIndex);
-		hostPtr->immunity.gainImmunity(genePtr);
-		if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
-			hostPtr->clinicalImmunity.gainImmunity(genePtr);
-		}
-		expressionIndex++;
-		active = false;
-	}
-	else {
-		active = true;
-	}
-	
-	if(shouldUpdateAllInfections) {
-		// Every infection's rates need to be updated
-		hostPtr->updateInfectionRates();
-	}
-	else {
-		updateTransitionRate();
-		updateClearanceRate();
-	}
-//	cerr << transitionTime << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
+    transitionTime = hostPtr->getTime();
+    
+    bool shouldUpdateAllInfections = transitionAffectsAllInfections();
+    
+    if(geneIndex == WAITING_STAGE) {
+        assert(!active);
+        geneIndex = expressionOrder[expressionIndex];
+    }
+    else if(active) {
+        assert(expressionIndex != strainPtr->size() - 1);
+        GenePtr genePtr = strainPtr->getGene(geneIndex);
+        hostPtr->immunity.gainImmunity(genePtr);
+        if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
+            hostPtr->clinicalImmunity.gainImmunity(genePtr);
+        }
+        expressionIndex++;
+        active = false;
+    }
+    else {
+        active = true;
+    }
+    
+    if(shouldUpdateAllInfections) {
+        // Every infection's rates need to be updated
+        hostPtr->updateInfectionRates();
+    }
+    else {
+        updateTransitionRate();
+        updateClearanceRate();
+    }
+//    cerr << transitionTime << ": " << toString() << " transitioned to " << geneIndex << "(" << getCurrentGene()->toString() << "), " << (active ? "active" : "not yet active") << '\n';
 }
 
 void Infection::updateTransitionRate()
 {
-	hostPtr->setEventRate(transitionEvent.get(), transitionRate());
+    hostPtr->setEventRate(transitionEvent.get(), transitionRate());
 }
 
 bool Infection::transitionAffectsAllInfections()
 {
-	if(geneIndex == WAITING_STAGE) {
-		return false;
-	}
-	else {
-		return true;
-	}
+    if(geneIndex == WAITING_STAGE) {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
 double Infection::transitionRate()
 {
-	assert(geneIndex != WAITING_STAGE);
-	
-	if(!active) {
-		return activationRate();
-	}
-	else {
-		return deactivationRate();
-	}
+    assert(geneIndex != WAITING_STAGE);
+    
+    if(!active) {
+        return activationRate();
+    }
+    else {
+        return deactivationRate();
+    }
 }
 
 void Infection::updateClearanceRate()
 {
-	hostPtr->setEventRate(clearanceEvent.get(), clearanceRate());
+    hostPtr->setEventRate(clearanceEvent.get(), clearanceRate());
 }
 
 double Infection::activationRate()
 {
-	assert(!active);
-//	GenePtr genePtr = getCurrentGene();
-//	int64_t geneId = getCurrentGeneId();
-//	bool immune = isImmune();
-//	bool clinicallyImmune = isClinicallyImmune();
-//	double age = getAgeAtTransitionTime();
-//	int64_t activeCount = hostPtr->getActiveInfectionCount();
-//	vector<GenePtr> activeGenes = hostPtr->getActiveInfectionGenes();
-//	vector<int64_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
-//	int64_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
-//	int64_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
-	
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	
-	double constant = simParPtr->withinHost.activationRateConstant;
-	assert(!std::isnan(constant));
-	assert(!std::isinf(constant));
-	assert(constant > 0.0);
-	double power = simParPtr->withinHost.activationRatePower;
-	assert(power <= 0.0);
-	assert(!std::isnan(power));
-	assert(!std::isinf(power));
-	
-	double nActiveInfections = hostPtr->getActiveInfectionCount();
-	
-	if(power == 0.0) {
-		return constant;
-	}
-	
-	if(nActiveInfections == 0) {
-		return std::numeric_limits<double>::infinity();
-	}
-	return constant * std::pow(nActiveInfections, power);
+    assert(!active);
+//    GenePtr genePtr = getCurrentGene();
+//    int64_t geneId = getCurrentGeneId();
+//    bool immune = isImmune();
+//    bool clinicallyImmune = isClinicallyImmune();
+//    double age = getAgeAtTransitionTime();
+//    int64_t activeCount = hostPtr->getActiveInfectionCount();
+//    vector<GenePtr> activeGenes = hostPtr->getActiveInfectionGenes();
+//    vector<int64_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
+//    int64_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
+//    int64_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
+    
+    SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+    
+    double constant = simParPtr->withinHost.activationRateConstant;
+    assert(!std::isnan(constant));
+    assert(!std::isinf(constant));
+    assert(constant > 0.0);
+    double power = simParPtr->withinHost.activationRatePower;
+    assert(power <= 0.0);
+    assert(!std::isnan(power));
+    assert(!std::isinf(power));
+    
+    double nActiveInfections = hostPtr->getActiveInfectionCount();
+    
+    if(power == 0.0) {
+        return constant;
+    }
+    
+    if(nActiveInfections == 0) {
+        return std::numeric_limits<double>::infinity();
+    }
+    return constant * std::pow(nActiveInfections, power);
 }
 
 double Infection::deactivationRate()
 {
-	assert(active);
-	
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	
-	double constant = simParPtr->withinHost.deactivationRateConstant;
-	assert(!std::isnan(constant));
-	assert(!std::isinf(constant));
-	assert(constant > 0.0);
-	double power = simParPtr->withinHost.deactivationRatePower;
-	assert(!std::isnan(power));
-	assert(!std::isinf(power));
-	
-	double nActiveInfections = hostPtr->getActiveInfectionCount();
-	
-	return constant * std::pow(nActiveInfections, power);
+    assert(active);
+    
+    SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+    
+    double constant = simParPtr->withinHost.deactivationRateConstant;
+    assert(!std::isnan(constant));
+    assert(!std::isinf(constant));
+    assert(constant > 0.0);
+    double power = simParPtr->withinHost.deactivationRatePower;
+    assert(!std::isnan(power));
+    assert(!std::isinf(power));
+    
+    double nActiveInfections = hostPtr->getActiveInfectionCount();
+    
+    return constant * std::pow(nActiveInfections, power);
 }
 
 double Infection::clearanceRate()
 {
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	
-	// Liver stage
-	if(geneIndex == WAITING_STAGE) {
-		return 0.0;
-	}
-	// Gene active: clearance rate depends on immunity
-	else if(active) {
-		double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
-		assert(!std::isnan(clearanceRatePower));
-		assert(!std::isinf(clearanceRatePower));
-		
-		double nActiveInfections = hostPtr->getActiveInfectionCount();
-		double clearanceRateConstant;
-		if(isImmune()) {
-			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
-		}
-		else {
-			clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
-		}
-		assert(!std::isnan(clearanceRateConstant));
-		assert(!std::isinf(clearanceRateConstant));
-		assert(clearanceRateConstant > 0.0);
-		
-		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
-	}
-	// Gene inactive: clearance rate = 0
-	else {
-		return 0.0;
-	}
+    SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+    
+    // Liver stage
+    if(geneIndex == WAITING_STAGE) {
+        return 0.0;
+    }
+    // Gene active: clearance rate depends on immunity
+    else if(active) {
+        double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
+        assert(!std::isnan(clearanceRatePower));
+        assert(!std::isinf(clearanceRatePower));
+        
+        double nActiveInfections = hostPtr->getActiveInfectionCount();
+        double clearanceRateConstant;
+        if(isImmune()) {
+            clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
+        }
+        else {
+            clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
+        }
+        assert(!std::isnan(clearanceRateConstant));
+        assert(!std::isinf(clearanceRateConstant));
+        assert(clearanceRateConstant > 0.0);
+        
+        return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
+    }
+    // Gene inactive: clearance rate = 0
+    else {
+        return 0.0;
+    }
 }
 
 bool Infection::isActive()
 {
-	return active;
+    return active;
 }
 
 double Infection::transmissionProbability()
 {
-	assert(active);
-	
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	
-	GenePtr genePtr = getCurrentGene();
-	
-	double p = genePtr->transmissibility;
-	assert(p > 0.0 && p < 1.0);
-	
-	if(simParPtr->coinfectionReducesTransmission) {
-		p /= hostPtr->getActiveInfectionCount();
-	}
-	
-	return p;
+    assert(active);
+    
+    SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+    
+    GenePtr genePtr = getCurrentGene();
+    
+    double p = genePtr->transmissibility;
+    assert(p > 0.0 && p < 1.0);
+    
+    if(simParPtr->coinfectionReducesTransmission) {
+        p /= hostPtr->getActiveInfectionCount();
+    }
+    
+    return p;
 }
 
 std::string Infection::toString()
 {
-	stringstream ss;
-	ss << hostPtr->toString() << ".i" << id;
-	return ss.str();
+    stringstream ss;
+    ss << hostPtr->toString() << ".i" << id;
+    return ss.str();
 }
 
 void Infection::write(Database & db, Table<InfectionRow> & table)
 {
-	InfectionRow row;
-	row.time = hostPtr->getTime();
-	row.hostId = hostPtr->id;
-	row.infectionId = id;
-	row.strainId = strainPtr->id;
-	if(geneIndex == WAITING_STAGE) {
-		row.geneIndex.setNull();
-		row.active.setNull();
-	}
-	else {
-		row.geneIndex = geneIndex;
-		row.active = active;
-	}
-	db.insert(table, row);
+    InfectionRow row;
+    row.time = hostPtr->getTime();
+    row.hostId = hostPtr->id;
+    row.infectionId = id;
+    row.strainId = strainPtr->id;
+    if(geneIndex == WAITING_STAGE) {
+        row.geneIndex.setNull();
+        row.active.setNull();
+    }
+    else {
+        row.geneIndex = geneIndex;
+        row.active = active;
+    }
+    db.insert(table, row);
 }
 
 void Infection::write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table)
 {
-	TransmissionInfectionRow row;
-	row.transmissionId = transmissionId;
-	row.hostId = hostPtr->id;
-	row.infectionId = id;
-	row.strainId = strainPtr->id;
-	if(geneIndex == WAITING_STAGE) {
-		row.geneIndex.setNull();
-		row.active.setNull();
-	}
-	else {
-		row.geneIndex = geneIndex;
-		row.active = active;
-	}
-	db.insert(table, row);
+    TransmissionInfectionRow row;
+    row.transmissionId = transmissionId;
+    row.hostId = hostPtr->id;
+    row.infectionId = id;
+    row.strainId = strainPtr->id;
+    if(geneIndex == WAITING_STAGE) {
+        row.geneIndex.setNull();
+        row.active.setNull();
+    }
+    else {
+        row.geneIndex = geneIndex;
+        row.active = active;
+    }
+    db.insert(table, row);
 }
 
 /*** INFECTION PROCESS EVENTS ***/
 
 InfectionProcessEvent::InfectionProcessEvent(
-	std::list<Infection>::iterator infectionItr, double time
+    std::list<Infection>::iterator infectionItr, double time
 ) :
-	RateEvent(time), infectionItr(infectionItr)
+    RateEvent(time), infectionItr(infectionItr)
 {
 }
 
 InfectionProcessEvent::InfectionProcessEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+    std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
-	RateEvent(rate, time, rng), infectionItr(infectionItr)
+    RateEvent(rate, time, rng), infectionItr(infectionItr)
 {
 }
 
 TransitionEvent::TransitionEvent(
-	std::list<Infection>::iterator infectionItr, double time
+    std::list<Infection>::iterator infectionItr, double time
 ) :
-	InfectionProcessEvent(infectionItr, time)
+    InfectionProcessEvent(infectionItr, time)
 {
 }
 
 
 TransitionEvent::TransitionEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+    std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
-	InfectionProcessEvent(infectionItr, rate, time, rng)
+    InfectionProcessEvent(infectionItr, rate, time, rng)
 {
 }
 
 ClearanceEvent::ClearanceEvent(
-	std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+    std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
 ) :
-	InfectionProcessEvent(infectionItr, rate, time, rng)
+    InfectionProcessEvent(infectionItr, rate, time, rng)
 {
 }
 
 void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
-	// If this is the final deactivation, then it's equivalent to clearing
-	if(infectionItr->active
-		&& infectionItr->expressionIndex == infectionItr->strainPtr->size() - 1
-	) {
-		infectionItr->hostPtr->clearInfection(infectionItr);
-	}
-	// Otherwise, actually perform a transition
-	else {
-		infectionItr->performTransition();
-	}
+    // If this is the final deactivation, then it's equivalent to clearing
+    if(infectionItr->active
+        && infectionItr->expressionIndex == infectionItr->strainPtr->size() - 1
+    ) {
+        infectionItr->hostPtr->clearInfection(infectionItr);
+    }
+    // Otherwise, actually perform a transition
+    else {
+        infectionItr->performTransition();
+    }
 }
 
 void ClearanceEvent::performEvent(zppsim::EventQueue &queue)
 {
-	infectionItr->hostPtr->clearInfection(infectionItr);
+    infectionItr->hostPtr->clearInfection(infectionItr);
 }
 

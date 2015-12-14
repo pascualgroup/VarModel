@@ -22,10 +22,10 @@ class Infection;
 class DeathEvent : public zppsim::Event
 {
 public:
-	DeathEvent(Host * hostPtr);
-	virtual void performEvent(zppsim::EventQueue & queue);
-	
-	Host * hostPtr;
+    DeathEvent(Host * hostPtr);
+    virtual void performEvent(zppsim::EventQueue & queue);
+    
+    Host * hostPtr;
 };
 
 
@@ -37,63 +37,63 @@ friend class DeathEvent;
 friend class Infection;
 friend class Immunity;
 public:
-	int64_t const id;
-	
-	Host(
-		Population * popPtr, int64_t id, double birthTime, double deathTime,
-		bool writeToDatabase,
-		Database & db,
-		zppdb::Table<HostRow> & table
-	);
-	
-	void prepareToDie();
-	
-	void transmitTo(Host & dstHost);
-	
-	void receiveInfection(StrainPtr & strain);
-	
-	void updateInfectionRates();
-	
-	double getAge();
-	
-	int64_t getActiveInfectionCount();
-	std::vector<GenePtr> getActiveInfectionGenes();
-	std::vector<int64_t> getActiveInfectionGeneIds();
-	
-	int64_t getActiveInfectionImmunityCount();
-	int64_t getActiveInfectionClinicalImmunityCount();
-	
-	void clearInfection(std::list<Infection>::iterator infectionItr);
-	
-	double getTime();
-	zppsim::rng_t * getRngPtr();
-	
-	SimParameters * getSimulationParametersPtr();
-	PopulationParameters * getPopulationParametersPtr();
-	
-	void addEvent(zppsim::Event * event);
-	void removeEvent(zppsim::Event * event);
-	void setEventRate(zppsim::RateEvent * event, double rate);
-	
-	void writeInfections(Database & db, Table<InfectionRow> & table);
-	void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
-	
-	std::string toString();
+    int64_t const id;
+    
+    Host(
+        Population * popPtr, int64_t id, double birthTime, double deathTime,
+        bool writeToDatabase,
+        Database & db,
+        zppdb::Table<HostRow> & table
+    );
+    
+    void prepareToDie();
+    
+    void transmitTo(Host & dstHost);
+    
+    void receiveInfection(StrainPtr & strain);
+    
+    void updateInfectionRates();
+    
+    double getAge();
+    
+    int64_t getActiveInfectionCount();
+    std::vector<GenePtr> getActiveInfectionGenes();
+    std::vector<int64_t> getActiveInfectionGeneIds();
+    
+    int64_t getActiveInfectionImmunityCount();
+    int64_t getActiveInfectionClinicalImmunityCount();
+    
+    void clearInfection(std::list<Infection>::iterator infectionItr);
+    
+    double getTime();
+    zppsim::rng_t * getRngPtr();
+    
+    SimParameters * getSimulationParametersPtr();
+    PopulationParameters * getPopulationParametersPtr();
+    
+    void addEvent(zppsim::Event * event);
+    void removeEvent(zppsim::Event * event);
+    void setEventRate(zppsim::RateEvent * event, double rate);
+    
+    void writeInfections(Database & db, Table<InfectionRow> & table);
+    void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
+    
+    std::string toString();
 private:
-	Population * popPtr;
-	double const birthTime;
-	double const deathTime;
-	
-	int64_t nextInfectionId;
-	
-	// Linked list of current infections
-	std::list<Infection> infections;
-	
-	std::unique_ptr<DeathEvent> deathEvent;
-	
-	// Two sets of immune history (regular & "clinical")
-	ImmuneHistory immunity;
-	ImmuneHistory clinicalImmunity;
+    Population * popPtr;
+    double const birthTime;
+    double const deathTime;
+    
+    int64_t nextInfectionId;
+    
+    // Linked list of current infections
+    std::list<Infection> infections;
+    
+    std::unique_ptr<DeathEvent> deathEvent;
+    
+    // Two sets of immune history (regular & "clinical")
+    ImmuneHistory immunity;
+    ImmuneHistory clinicalImmunity;
 };
 
 #endif
