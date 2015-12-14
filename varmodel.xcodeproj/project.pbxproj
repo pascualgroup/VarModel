@@ -83,11 +83,11 @@
 		692A381F18B949590085986A /* Simulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Simulation.cpp; sourceTree = "<group>"; };
 		692A382018B949590085986A /* Simulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Simulation.h; sourceTree = "<group>"; };
 		692A382F18B94A060085986A /* libsqlite3.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.0.dylib; path = usr/lib/libsqlite3.0.dylib; sourceTree = SDKROOT; };
-		692A383518B94A640085986A /* test_malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
+		692A383518B94A640085986A /* test_varmodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test_varmodel; sourceTree = BUILT_PRODUCTS_DIR; };
 		692A384018B94A700085986A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		693303411917857300EBB876 /* Infection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Infection.cpp; sourceTree = "<group>"; };
 		693303421917857300EBB876 /* Infection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Infection.h; sourceTree = "<group>"; };
-		693B771918B94655009D10D4 /* malariamodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = malariamodel; sourceTree = BUILT_PRODUCTS_DIR; };
+		693B771918B94655009D10D4 /* varmodel */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = varmodel; sourceTree = BUILT_PRODUCTS_DIR; };
 		693F00F518BCFC63000F31C7 /* Strain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Strain.cpp; sourceTree = "<group>"; };
 		693F00F618BCFC63000F31C7 /* Strain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Strain.h; sourceTree = "<group>"; };
 		69410D131A192B2C00AB306C /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
@@ -221,8 +221,8 @@
 		693B771A18B94655009D10D4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				693B771918B94655009D10D4 /* malariamodel */,
-				692A383518B94A640085986A /* test_malariamodel */,
+				693B771918B94655009D10D4 /* varmodel */,
+				692A383518B94A640085986A /* test_varmodel */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -278,9 +278,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		692A383418B94A640085986A /* test_malariamodel */ = {
+		692A383418B94A640085986A /* test_varmodel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 692A383B18B94A640085986A /* Build configuration list for PBXNativeTarget "test_malariamodel" */;
+			buildConfigurationList = 692A383B18B94A640085986A /* Build configuration list for PBXNativeTarget "test_varmodel" */;
 			buildPhases = (
 				692A383118B94A640085986A /* Sources */,
 				692A383218B94A640085986A /* Frameworks */,
@@ -290,14 +290,14 @@
 			);
 			dependencies = (
 			);
-			name = test_malariamodel;
+			name = test_varmodel;
 			productName = test_malariamodel;
-			productReference = 692A383518B94A640085986A /* test_malariamodel */;
+			productReference = 692A383518B94A640085986A /* test_varmodel */;
 			productType = "com.apple.product-type.tool";
 		};
-		693B771818B94655009D10D4 /* malariamodel */ = {
+		693B771818B94655009D10D4 /* varmodel */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 693B772218B94655009D10D4 /* Build configuration list for PBXNativeTarget "malariamodel" */;
+			buildConfigurationList = 693B772218B94655009D10D4 /* Build configuration list for PBXNativeTarget "varmodel" */;
 			buildPhases = (
 				693B771518B94655009D10D4 /* Sources */,
 				693B771618B94655009D10D4 /* Frameworks */,
@@ -307,9 +307,9 @@
 			);
 			dependencies = (
 			);
-			name = malariamodel;
+			name = varmodel;
 			productName = malariamodel;
-			productReference = 693B771918B94655009D10D4 /* malariamodel */;
+			productReference = 693B771918B94655009D10D4 /* varmodel */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -321,7 +321,7 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "Ed Baskerville";
 			};
-			buildConfigurationList = 693B771418B94655009D10D4 /* Build configuration list for PBXProject "malariamodel" */;
+			buildConfigurationList = 693B771418B94655009D10D4 /* Build configuration list for PBXProject "varmodel" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -333,8 +333,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				693B771818B94655009D10D4 /* malariamodel */,
-				692A383418B94A640085986A /* test_malariamodel */,
+				693B771818B94655009D10D4 /* varmodel */,
+				692A383418B94A640085986A /* test_varmodel */,
 			);
 		};
 /* End PBXProject section */
@@ -507,7 +507,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		692A383B18B94A640085986A /* Build configuration list for PBXNativeTarget "test_malariamodel" */ = {
+		692A383B18B94A640085986A /* Build configuration list for PBXNativeTarget "test_varmodel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				692A383C18B94A640085986A /* Debug */,
@@ -516,7 +516,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		693B771418B94655009D10D4 /* Build configuration list for PBXProject "malariamodel" */ = {
+		693B771418B94655009D10D4 /* Build configuration list for PBXProject "varmodel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				693B772018B94655009D10D4 /* Debug */,
@@ -525,7 +525,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		693B772218B94655009D10D4 /* Build configuration list for PBXNativeTarget "malariamodel" */ = {
+		693B772218B94655009D10D4 /* Build configuration list for PBXNativeTarget "varmodel" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				693B772318B94655009D10D4 /* Debug */,

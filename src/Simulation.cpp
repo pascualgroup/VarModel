@@ -361,6 +361,10 @@ void Simulation::sampleHosts()
 
 void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<StrainPtr> &strains)
 {
+    if(getTime() < parPtr->burnIn) {
+        return;
+    }
+    
     for(auto & strainPtr : strains) {
         TransmissionStrainRow row;
         row.time = getTime();

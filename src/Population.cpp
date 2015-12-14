@@ -201,6 +201,10 @@ void Population::updateRates()
 
 void Population::sampleHosts()
 {
+    if(getTime() < simPtr->parPtr->burnIn) {
+        return;
+    }
+    
     Database * dbPtr = simPtr->dbPtr;
     
     vector<size_t> hostIndices = drawUniformIndices(

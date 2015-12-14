@@ -275,6 +275,11 @@ ZPPJSON_DEFINE_TYPE(
     ( (Int64)(randomSeed) )
     
     /**
+        \brief Burn-in period for simulation.
+    */
+    ( (Double)(burnIn) )
+                    
+    /**
         \brief Simulation end time
     */
     ( (Double)(tEnd) )
