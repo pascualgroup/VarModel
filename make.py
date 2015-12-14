@@ -2,50 +2,76 @@
 
 import os
 import sys
+import subprocess
 
-EXEC_NAME = 'malariamodel'
+SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Compilers in preference order: tuple (cCompiler, cppCompiler, flags)
-COMPILERS = [
-#Intel compiler does not currently work
-#	('icc', 'icpc', ''),
-	('clang', 'clang++', '-stdlib=libc++'),
-	('gcc', 'g++', '')
-]
+def main():
+    if sys.platform.startswith('linux'):
+        c_compiler = 'gcc'
+        cpp_compiler = 'g++'
+        flags = []
+    elif sys.platform == 'darwin':
+        c_compiler = 'clang'
+        cpp_compiler = 'clang++'
+        flags = ['-stdlib=libc++']
+    else:
+        sys.stderr.write('This build script only works on Linux+GCC and Mac OS X+Clang.')
+        sys.exit(1)
+    
+    include_dirs = [
+        'zppjson/src',
+        'zppdb/src',
+        'zppsim/src',
+        'preprocessor/include',
+        'libjson'
+    ]
+    
+    src_dirs = [
+        'src',
+        'zppjson/src',
+        'zppdb/src',
+        'zppsim/src',
+    ]
+    
+    src_files = []
+    for src_dir in src_dirs:
+        for root, dirs, filenames in os.walk(src_dir):
+            for filename in filenames:
+                if filename.endswith('.cpp'):
+                    src_files.append(os.path.join(root, filename))
+    
+    try:
+        os.makedirs(os.path.join(SCRIPT_DIR, 'bin'))
+    except:
+        pass
+    
+    run_command([
+        c_compiler,
+        '-O3',
+        '-c', 'libjson/json.c',
+        '-o', 'bin/libjson.o'
+    ])
+    
+    run_command(
+        [cpp_compiler, '-O3', '-std=c++11'] + flags +
+        ['-I{}'.format(os.path.expanduser(x)) for x in include_dirs] +
+        ['bin/libjson.o'] +
+        src_files +
+        ['-o', 'bin/varmodel', '-lsqlite3']
+    )
+    
+    os.remove('bin/libjson.o')
 
-def execPresent(execName):
-	return os.system('which {0}'.format(execName)) == 0
+def run_command(cmd_and_args):
+    sys.stderr.write(' '.join(cmd_and_args))
+    sys.stderr.write('\n')
+    
+    proc = subprocess.Popen(
+        cmd_and_args,
+        cwd=SCRIPT_DIR
+    )
+    proc.wait()
 
 if __name__ == '__main__':
-	os.chdir(os.path.dirname(__file__))
-	
-	for compiler in COMPILERS:
-		if execPresent(compiler[0]) and execPresent(compiler[1]):
-			cCompiler, cppCompiler, flags = compiler
-			break
-	
-	includeDirs = [
-		'zppjson/src',
-		'zppdb/src',
-		'zppsim/src',
-		'preprocessor/include',
-		'libjson'
-	]
-	
-	srcDirs = [
-		'src',
-		'zppjson/src',
-		'zppdb/src',
-		'zppsim/src',
-	]
-	
-	os.system('mkdir -p bin')
-	os.system('{0} -O3 -c libjson/json.c -o bin/libjson.o'.format(cCompiler))
-	os.system('{0} -O3 -std=c++11 {1} {2} bin/libjson.o {3} -o bin/{4} -lsqlite3'.format(
-		cppCompiler,
-		flags,
-		' '.join(['-I{0}'.format(os.path.expanduser(x)) for x in includeDirs]),
-		' '.join(['{0}/*.cpp'.format(x) for x in srcDirs]),
-		EXEC_NAME
-	))
-	os.system('rm bin/libjson.o')
+    main()
