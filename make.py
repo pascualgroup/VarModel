@@ -36,7 +36,7 @@ def main():
     
     src_files = []
     for src_dir in src_dirs:
-        for root, dirs, filenames in os.walk(src_dir):
+        for root, dirs, filenames in os.walk(os.path.join(SCRIPT_DIR, src_dir)):
             for filename in filenames:
                 if filename.endswith('.cpp'):
                     src_files.append(os.path.join(root, filename))
@@ -61,7 +61,7 @@ def main():
         ['-o', 'bin/varmodel', '-lsqlite3']
     )
     
-    os.remove('bin/libjson.o')
+    os.remove(os.path.join(SCRIPT_DIR, 'bin/libjson.o'))
 
 def run_command(cmd_and_args):
     sys.stderr.write(' '.join(cmd_and_args))

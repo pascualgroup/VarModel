@@ -101,18 +101,6 @@ ZPPJSON_DEFINE_TYPE(
     ( (Double)(immigrationRate) )
     
     /**
-        \brief Probability that an immigration event will include new genes
-        added to the pool.
-    */
-    ( (Double)(pImmigrationIncludesNewGenes) )
-    
-    /**
-        \brief Number of new genes added to the pool during immigration event
-        that includes new genes.
-    */
-    ( (Int64)(nImmigrationNewGenes) )
-    
-    /**
         \brief x-position of population in 2D space.
     */
     ( (Double)(x) )

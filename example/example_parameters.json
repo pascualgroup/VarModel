@@ -1,141 +1,78 @@
 {
-	// Output filename.
-	"dbFilename" : "output.sqlite",
-	
-	// Overwrite database
-	// (if false, exception will be thrown)
-	"overwriteDatabase" : true,
-	
-	// How often to commit the database, in simulation time
-	// (prevents database from becoming bottleneck).
-	"dbCommitPeriod" : 30,
-	
-	// Whether to output hosts, genes, strains
-	"outputHosts" : true,
-	"outputGenes" : true,
-	"outputStrains" : true,
-	
-	// Random seed: if 0, seed is generated from system random generator
-	"randomSeed" : 0,
-	
-	// End time of simulation
-	"tEnd" : 360.0, // "year" that's divisible by 12 and 30
-	
-	// How often to update seasonal rates
-	"seasonalUpdateEvery" : 1.0,
-	
-	// How often to sample hosts
-	"sampleHostsEvery" : 5.0,
-	
-    // How often to sample a transmission event, in number of transmission events
+    "dbFilename" : "output.sqlite",
+    "overwriteDatabase" : true,
+    "dbCommitPeriod" : 30,
+    
+    "burnIn" : 100.0,
+    
+    "outputHosts" : true,
+    "outputGenes" : true,
+    "outputStrains" : true,
+    
+    "randomSeed" : 0,
+    
+    "tEnd" : 360.0,
+    
+    "seasonalUpdateEvery" : 1.0,
+    "sampleHostsEvery" : 5.0,
     "sampleTransmissionEventEvery" : 100,
-	
-	// Number of var genes in pool
-	"genePoolSize" : 1000,
-	
-	// Number of genes in each strain
-	"genesPerStrain" : 50,
-	
-	// Probability of mutation, per locus, per transmission events
-	"pMutation" : 0.01,
-	
-	// Probability that a transmitted strain will be a recombinant
-	// (non-recombinant strains will be a random subset of original strains)
-	"pRecombinant" : 0.05,
-	
-	
-	"tLiverStage" : 7.0,
-	
-	// Parameter used to determine effective distance, and thus contact rate,
-	// for different populations. The relative weight of populations is given by
-	// d^(-power)
-	"distancePower" : 1.0,
-	
-	// Host-lifetime distribution, specified as a discrete PDF,
-	// with uniform density within each discrete chunk
-	"hostLifetimeDistribution" : {
-		"x0" : 0.0,
-		"dx" : 3600.0, // 10-"year" discrete chunks
-		"pdf" : [0.3, 0.3, 0.4] // 30% 0-10, 30% 10-20, 40% 20-30
-	},
-	
-	// Transmission parameters (will probably change)
-	// If true, the probability of transmission is reduced by the number of active
-	// infections
-	"coinfectionReducesTransmission" : true,
-	
-	// Within-host parameters
-	"withinHost" : {
-		"activationRateConstant" : 1.0,
-		"activationRatePower" : 0.0,
-		"deactivationRateConstant" : 1.0,
-		"deactivationRatePower" : 0.0,
-		"clearanceRateConstantNotImmune" : 1.0,
-		"clearanceRateConstantImmune" : 1.0,
-		"clearanceRatePower" : 0.0
-	},
-	
-	// Array of population parameters
-	"populations" : [
-		// First population
-		{
-			// Population size
-			"size" : 100000,
-			
-			// Number of hosts to sample at sampling interval
-			"sampleSize" : 1000,
-			
-			// Number of initial infections in the population
-			"nInitialInfections" : 1000,
-			
-			// Biting rate mean/amplitude (as fraction)/period/phase
-			"bitingRate" : {
-				"mean" : 1.4,
-				"relativeAmplitude" : 0.05,
-				"period" : 360.0,
-				"phase" : 0.0
-			},
-			
-			// Rate of appearance of new strains
-			"immigrationRate" : 0.1,
-			
-			// Probability that immigration event includes new genes
-			"pImmigrationIncludesNewGenes" : 0.1,
-			
-			// Number of new genes included in new-gene immigration event
-			"nImmigrationNewGenes" : 10,
-			
-			// Location in space, used to calculate contact rates between populations
-			"x" : 0,
-			"y" : 0,
-			
-			// "Distance" for within-population contacts, used to calculate
-			// within-population contact rate
-			"selfDistance" : 0.5
-		}
-		// Additional populations can appear here (separate {} sections with commas between them)
-	],
-	
-	// Gene parameters
-	"genes" : {
-		// Array of transmissibility values, one for each gene, or a single value
-		// shared across genes
-		"transmissibility" : [0.8],
-		
-		// Array of immunity loss rates, one for each gene, or a single value
-		// shared across genes
-		"immunityLossRate" : [0.001],
-		
-		// Array of clinical immunity-loss rates, one for each gene, or a single value
-		// shared across genes
-		"clinicalImmunityLossRate" : [0.1],
-		
-		// Relative mutation rates from each gene to each other gene;
-		// mutationWeights[i] is the relative probability of different mutations from
-		// gene i. mutationWeights[i][i] are set to 0 before normalizing.
-		//"mutationWeights" : [[1, 5], [5, 1]]
-		"mutationWeights" : [[1]]
-	},
-	
-	"trackClinicalImmunity" : false
+    
+    "genePoolSize" : 1000,
+    "genesPerStrain" : 50,
+    
+    "pMutation" : 0.01,
+    "pRecombinant" : 0.05,
+    
+    "tLiverStage" : 7.0,
+    
+    "distancePower" : 1.0,
+    
+    "hostLifetimeDistribution" : {
+        "x0" : 0.0,
+        "dx" : 3600.0,
+        "pdf" : [0.3, 0.3, 0.4]
+    },
+    
+    "coinfectionReducesTransmission" : true,
+    
+    "withinHost" : {
+        "activationRateConstant" : 1.0,
+        "activationRatePower" : 0.0,
+        "deactivationRateConstant" : 1.0,
+        "deactivationRatePower" : 0.0,
+        "clearanceRateConstantNotImmune" : 1.0,
+        "clearanceRateConstantImmune" : 1.0,
+        "clearanceRatePower" : 0.0
+    },
+    
+    "populations" : [
+        {
+            "size" : 100000,
+            "sampleSize" : 1000,
+            "nInitialInfections" : 1000,
+            "bitingRate" : {
+                "mean" : 1.4,
+                "relativeAmplitude" : 0.05,
+                "period" : 360.0,
+                "phase" : 0.0
+            },
+            "immigrationRate" : 0.1,
+            "pImmigrationIncludesNewGenes" : 0.0,
+            "nImmigrationNewGenes" : 10,
+            
+            "x" : 0,
+            "y" : 0,
+            
+            "selfDistance" : 0.5
+        }
+    ],
+    
+    "genes" : {
+        "transmissibility" : [0.8],
+        "immunityLossRate" : [0.001],
+        "clinicalImmunityLossRate" : [0.1],
+        "mutationWeights" : [[1]]
+    },
+    
+    "trackClinicalImmunity" : false
 }

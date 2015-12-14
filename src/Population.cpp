@@ -162,18 +162,7 @@ void Population::performImmigrationEvent()
 //    cerr << getTime() << ": immigration event, pop " << id << '\n';
     int64_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
     
-    bernoulli_distribution flipCoin(parPtr->pImmigrationIncludesNewGenes);
-    bool includesNewGenes = flipCoin(*rngPtr);
-    
-    StrainPtr strain;
-    if(includesNewGenes) {
-//        cerr << "Generating strain with new genes" << endl;
-        strain = simPtr->generateRandomStrain(parPtr->nImmigrationNewGenes);
-    }
-    else {
-//        cerr << "Generating strain with all old genes" << endl;
-        strain = simPtr->generateRandomStrain();
-    }
+    StrainPtr strain = simPtr->generateRandomStrain();
     hosts[hostIndex]->receiveInfection(strain);
 }
 
