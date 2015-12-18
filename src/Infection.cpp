@@ -19,11 +19,6 @@ Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t 
     geneIndex(initialGeneIndex), active(false),
     transitionTime(initialTime)
 {
-    for (int64_t i=0; i<strainPtr->size(); i++) {
-        expressionOrder.push_back(i);
-    }
-    std::random_shuffle(expressionOrder.begin(),expressionOrder.end());
-    expressionIndex = 0;
 }
 
 void Infection::prepareToEnd()
@@ -71,16 +66,16 @@ void Infection::performTransition()
     
     if(geneIndex == WAITING_STAGE) {
         assert(!active);
-        geneIndex = expressionOrder[expressionIndex];
+        geneIndex = 0;
     }
     else if(active) {
-        assert(expressionIndex != strainPtr->size() - 1);
+        assert(geneIndex != strainPtr->size() - 1);
         GenePtr genePtr = strainPtr->getGene(geneIndex);
         hostPtr->immunity.gainImmunity(genePtr);
         if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
             hostPtr->clinicalImmunity.gainImmunity(genePtr);
         }
-        expressionIndex++;
+        geneIndex++;
         active = false;
     }
     else {
@@ -328,7 +323,7 @@ void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
     // If this is the final deactivation, then it's equivalent to clearing
     if(infectionItr->active
-        && infectionItr->expressionIndex == infectionItr->strainPtr->size() - 1
+        && infectionItr->geneIndex == infectionItr->strainPtr->size() - 1
     ) {
         infectionItr->hostPtr->clearInfection(infectionItr);
     }

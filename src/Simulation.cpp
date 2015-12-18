@@ -365,14 +365,6 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
         return;
     }
     
-    for(auto & strainPtr : strains) {
-        TransmissionStrainRow row;
-        row.time = getTime();
-        row.transmissionId = transmissionCount;
-        row.strainId = strainPtr->id;
-        dbPtr->insert(sampledTransmissionStrainTable, row);
-    }
-    
     if((transmissionCount + 1) % parPtr->sampleTransmissionEventEvery == 0) {
         TransmissionRow row;
         row.time = getTime();
@@ -380,8 +372,14 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
         row.sourceHostId = srcHost.id;
         row.targetHostId = dstHost.id;
         dbPtr->insert(sampledTransmissionTable, row);
-
-        /**
+    
+        for(auto & strainPtr : strains) {
+            TransmissionStrainRow row;
+            row.time = getTime();
+            row.transmissionId = transmissionCount;
+            row.strainId = strainPtr->id;
+            dbPtr->insert(sampledTransmissionStrainTable, row);
+        }
 
         srcHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
         dstHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
@@ -390,7 +388,6 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
         srcHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
         dstHost.immunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
         dstHost.clinicalImmunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
-         **/
     }
     
     transmissionCount++;
@@ -425,11 +422,9 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
 }
 
 
-StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
+StrainPtr Simulation::getStrain(std::vector<GenePtr> const & strainGenes)
 {
     StrainPtr strainPtr;
-    std::vector<GenePtr> strainGenes = oriStrainGenes;
-    std::sort (strainGenes.begin(),strainGenes.end());
     auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
     if(strainItr == geneVecToStrainIndexMap.end()) {
         strains.emplace_back(new Strain(nextStrainId++, strainGenes));
