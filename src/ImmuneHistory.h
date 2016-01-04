@@ -53,8 +53,6 @@ public:
 	void gainImmunity(GenePtr genePtr);
 	void gainAlleleImmunity(GenePtr genePtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
     //void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
-    void gainGeneralImmunity();
-    double checkGeneralImmunity();
     double checkGeneImmunity(GenePtr genePtr);
 	void loseImmunity(GenePtr genePtr);
     //void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
@@ -68,7 +66,6 @@ public:
     std::vector<std::unordered_map<int64_t,int64_t>> immuneAlleles;
 	std::unordered_set<GenePtr> genes;
 	std::unordered_map<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
-    int64_t infectedTimes = 0;
 private:
 	Host * hostPtr;
 	bool clinical;

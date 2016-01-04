@@ -277,7 +277,7 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	// Gain immunity to active gene
 	if(infectionItr->active) {
 		GenePtr genePtr = infectionItr->getCurrentGene();
-        /*
+        
         if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
             immunity.gainImmunity(genePtr);
             if(getSimulationParametersPtr()->trackClinicalImmunity) {
@@ -286,8 +286,8 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
         }else{
             gainAlleleImmunity(genePtr);
         }
-         */
-        immunity.gainGeneralImmunity();
+        
+        //immunity.gainGeneralImmunity();
 	}
 	
 	// Remove infection

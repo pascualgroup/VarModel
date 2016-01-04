@@ -69,7 +69,7 @@ double Infection::getAgeAtTransitionTime()
 
 void Infection::performTransition()
 {
-	//SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	transitionTime = hostPtr->getTime();
 	
 	bool shouldUpdateAllInfections = transitionAffectsAllInfections();
@@ -81,8 +81,6 @@ void Infection::performTransition()
 	else if(active) {
 		assert(expressionIndex != strainPtr->size() - 1);
 		GenePtr genePtr = strainPtr->getGene(geneIndex);
-        //change it to only gain immunity through the time person gets infected
-         /*
         if(!simParPtr->withinHost.useAlleleImmunity) {
             hostPtr->immunity.gainImmunity(genePtr);
             if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
@@ -91,8 +89,6 @@ void Infection::performTransition()
         }else{
             hostPtr->gainAlleleImmunity(genePtr);
         }
-         */
-        hostPtr->immunity.gainGeneralImmunity();
 		expressionIndex++;
 		active = false;
 	}
@@ -217,7 +213,7 @@ double Infection::clearanceRate()
 		
 		double nActiveInfections = hostPtr->getActiveInfectionCount();
 		double clearanceRateConstant;
-        /*
+        
         if(!simParPtr->withinHost.useAlleleImmunity){
             if(isImmune()) {
                 clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
@@ -238,17 +234,7 @@ double Infection::clearanceRate()
             }
             //cout<<"clearRate "<<clearanceRateConstant<<endl;
         }
-         */
-        double geneImmuneLevel = hostPtr->immunity.checkGeneralImmunity();
-        double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
-        double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune / (1-geneImmuneLevel);
-        if(geneImmuneLevel==1.0) {
-            clearanceRateConstant = r1;
-        }else if (geneImmuneLevel==0) {
-            clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
-        }else{
-            clearanceRateConstant = r2;
-        }
+        
         
 		assert(!std::isnan(clearanceRateConstant));
 		assert(!std::isinf(clearanceRateConstant));

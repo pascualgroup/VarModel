@@ -68,21 +68,6 @@ void ImmuneHistory::gainImmunity(GenePtr genePtr)
 	}
 }
 
-void ImmuneHistory::gainGeneralImmunity() {
-    infectedTimes++;
-    hostPtr->updateInfectionRates();
-}
-
-double ImmuneHistory::checkGeneralImmunity() {
-    //assume 10 times infection give full protection
-    //can add this as a parameter later
-    if (infectedTimes >= 10) {
-        return 1.0;
-    }else{
-        return infectedTimes/10.0;
-    }
-}
-
 void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr,bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table)
 {
     vector<int64_t> geneAlleles = genePtr->Alleles;
