@@ -4,6 +4,8 @@
 #include "zppsim_util.hpp"
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <math.h>
+#include <algorithm>
 
 // 100-millisecond delay between database commit retries
 #define DB_RETRY_DELAY 100000
@@ -509,74 +511,94 @@ int64_t Simulation::recLociId(std::vector<int64_t> & recGeneAlleles) {
     return genes.size();
 }
 
-double Simulation::parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2) {
-    double pSim = 0;
+double Simulation::parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2, int64_t breakPoint) {
+    double pDiv = 0;
+    double childDiv = 0;
+    double rho = 0.8; //recombination tolerance;
+    double averageMutation = 5; //average number of mutations per epitope
     std::vector<int64_t> pGene1Alleles = pGene1->Alleles;
     std::vector<int64_t> pGene2Alleles = pGene2->Alleles;
     for (int64_t i=0; i<locusNumber; ++i) {
-        if (pGene1Alleles[i] == pGene2Alleles[i]) {
-            pSim += 1./locusNumber;
+        if (pGene1Alleles[i] != pGene2Alleles[i]) {
+            pDiv += 1;
+            if (i<breakPoint) {
+                childDiv += 1;
+            }
         }
     }
-    //cout<<pSim<<endl;
-    return pSim>0 ? pSim:0.01;
+    double rhoPower = childDiv * averageMutation * (pDiv-childDiv)* averageMutation /(pDiv * averageMutation -1);
+    double survProb = pow(rho, rhoPower);
+    //cout<<survProb<<endl;
+    return survProb;
 }
 
 //recombine or conversion of two parent genes, return gene pointers of the two new genes
+//11-20 change the recombination probability to incorporate child's similarity to the parents.
 std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion) {
     //cout<<"ectopic recombine gene\n";
     std::vector<GenePtr> returnGenes;
     returnGenes.push_back(pGene1);
     returnGenes.push_back(pGene2);
-    int64_t breakPoint = 1 + drawUniformIndex(rng,locusNumber-2);
-    std::vector<int64_t> pGene1Alleles = pGene1->Alleles;
-    std::vector<int64_t> pGene2Alleles = pGene2->Alleles;
-    bernoulli_distribution flipCoin(parentsSimilarity(pGene1,pGene2));
-    bool recFunction[] = {flipCoin(rng),flipCoin(rng)};//whether functional for the two recombinants;
-    std::vector<int64_t> recGene1Alleles(locusNumber);
-    std::vector<int64_t> recGene2Alleles(locusNumber);
-    for (int64_t i=0; i<locusNumber; ++i) {
-        if (i<breakPoint) {
-            recGene1Alleles[i] = pGene1Alleles[i];
-            recGene2Alleles[i] = pGene2Alleles[i];
-        } else {
-            recGene1Alleles[i] = pGene2Alleles[i];
-            recGene2Alleles[i] = pGene1Alleles[i];
+    int64_t breakPoint = drawUniformIndex(rng,locusNumber);
+    if ((breakPoint == 0) || (breakPoint == (locusNumber-1))) {
+        if(isConversion) {
+            if(breakPoint>0) {
+                returnGenes[0] = pGene2;
+            }else{
+                returnGenes[1] = pGene1;
+            }
         }
-    }
-    //test whether the new recombinant is already in genes matrix
-    int64_t recId[] = {recLociId(recGene1Alleles),recLociId(recGene2Alleles)};
-    if (recId[0] == genes.size()) {
-    //get whether the new recombinant is functional
-        GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0]);
-        recId[1]++;
-        if (recFunction[0]) {
-           returnGenes[0] = recGenePtr;
-        }
-    } else {
-        if (genes[recId[0]]->functionality) {
-            returnGenes[0] = genes[recId[0]];
-        }
-    }
-    if (isConversion) {
         return returnGenes;
-        //cout<<returnGenes[0]->id<<endl;
-        //cout<<returnGenes[1]->id<<endl;
-    }else{
-        if(recId[1] == genes.size()) {
-            GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1]);
-            if (recFunction[1]) {
-                returnGenes[1] = recGenePtr;
-            }
-        } else {
-            if (genes[recId[1]]->functionality) {
-                returnGenes[1] = genes[recId[1]];
+    }else {
+        std::vector<int64_t> pGene1Alleles = pGene1->Alleles;
+        std::vector<int64_t> pGene2Alleles = pGene2->Alleles;
+        bernoulli_distribution flipCoin(parentsSimilarity(pGene1,pGene2, breakPoint));
+        bool recFunction[] = {flipCoin(rng),flipCoin(rng)};//whether functional for the two recombinants;
+        std::vector<int64_t> recGene1Alleles(locusNumber);
+        std::vector<int64_t> recGene2Alleles(locusNumber);
+        for (int64_t i=0; i<locusNumber; ++i) {
+            if (i<breakPoint) {
+                recGene1Alleles[i] = pGene1Alleles[i];
+                recGene2Alleles[i] = pGene2Alleles[i];
+            } else {
+                recGene1Alleles[i] = pGene2Alleles[i];
+                recGene2Alleles[i] = pGene1Alleles[i];
             }
         }
-        //cout<<returnGenes[0]->id<<endl;
-        //cout<<returnGenes[1]->id<<endl;
+        //test whether the new recombinant is already in genes matrix
+        int64_t recId = recLociId(recGene1Alleles);
+        if (recId == genes.size()) {
+            //get whether the new recombinant is functional
+            GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0]);
+            if (recFunction[0]) {
+                returnGenes[0] = recGenePtr;
+            }
+        } else {
+            if (genes[recId]->functionality) {
+                returnGenes[0] = genes[recId];
+            }
+        }
+        if (isConversion) {
+            return returnGenes;
+            //cout<<returnGenes[0]->id<<endl;
+            //cout<<returnGenes[1]->id<<endl;
+        }else{
+            recId = recLociId(recGene2Alleles);
+            if(recId == genes.size()) {
+                GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1]);
+                if (recFunction[1]) {
+                    returnGenes[1] = recGenePtr;
+                }
+            } else {
+                if (genes[recId]->functionality) {
+                returnGenes[1] = genes[recId];
+                }
+            }
+            //cout<<returnGenes[0]->id<<endl;
+            //cout<<returnGenes[1]->id<<endl;
         
         return returnGenes;
+        }
     }
 }
 /**

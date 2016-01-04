@@ -81,7 +81,7 @@ public:
 	GenePtr mutateGene(GenePtr const & srcGene);
 	//GenePtr mutateGene2(GenePtr const & srcGene);
     int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
-    double parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2);
+    double parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2, int64_t breakPoint);
     std::vector<GenePtr> ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion);
 	
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
