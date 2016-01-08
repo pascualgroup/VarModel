@@ -17,8 +17,8 @@ def main():
         'executable' : os.path.join(SCRIPT_DIR, 'run_single.py')
     }
     
-    for pMutation in [0.01, 0.02, 0.03, 0.04]:
-        for immigrationRate in [0.1, 0.2, 0.3]:
+    for pMutation in [0.01, 0.02]:
+        for immigrationRate in [0.1, 0.2]:
             for replicate in range(1, 3):
                 # Set the parameter values
                 params['pMutation'] = pMutation
