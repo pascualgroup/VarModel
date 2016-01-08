@@ -19,7 +19,7 @@ def main():
     
     for pMutation in [0.01, 0.02, 0.03, 0.04]:
         for immigrationRate in [0.1, 0.2, 0.3]:
-            for replicate in range(1, 11):
+            for replicate in range(1, 3):
                 # Set the parameter values
                 params['pMutation'] = pMutation
                 params['populations'][0]['immigrationRate'] = immigrationRate
