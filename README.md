@@ -6,6 +6,95 @@
 * Python 2.7.x (for build scripts)
 * C++11-compliant compiler (Intel C++ compiler, LLVM/Clang, or GCC)
 * Doxygen (to build code documentation)
+* `runmany` to do parameter sweeps
+
+## Running a parameter sweep
+
+Before you do this for the first time, you need to make sure that [runmany](https://bitbucket.org/cobeylab/runmany) is installed on your system and is in your search path.
+
+First, make a new directory for your experiment and go there:
+
+```{sh}
+mkdir path/to/my_experiment_dir
+cd path/to/my_experiment_dir
+```
+
+Then, check out the varmodel code into that directory and build it, so you have a record of exactly what version of the code was used to run this experiment:
+
+```{sh}
+git clone git@bitbucket.org:pascualgroup/varmodel.git
+cd varmodel
+git submodule init
+git submodule update
+./make.py
+cd ..
+```
+
+Then, copy the example sweep files into this directory:
+
+```{sh}
+cp varmodel/example/sweep/* .
+``` 
+
+Your directory should now look like this:
+
+```
+my_experiment_dir/
+    generate_runs.py
+    run_single.py
+    varmodel/
+```
+
+Now, you want to set up the parameters that will be shared by all your runs, and also modify the script that will change the parameters for each individual run.
+
+Create a file called `base_parameters.json` and modify it to your liking, for example by copying the `example_parameters.json` file:
+
+```{sh}
+cp varmodel/example/example_parameters.json base_parameters.json
+```
+
+Now edit `generate_runs.py` to modify the parameters differently for each run. The first time you do this, it's probably a good idea to simply use the example, to make sure everything is working correctly before your modify it.
+
+Inside `generate_runs.py` you'll notice a nested for loop that creates a directory for each individual run, and dumps two files: `parameters.json`, which contains a parameters file specifically for that run, and `runmany_info.json`, which we'll get to below.
+
+WARNING: Python syntax is indentation-dependent, and standard indentation is four spaces (NOT tabs). Before you edit this file, change your text editor's settings to use four spaces.
+
+Once you've edited `generate_runs.py` to your liking, run it:
+
+```{sh}
+./generate_runs.py
+```
+
+This will create a directory hierarchy under `runs` according to your specifications, e.g.:
+
+```
+runs/
+    pm=0.01-imm=0.01/
+        01/
+            parameters.json
+            runmany_info.json
+        ...
+    ...
+```
+
+At this point, you could `cd` into any individual run directory and use `run_single.py` to run the simulation:
+```{sh}
+cd runs/pm=0.01-imm=0.01/01
+../../../run_single.py
+```
+
+but, more interestingly, you can use `runmany` to do a whole bunch of them in parallel:
+
+```{sh}
+runmany local runs --cores 4
+```
+
+This will perform your runs 4 at a time until they're all done. While they're running, you can open another terminal and check the status:
+```{sh}
+runmany status runs
+```
+
+You should be able to load data from the output files in Matlab, R, or Python while they are running.
 
 ## Getting and updating the soure code/Git primer
 
