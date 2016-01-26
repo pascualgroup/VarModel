@@ -467,8 +467,9 @@ GenePtr Simulation::drawRandomGene()
 {
     bool func = false;
     int64_t geneIndex;
+    int64_t s = parPtr->genePoolSize;
     while(!func) {
-        geneIndex = drawUniformIndex(rng, parPtr->genePoolSize);
+        geneIndex = drawUniformIndex(rng, s);
         func = genes[geneIndex]->functionality;
     }
 	return genes[geneIndex];
