@@ -116,7 +116,7 @@ int64_t Host::getActiveInfectionClinicalImmunityCount()
 }
 
 void Host::gainAlleleImmunity(GenePtr genePtr) {
-    immunity.gainAlleleImmunity(genePtr,true,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
+    immunity.gainAlleleImmunity(genePtr,false,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
 }
 
 void Host::prepareToDie()

@@ -462,12 +462,13 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 	transmissionCount++;
 }
 
+//for immigration events, only sample from the large pool that exists
 GenePtr Simulation::drawRandomGene()
 {
     bool func = false;
     int64_t geneIndex;
     while(!func) {
-        geneIndex = drawUniformIndex(rng, genes.size());
+        geneIndex = drawUniformIndex(rng, parPtr->genePoolSize);
         func = genes[geneIndex]->functionality;
     }
 	return genes[geneIndex];

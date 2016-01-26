@@ -189,7 +189,24 @@ double Infection::deactivationRate()
 	double power = simParPtr->withinHost.deactivationRatePower;
 	assert(!std::isnan(power));
 	assert(!std::isinf(power));
-	
+
+    //change the rule of immunity to be directly linked with deactivation rate,
+    //not with clearance rate anymore. delete events regarding clearance rates
+    if(!simParPtr->withinHost.useAlleleImmunity){
+        if(isImmune()) {
+            constant = 1.0;
+        }
+    }else{
+        double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
+        if(geneImmuneLevel==1.0) {
+            constant = 1.0;
+        }else{
+            constant = constant/(1-geneImmuneLevel);
+        }
+        //cout<<"clearRate "<<clearanceRateConstant<<endl;
+    }
+  
+    
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
 	
 	return constant * std::pow(nActiveInfections, power);
@@ -214,6 +231,7 @@ double Infection::clearanceRate()
 		double nActiveInfections = hostPtr->getActiveInfectionCount();
 		double clearanceRateConstant;
         
+        /*
         if(!simParPtr->withinHost.useAlleleImmunity){
             if(isImmune()) {
                 clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
@@ -234,6 +252,11 @@ double Infection::clearanceRate()
             }
             //cout<<"clearRate "<<clearanceRateConstant<<endl;
         }
+        */
+        
+        //in the input, set constant immune to be small so that most likely, strains
+        //finished expressing all the genes before being cleared.
+        clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
         
         
 		assert(!std::isnan(clearanceRateConstant));
