@@ -98,6 +98,8 @@ public:
 	
     void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
+    void writeDuration(double initialTime, double duration);
+
 	
 	bool verifyState();
 private:
@@ -148,7 +150,8 @@ private:
 	zppdb::Table<InfectionRow> sampledHostInfectionTable;
 	zppdb::Table<ImmunityRow> sampledHostImmunityTable;
 	zppdb::Table<ImmunityRow> sampledHostClinicalImmunityTable;
-	
+    
+	zppdb::Table<InfectionDurationRow> InfectionDurationTable;
 	zppdb::Table<TransmissionRow> sampledTransmissionTable;
 	zppdb::Table<TransmissionStrainRow> sampledTransmissionStrainTable;
 	zppdb::Table<TransmissionInfectionRow> sampledTransmissionInfectionTable;

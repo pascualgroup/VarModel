@@ -17,8 +17,9 @@ using namespace std;
 Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime) :
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
 	geneIndex(initialGeneIndex), active(false),
-	transitionTime(initialTime)
+	initialTime(initialTime)
 {
+    transitionTime = initialTime;
     for (int64_t i=0; i<strainPtr->size(); i++) {
         expressionOrder.push_back(i);
     }

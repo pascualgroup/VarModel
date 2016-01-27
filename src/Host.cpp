@@ -290,6 +290,10 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
         //immunity.gainGeneralImmunity();
 	}
 	
+    // add table to record duration of infection
+    double durationTime = getTime()-infectionItr->initialTime;
+    popPtr->simPtr->writeDuration(infectionItr->initialTime, durationTime);
+    
 	// Remove infection
 	infectionItr->prepareToEnd();
 	infections.erase(infectionItr);

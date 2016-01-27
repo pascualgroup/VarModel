@@ -295,6 +295,18 @@ ZPPDB_DEFINE_ROW_TYPE(
 	`sampledTransmissionClinicalImmunity` columns.
 */
 ZPPDB_DEFINE_ROW_TYPE(
+    InfectionDurationRow,
+    /**
+     time of infection sampled started
+     */
+     ((Real)(time))
+     /**
+      duration of infection
+      */
+     ((Real)(duration))
+)
+
+ZPPDB_DEFINE_ROW_TYPE(
 	ImmunityRow,
 	
 	/**

@@ -55,7 +55,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	strainsTable("strains"),
 	hostsTable("hosts"),
     alleleImmunityTable("hostsAlleleImmunityHistory"),
-	sampledHostsTable("sampledHosts"),
+    InfectionDurationTable("InfectionDurationTable"),
+    sampledHostsTable("sampledHosts"),
 	sampledHostInfectionTable("sampledHostInfections"),
 	sampledHostImmunityTable("sampledHostImmunity"),
 	sampledHostClinicalImmunityTable("sampledHostClinicalImmunity"),
@@ -461,6 +462,18 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 	
 	transmissionCount++;
 }
+
+void Simulation::writeDuration(double initialTime, double duration)
+{
+    bernoulli_distribution flipCoin(1.0/double(parPtr->sampleTransmissionEventEvery));
+    if(flipCoin(rng)) {
+        InfectionDurationRow row;
+        row.time = initialTime;
+        row.duration = duration;
+        dbPtr->insert(InfectionDurationTable, row);
+    }
+}
+
 
 //for immigration events, only sample from the large pool that exists
 GenePtr Simulation::drawRandomGene()

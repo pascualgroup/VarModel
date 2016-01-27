@@ -82,6 +82,7 @@ public:
 	int64_t geneIndex;
 	bool active;
 	double transitionTime;
+    double initialTime;
 	
 	std::unique_ptr<TransitionEvent> transitionEvent;
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
