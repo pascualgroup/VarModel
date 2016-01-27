@@ -33,13 +33,7 @@
         "pdf" : [0.3, 0.3, 0.4]
     },
     
-    "coinfectionReducesTransmission" : true,
-    
     "withinHost" : {
-        "activationRateConstant" : 1.0,
-        "activationRatePower" : 0.0,
-        "deactivationRateConstant" : 1.0,
-        "deactivationRatePower" : 0.0,
         "clearanceRateConstantNotImmune" : 1.0,
         "clearanceRateConstantImmune" : 1.0,
         "clearanceRatePower" : 0.0
@@ -68,7 +62,14 @@
     ],
     
     "genes" : {
+        "baselineActivationTime" : 1.0,
+        // "maxExpressionTime" : 1.0,
+        // "maxTransmissibility" : 1.0,
+        // "antigenicProfile" : [[1]],
         "transmissibility" : [0.8],
+        "expressionTime" : [4.0],
+        "activationPower" : [0.0],
+        "transmissibilityPower" : [-1.0],
         "immunityLossRate" : [0.001],
         "clinicalImmunityLossRate" : [0.1],
         "mutationWeights" : [[1]]

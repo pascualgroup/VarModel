@@ -129,7 +129,7 @@ ZPPJSON_DEFINE_TYPE(
     /**
         \brief Whether or not to divide transmissibility by #infections ("cost")
     */
-    ( (Bool)(coinfectionsReduceTransmission) )
+    //( (Bool)(coinfectionsReduceTransmission) )
 
     /**
         \brief The constant controlling the relationship between # active infections
@@ -137,13 +137,13 @@ ZPPJSON_DEFINE_TYPE(
         
         activationRate = activationRateConstant * nActiveInfections^activationRatePower
     */
-    ( (Double)(activationRateConstant) )
+    //( (Double)(activationRateConstant) )
 
     /**
         \brief The power controlling the relationship between # active infections
         and activation rate.
     */
-    ( (Double)(activationRatePower) )
+    //( (Double)(activationRatePower) )
 
     /**
         \brief The constant controlling the relationship between # active infections
@@ -151,13 +151,13 @@ ZPPJSON_DEFINE_TYPE(
         
         deactivationRate = deactivationRateConstant * nActiveInfections^deactivationRatePower
     */
-    ( (Double)(deactivationRateConstant) )
+    //( (Double)(deactivationRateConstant) )
 
     /**
         \brief The power controlling the relationship between # active infections
         and deactivation rate.
     */
-    ( (Double)(deactivationRatePower) )
+    //( (Double)(deactivationRatePower) )
 
     /**
         \brief The constant controlling the relationship between # active infections
@@ -193,11 +193,61 @@ ZPPJSON_DEFINE_TYPE(
     GeneParameters,
     
     /**
-        \brief Transmissibility of genes.
+        \brief Baseline activation time C.
+    */
+    ( (Double)(baselineActivationTime) )
+    
+    /**
+        \brief Maximum expected duration of expression.
+        
+        If not specified, expected duration will be d_i for each strain i.
+    */
+    ( (Double)(maxExpressionTime) )
+    
+    /**
+        \brief Maximum effect transmissibility.
+        
+        If not specified, will be set to t_i for each strain i.
+    */
+    ( (Double)(maxTransmissibility) )
+    
+    /**
+        \brief Antigenic profile for vars.
+        
+        Each row (inner array) represents the presence or absence of (abstract) epitopes on the var, which affects cross-immunity between vars.
+        If not specified, or if set to [[1]], a square matrix is implied, where each var has a different single epitope.
+    */
+    ( (Array<Array<Int64>>)(antigenicProfile) )
+    
+    /**
+        \brief Transmissibility of genes `t_i`.
         
         If only one entry present, used for all genes.
     */
     ( (Array<Double>)(transmissibility) )
+    
+    /**
+        \brief Mean duration of expression d_i, in simulation time units ("days").
+        
+        If only one entry present, used for all genes.
+    */
+    ( (Array<Double>)(expressionTime) )
+    
+    /**
+        \brief Power `p1_i` in expression for mean activation time, `C*(n+1)*p1_i`.
+        
+        Mean activation time is expressed as `C*(n+1)*p1_i`, for constant `C` and number of active infections `n`. If only one entry present, used for all genes.
+    */
+    ( (Array<Double>)(activationPower) )
+    
+    /**
+        \brief Power `p2_i` in expression for transmissibility, `[...]n^p2_i`.
+        
+        Effective transmissibility is expressed as
+        `E_t_i = [t_i + (T - t_i) * f1_i / (sum(a_i) - 1)] * n^p2_i`.
+        If only one entry present, used for all genes.
+    */
+    ( (Array<Double>)(transmissibilityPower) )
     
     /**
         \brief Immunity loss rate of genes.
@@ -346,7 +396,7 @@ ZPPJSON_DEFINE_TYPE(
     /**
         \brief Whether or not coinfection reduces transmission.
     */
-    ( (Bool)(coinfectionReducesTransmission) )
+//    ( (Bool)(coinfectionReducesTransmission) )
     
     /**
         \brief Parameters governing within-host dynamics

@@ -24,6 +24,7 @@ class Gene
 {
 public:
     int64_t const id;
+    
     double const transmissibility;
     double const immunityLossRate;
     double const clinicalImmunityLossRate;

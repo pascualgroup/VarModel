@@ -173,9 +173,62 @@ void Host::transmitTo(Host & dstHost)
     popPtr->simPtr->recordTransmission(*this, dstHost, strainsToTransmit);
 }
 
+int64_t Host::getEpitopeImmunityCount(GenePtr genePtr)
+{
+    SimParameters * simParPtr = getSimulationParametersPtr();
+    
+    int64_t geneId = genePtr->id;
+    if(simParPtr->genes.antigenicProfile.present()) {
+        int64_t n_epitopes = simParPtr->genes.antigenicProfile[geneId].size();
+        vector<int64_t> immuneEpitopes(n_epitopes, 0);
+        int64_t nImmuneEpitopes = 0;
+        for(auto & immuneGenePtr : immunity.genes) {
+            for(int64_t i = 0; i < n_epitopes; i++) {
+                if(
+                    immuneEpitopes[i] == 0 &&
+                    simParPtr->genes.antigenicProfile[geneId][i] > 0 &&
+                    simParPtr->genes.antigenicProfile[immuneGenePtr->id][i] > 0
+                ) {
+                    immuneEpitopes[i] = 1;
+                    nImmuneEpitopes += 1;
+                }
+            }
+        }
+        return nImmuneEpitopes;
+    }
+    return immunity.isImmune(genePtr);
+}
+
+int64_t Host::getEpitopeCount(GenePtr genePtr)
+{
+    SimParameters * simParPtr = getSimulationParametersPtr();
+    
+    int64_t geneId = genePtr->id;
+    if(simParPtr->genes.antigenicProfile.present()) {
+        int64_t count = 0;
+        for(int64_t i = 0; i < simParPtr->genes.antigenicProfile[geneId].size(); i++) {
+            count += simParPtr->genes.antigenicProfile[geneId][i];
+        }
+        return count;
+    }
+    return 1;
+}
+
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
     assert(strainPtr->size() > 0);
+    
+    // If we're currently immune to everything don't bother with infection
+    bool immuneToEverything = true;
+    for(auto & genePtr : strainPtr->getGenes()) {
+        if(getEpitopeImmunityCount(genePtr) < getEpitopeCount(genePtr)) {
+            immuneToEverything = false;
+        }
+    }
+    
+    if(immuneToEverything) {
+        return;
+    }
     
     rng_t * rngPtr = getRngPtr();
     double time = popPtr->getTime();
@@ -183,7 +236,6 @@ void Host::receiveInfection(StrainPtr & strainPtr)
     double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
     int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
     infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex, time);
-    
     
     // Get an iterator to the infection so that events can
     // point back to their infection

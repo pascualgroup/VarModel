@@ -50,6 +50,9 @@ public:
     
     void transmitTo(Host & dstHost);
     
+    int64_t getEpitopeImmunityCount(GenePtr genePtr);
+    int64_t getEpitopeCount(GenePtr genePtr);
+    
     void receiveInfection(StrainPtr & strain);
     
     void updateInfectionRates();

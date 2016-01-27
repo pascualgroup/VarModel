@@ -128,8 +128,8 @@ void Infection::updateClearanceRate()
 double Infection::activationRate()
 {
     assert(!active);
-//    GenePtr genePtr = getCurrentGene();
-//    int64_t geneId = getCurrentGeneId();
+    GenePtr genePtr = getCurrentGene();
+    int64_t geneId = getCurrentGeneId();
 //    bool immune = isImmune();
 //    bool clinicallyImmune = isClinicallyImmune();
 //    double age = getAgeAtTransitionTime();
@@ -141,44 +141,45 @@ double Infection::activationRate()
     
     SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
     
-    double constant = simParPtr->withinHost.activationRateConstant;
-    assert(!std::isnan(constant));
-    assert(!std::isinf(constant));
-    assert(constant > 0.0);
-    double power = simParPtr->withinHost.activationRatePower;
-    assert(power <= 0.0);
-    assert(!std::isnan(power));
-    assert(!std::isinf(power));
-    
+    double C = simParPtr->genes.baselineActivationTime;
+    double p1;
+    if(simParPtr->genes.activationPower.size() == 1) {
+        p1 = simParPtr->genes.activationPower[0];
+    }
+    else {
+        p1 = simParPtr->genes.activationPower[geneId];
+    }
     double nActiveInfections = hostPtr->getActiveInfectionCount();
     
-    if(power == 0.0) {
-        return constant;
-    }
-    
-    if(nActiveInfections == 0) {
-        return std::numeric_limits<double>::infinity();
-    }
-    return constant * std::pow(nActiveInfections, power);
+    return pow(nActiveInfections + 1.0, -p1) / C;
 }
 
 double Infection::deactivationRate()
 {
     assert(active);
+    GenePtr genePtr = getCurrentGene();
+    int64_t geneId = getCurrentGeneId();
     
     SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
     
-    double constant = simParPtr->withinHost.deactivationRateConstant;
-    assert(!std::isnan(constant));
-    assert(!std::isinf(constant));
-    assert(constant > 0.0);
-    double power = simParPtr->withinHost.deactivationRatePower;
-    assert(!std::isnan(power));
-    assert(!std::isinf(power));
+    double d_i;
+    if(simParPtr->genes.expressionTime.size() == 1) {
+        d_i = simParPtr->genes.expressionTime[0];
+    }
+    else {
+        d_i = simParPtr->genes.expressionTime[geneId];
+    }
     
-    double nActiveInfections = hostPtr->getActiveInfectionCount();
+    double f1_i = hostPtr->getEpitopeImmunityCount(genePtr);
+    double a_i_sum = hostPtr->getEpitopeCount(genePtr);
     
-    return constant * std::pow(nActiveInfections, power);
+    if(a_i_sum > 1 && simParPtr->genes.maxExpressionTime.present()) {
+        double D = simParPtr->genes.maxExpressionTime;
+        return 1.0 / (
+            d_i + (D - d_i) * f1_i / (a_i_sum - 1.0)
+        );
+    }
+    return d_i;
 }
 
 double Infection::clearanceRate()
@@ -227,15 +228,29 @@ double Infection::transmissionProbability()
     SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
     
     GenePtr genePtr = getCurrentGene();
+    int64_t geneId = getCurrentGeneId();
     
-    double p = genePtr->transmissibility;
-    assert(p > 0.0 && p < 1.0);
+    double t_i = genePtr->transmissibility;
     
-    if(simParPtr->coinfectionReducesTransmission) {
-        p /= hostPtr->getActiveInfectionCount();
+    double f1_i = hostPtr->getEpitopeImmunityCount(genePtr);
+    double a_i_sum = hostPtr->getEpitopeCount(genePtr);
+    
+    double n = hostPtr->getActiveInfectionCount();
+    
+    double p2;
+    if(simParPtr->genes.transmissibilityPower.size() == 1) {
+        p2 = simParPtr->genes.transmissibilityPower[0];
+    }
+    else {
+        p2 = simParPtr->genes.transmissibilityPower[geneId];
     }
     
-    return p;
+    if(a_i_sum > 1.0 && simParPtr->genes.maxTransmissibility.present()) {
+        double T = simParPtr->genes.maxTransmissibility;
+        return (t_i + (T - t_i) * f1_i / (a_i_sum - 1.0)) * pow(n, p2);
+    }
+    
+    return t_i * pow(n, p2);
 }
 
 std::string Infection::toString()

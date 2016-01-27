@@ -49,8 +49,15 @@ def dump_json(obj, filename):
         f.write('\n')
 
 def load_json(filename):
+    json_str = ''
     with open(filename) as f:
-        return json.load(f, object_pairs_hook=OrderedDict)
+        for line in f:
+            pieces = line.split('//')
+            if len(pieces) == 1:
+                json_str += pieces[0]
+            else:
+                json_str += pieces[0] + '\n'
+    return json.loads(json_str, object_pairs_hook=OrderedDict)
 
 if __name__ == '__main__':
     main()
