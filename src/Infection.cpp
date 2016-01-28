@@ -27,14 +27,31 @@ Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t 
     expressionIndex = 0;
 }
 
+Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, GenePtr & msPtr, int64_t initialGeneIndex, double initialTime) :
+hostPtr(hostPtr), id(id), strainPtr(strainPtr),
+msPtr(msPtr), geneIndex(initialGeneIndex), active(false),
+initialTime(initialTime)
+{
+    transitionTime = initialTime;
+    for (int64_t i=0; i<strainPtr->size(); i++) {
+        expressionOrder.push_back(i);
+    }
+    std::random_shuffle(expressionOrder.begin(),expressionOrder.end());
+    expressionIndex = 0;
+}
+
 void Infection::prepareToEnd()
 {
+    SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	hostPtr->removeEvent(transitionEvent.get());
 	hostPtr->removeEvent(clearanceEvent.get());
     //now also remove the mutation Events
     hostPtr->removeEvent(mutationEvent.get());
     //now also remove the recombination events
     hostPtr->removeEvent(recombinationEvent.get());
+    if (simParPtr->genes.includeMicrosat) {
+        hostPtr->removeEvent(msMutationEvent.get());
+    }
 }
 
 GenePtr Infection::getCurrentGene()
@@ -283,7 +300,7 @@ std::string Infection::toString()
 
 void Infection::write(Database & db, Table<InfectionRow> & table)
 {
-	InfectionRow row;
+    InfectionRow row;
 	row.time = hostPtr->getTime();
 	row.hostId = hostPtr->id;
 	row.infectionId = id;
@@ -296,6 +313,11 @@ void Infection::write(Database & db, Table<InfectionRow> & table)
 		row.geneIndex = geneIndex;
 		row.active = active;
 	}
+    if (msPtr != NULL){
+         row.msID = msPtr->id;
+    }else{
+        row.msID.setNull();
+    }
 	db.insert(table, row);
 }
 
@@ -369,6 +391,13 @@ InfectionProcessEvent(infectionItr, rate, time, rng)
 {
 }
 
+MSmutationEvent::MSmutationEvent(
+                                 std::list<Infection>::iterator infectionItr, double rate, double time, zppsim::rng_t & rng
+                                 ) :
+InfectionProcessEvent(infectionItr, rate, time, rng)
+{
+}
+
 void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
 	// If this is the final deactivation, then it's equivalent to clearing
@@ -397,5 +426,11 @@ void MutationEvent::performEvent(zppsim::EventQueue &queue)
 void RecombinationEvent::performEvent(zppsim::EventQueue &queue)
 {
     infectionItr->hostPtr->RecombineStrain(infectionItr);
+    //cout<<"recomb"<<endl;
+}
+
+void MSmutationEvent::performEvent(zppsim::EventQueue &queue)
+{
+    infectionItr->hostPtr->microsatMutate(infectionItr);
     //cout<<"recomb"<<endl;
 }

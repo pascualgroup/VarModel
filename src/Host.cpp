@@ -149,7 +149,7 @@ void Host::transmitTo(Host & dstHost)
 	
 	// Get some current infections according to transmission probability
 	vector<StrainPtr> originalStrains;
-	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
+    for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
 		if(infItr->isActive()) {
 			bernoulli_distribution flipCoin(infItr->transmissionProbability());
 			if(flipCoin(*rngPtr)) {
@@ -194,6 +194,91 @@ void Host::transmitTo(Host & dstHost)
 	for(auto & strainPtr : strainsToTransmit) {
 		dstHost.receiveInfection(strainPtr);
 	}
+	popPtr->simPtr->recordTransmission(*this, dstHost, strainsToTransmit);
+}
+
+void Host::transmitMSTo(Host & dstHost)
+{
+	rng_t * rngPtr = getRngPtr();
+	
+	if(infections.size() == 0) {
+        //	cerr << "No infections to transmit" << endl;
+        popPtr->simPtr->writeEIR(popPtr->getTime(),0);
+		return;
+	}
+    
+    popPtr->simPtr->writeEIR(popPtr->getTime(),1);
+    
+    //	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
+	
+	// Get some current infections according to transmission probability
+	vector<StrainPtr> originalStrains;
+    vector<GenePtr> originalMS;
+	for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
+		if(infItr->isActive()) {
+			bernoulli_distribution flipCoin(infItr->transmissionProbability());
+			if(flipCoin(*rngPtr)) {
+				originalStrains.push_back(infItr->strainPtr);
+                originalMS.push_back(infItr->msPtr);
+			}
+		}
+	}
+	
+    
+	if(originalStrains.size() == 0) {
+		return;
+	}
+	
+	vector<StrainPtr> strainsToTransmit;
+    vector<GenePtr> msToTransmit;
+	if(originalStrains.size() > 1) {
+		// Take each original strain with probability 1.0 - pRecombinant
+		double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
+        std::vector<size_t> indices = drawMultipleBernoulli(*rngPtr, originalStrains.size(), 1.0 - pRecombinant, false);
+        strainsToTransmit.reserve(indices.size());
+        msToTransmit.reserve(indices.size());
+        for(size_t index : indices) {
+            strainsToTransmit.push_back(originalStrains[index]);
+            msToTransmit.push_back(originalMS[index]);
+        }
+        
+		//strainsToTransmit = drawMultipleBernoulliRandomSubset(
+		//	*rngPtr, originalStrains, 1.0 - pRecombinant, false
+		//);
+		
+		// Complete a set of size originalStrains.size() using recombinants
+		int64_t nRecombinants = originalStrains.size() - strainsToTransmit.size();
+		for(int64_t i = 0; i < nRecombinants; i++) {
+			uniform_int_distribution<int64_t> indDist(0, originalStrains.size() - 1);
+			int64_t ind1 = indDist(*rngPtr);
+			int64_t ind2 = indDist(*rngPtr);
+			strainsToTransmit.push_back(
+                    popPtr->simPtr->recombineStrains(
+                    originalStrains[ind1],
+                    originalStrains[ind2]
+                    )
+            );
+            msToTransmit.push_back(
+            popPtr->simPtr->recombineMS(                                                                    originalMS[ind1],
+                originalMS[ind2])
+            );
+		}
+	}
+	else {
+		strainsToTransmit = originalStrains;
+        msToTransmit = originalMS;
+	}
+	
+	// Transmit all strains
+    for(size_t i=0; i<strainsToTransmit.size(); ++i) {
+        dstHost.receiveInfection(strainsToTransmit[i],msToTransmit[i]);
+    }
+    /*
+     for(auto & strainPtr : strainsToTransmit) {
+     dstHost.receiveInfection(strainPtr,infItr->msPtr);
+     }
+     */
 	popPtr->simPtr->recordTransmission(*this, dstHost, strainsToTransmit);
 }
 
@@ -258,6 +343,74 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 
 	
 //	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
+}
+
+void Host::receiveInfection(StrainPtr & strainPtr, GenePtr & msPtr)
+{
+	assert(strainPtr->size() > 0);
+	
+	rng_t * rngPtr = getRngPtr();
+	double time = popPtr->getTime();
+	
+	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
+	int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
+	infections.emplace_back(this, nextInfectionId++, strainPtr, msPtr, initialGeneIndex, time);
+	
+	
+	// Get an iterator to the infection so that events can
+	// point back to their infection
+	list<Infection>::reverse_iterator reverseItr = infections.rbegin();
+	reverseItr++;
+	list<Infection>::iterator infectionItr = reverseItr.base();
+	
+	// If starting in liver stage, create a fixed-time transition event
+	// (liver stage -> first gene not yet active)
+	if(initialGeneIndex == WAITING_STAGE) {
+		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
+               new TransitionEvent(infectionItr, time + tLiverStage)
+               );
+		addEvent(infectionItr->transitionEvent.get());
+	}
+	// Otherwise create a rate-based transition event
+	// (first gene not yet active -> first gene active)
+	else {
+		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
+             new TransitionEvent(
+              infectionItr,
+              infectionItr->transitionRate(),
+              time,
+              *rngPtr
+              )
+        );
+		addEvent(infectionItr->transitionEvent.get());
+	}
+	
+    //Create a mutation event, rate equals pMutation * genesPerStrain
+    infectionItr->mutationEvent = unique_ptr<MutationEvent>(new MutationEvent(infectionItr,popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->locusNumber,time,*rngPtr));
+    addEvent(infectionItr->mutationEvent.get());
+    
+    //Create a ectopic recombination event, rate equals pIntraRecomb * C(genesPerStrain,2)
+    int64_t numGenes = popPtr->simPtr->parPtr->genesPerStrain;
+    infectionItr->recombinationEvent = unique_ptr<RecombinationEvent>(new RecombinationEvent(infectionItr,popPtr->simPtr->parPtr->pIntraRecomb * numGenes * (numGenes -1)/2,time,*rngPtr));
+    addEvent(infectionItr->recombinationEvent.get());
+    
+    // Create an ms mutation event, change rate
+    infectionItr->msMutationEvent = unique_ptr<MSmutationEvent>(new MSmutationEvent(infectionItr,popPtr->simPtr->parPtr->pMsMutate * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->microsatNumber,time,*rngPtr));
+    addEvent(infectionItr->mutationEvent.get());
+    
+    
+	// Create a clearance event
+	// (rate will depend on state as determined in clearanceRate()
+	// and may be zero)
+    infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
+        new ClearanceEvent(
+        infectionItr, infectionItr->clearanceRate(), time, *rngPtr
+        )
+    );
+	addEvent(infectionItr->clearanceEvent.get());
+    
+	
+    //	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
 
 void Host::updateInfectionRates()
@@ -337,6 +490,10 @@ void Host::RecombineStrain(std::list<Infection>::iterator infectionItr) {
         infectionItr->expressionOrder[i] = reorderIndexMap[infectionItr->expressionOrder[i]];
     }
     infectionItr->strainPtr = popPtr->simPtr->getStrain(newStrainGenes);
+}
+
+void Host::microsatMutate(std::list<Infection>::iterator infectionItr) {
+    infectionItr->msPtr = popPtr->simPtr->mutateMS(infectionItr->msPtr);
 }
 
 double Host::getTime()

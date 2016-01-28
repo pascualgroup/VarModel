@@ -430,6 +430,11 @@ ZPPJSON_DEFINE_TYPE(
 		\brief Whether or not clinical immunity is tracked.
 	*/
 	( (Bool)(trackClinicalImmunity) )
+                    
+    /**
+     \brief Probability of microsatellites mutation, per gene, per day
+     */
+     ((Double)(pMsMutate))
 )
 
 #endif // #ifndef DOXYGEN_SHOULD_SKIP_THIS

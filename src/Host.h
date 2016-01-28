@@ -49,10 +49,14 @@ public:
 	void prepareToDie();
 	
 	void transmitTo(Host & dstHost);
-	
+
+    void transmitMSTo(Host & dstHost);
+
 	void receiveInfection(StrainPtr & strain);
 	
-	void updateInfectionRates();
+    void receiveInfection(StrainPtr & strain, GenePtr & msPtr);
+	
+    void updateInfectionRates();
 	
 	double getAge();
 	
@@ -69,7 +73,8 @@ public:
     void RecombineStrain(std::list<Infection>::iterator infectionItr);
     
     void getSelectionMode(GenePtr genePtr);
-	
+	void microsatMutate(std::list<Infection>::iterator infectionItr);
+    
 	double getTime();
 	zppsim::rng_t * getRngPtr();
 	  

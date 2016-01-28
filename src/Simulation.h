@@ -80,11 +80,13 @@ public:
 	GenePtr drawRandomGeneExcept(int64_t geneId);
 	GenePtr mutateGene(GenePtr const & srcGene);
 	//GenePtr mutateGene2(GenePtr const & srcGene);
-    int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
+    //int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
     int64_t recLociId(std::vector<int64_t> & recGeneAlleles, std::vector<GenePtr> & searchSet);
     double parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2, int64_t breakPoint);
     std::vector<GenePtr> ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion);
 	
+    GenePtr mutateMS(GenePtr const & srcMS);
+    
 	StrainPtr getStrain(std::vector<GenePtr> const & strainGenes);
 	StrainPtr generateRandomStrain();
 	StrainPtr generateRandomStrain(int64_t nNewGenes);
@@ -92,6 +94,7 @@ public:
     std::vector<GenePtr> ectopicRecStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
 	GenePtr generateRandomMicrosat();
+    GenePtr recombineMS(GenePtr const & ms1, GenePtr const & ms2);
 	Host * drawDestinationHost(int64_t srcPopId);
 	
 	void updateRates();
@@ -141,11 +144,6 @@ private:
     std::vector<int64_t> microsatAlleles;
     size_t microsatNumber = parPtr->genes.microsatNumber;
     
-    // Genome tracking: one genome for each unique varStrain, microsat pair
-    //std::vector<std::pair<StrainPtr,GenePtr>> genomes;
-    //std::vector<GenomePtr> genomes;
-    //std::vector<tttPtr> tests;
-    
 	int64_t transmissionCount;
     int64_t mutationCount;
 	
@@ -154,7 +152,7 @@ private:
 	zppdb::Table<LociRow> lociTable;
 	zppdb::Table<StrainRow> strainsTable;
 	zppdb::Table<HostRow> hostsTable;
-    
+    zppdb::Table<LociRow> microsatTable;
     zppdb::Table<AlleleImmunityRow> alleleImmunityTable;
 	
 	zppdb::Table<SampledHostRow> sampledHostsTable;
@@ -171,7 +169,8 @@ private:
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionClinicalImmunityTable;
 	
 	GenePtr createGene(std::vector<int64_t> Alleles,bool const functionality);
-	
+	GenePtr createMicrosat(std::vector<int64_t> Alleles);
+    
 	void initializeDatabaseTables();
 };
 

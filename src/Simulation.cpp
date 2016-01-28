@@ -54,6 +54,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     lociTable("loci"),
 	strainsTable("strains"),
 	hostsTable("hosts"),
+    microsatTable("microsats"),
     alleleImmunityTable("hostsAlleleImmunityHistory"),
     InfectionDurationTable("InfectionDuration"),
     recordEIRTable("recordEIR"),
@@ -131,7 +132,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
                     //cout<<Alleles[j]<<" ";
                 }
                 //cout<<"\n";
-                checkId = recLociId(Alleles);
+                checkId = recLociId(Alleles,genes);
             }
         }
         
@@ -151,7 +152,22 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 		));
 	}
 
-   
+    //create allele size range for microsatellites, if required
+    if (microsatNumber>0){
+        Array<Double> msvals = parPtr->genes.microsatAlleles;
+        if(msvals.size() == 1) {
+            for(size_t i =0; i<microsatNumber; ++i) {
+                microsatAlleles.push_back((int64_t)(msvals[0]));
+            }
+        }
+        else {
+            assert(msvals.size() == microsatNumber);
+            for(size_t i =0; i<microsatNumber; ++i) {
+                microsatAlleles.push_back((int64_t)(msvals[i]));
+            }
+        }
+        assert(microsatAlleles.size()==size_t(microsatNumber));
+    }
                 
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
@@ -383,6 +399,23 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 	return getStrain(daughterGenes);
 }
 
+GenePtr Simulation::recombineMS(GenePtr const & ms1, GenePtr const & ms2)
+{
+    vector<int64_t> newMS;
+    newMS.reserve(ms1->Alleles.size());
+    for (size_t i=0; i<ms1->Alleles.size(); ++i) {
+        newMS[i] = drawUniformIndex(rng,2) == 0
+        ? ms1->Alleles[i] : ms2->Alleles[i];
+    }
+    int64_t index = recLociId(newMS,microsats);
+    if(index == microsats.size()) {
+        return createMicrosat(newMS);
+    }else{
+        return microsats[index];
+    }
+}
+
+
 //new mutation mode -> change function "mutateGene"
 //select one gene from the strain to mutate
 std::vector<GenePtr> Simulation::mutateStrain(StrainPtr & strain)
@@ -408,6 +441,44 @@ std::vector<GenePtr> Simulation::ectopicRecStrain(StrainPtr & strain)
     curStrainGenes[indices[0]] = genesPtrAfterEctopicRecomb[0];
     curStrainGenes[indices[1]] = genesPtrAfterEctopicRecomb[1];
     return curStrainGenes;
+}
+
+//generate random microsatellite alleles
+GenePtr Simulation::generateRandomMicrosat()
+{
+    std::vector<int64_t> Alleles(microsatNumber);
+    for(int64_t j = 0; j < microsatNumber; j++) {
+        std::uniform_int_distribution<int64_t> unif(0, microsatAlleles[j]-1);
+        Alleles[j] = unif(rng);
+        //cout<<Alleles[j]<<" ";
+    }
+    //cout<<"\n";
+    int64_t checkId = recLociId(Alleles,microsats);
+    if (checkId == microsats.size()) {
+        return createMicrosat(Alleles);
+    }else{
+        return microsats[checkId];
+    }
+}
+
+//create new microsatellite alleles and store in microsats
+GenePtr Simulation::createMicrosat(std::vector<int64_t> Alleles)
+{
+    int64_t index = microsats.size();
+    microsats.emplace_back(new Gene(
+                                    index,
+                                    0,
+                                    0,
+                                    0,
+                                    true,
+                                    Alleles,
+                                    false,
+                                    parPtr->outputLoci,
+                                    *dbPtr,
+                                    genesTable,
+                                    microsatTable
+                                    ));
+    return microsats.back();
 }
 
 void Simulation::updateRates()
@@ -513,7 +584,6 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     //cout<<"mutate gene\n";
     std::vector<int64_t> srcLociAlleles = srcGenePtr->Alleles;
     //not using mutationDistributions anymore, mutation weights are locus specific weight, sum(weight) = 1
-    //to do: redefine mutationDistributions
     size_t mutateLocusId;
     if(mutationDistributions.size() == 0) {
         mutateLocusId = drawUniformIndex(rng, srcLociAlleles.size());
@@ -530,15 +600,26 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     return createGene(newLoci,true);
 }
 
+GenePtr Simulation::mutateMS(GenePtr const & srcMS) {
+    std::vector<int64_t> srcLociAlleles = srcMS->Alleles;
+    size_t mutateLocusId;
+    mutateLocusId = drawUniformIndex(rng, srcLociAlleles.size());
+    microsatAlleles[mutateLocusId]++;
+    std::vector<int64_t> newLoci = srcLociAlleles;
+    newLoci[mutateLocusId] = microsatAlleles[mutateLocusId]-1;
+    return createGene(newLoci,true);
+    
+}
+
 //test whether a new allele vector already exist in the genes allele vectors
 //return the id number of the vector, all the new gene id
-int64_t Simulation::recLociId(std::vector<int64_t> & recGeneAlleles) {
-    for (GenePtr j : genes) {
+int64_t Simulation::recLociId(std::vector<int64_t> & recGeneAlleles, std::vector<GenePtr> & searchSet) {
+    for (GenePtr j : searchSet) {
         if (recGeneAlleles == j->Alleles) {
             return j->id;
         }
     }
-    return genes.size();
+    return searchSet.size();
 }
 
 double Simulation::parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2, int64_t breakPoint) {
@@ -596,7 +677,7 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
             }
         }
         //test whether the new recombinant is already in genes matrix
-        int64_t recId = recLociId(recGene1Alleles);
+        int64_t recId = recLociId(recGene1Alleles,genes);
         if (recId == genes.size()) {
             //get whether the new recombinant is functional
             GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0]);
@@ -613,7 +694,7 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
             //cout<<returnGenes[0]->id<<endl;
             //cout<<returnGenes[1]->id<<endl;
         }else{
-            recId = recLociId(recGene2Alleles);
+            recId = recLociId(recGene2Alleles,genes);
             if(recId == genes.size()) {
                 GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1]);
                 if (recFunction[1]) {

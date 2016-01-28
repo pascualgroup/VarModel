@@ -287,6 +287,11 @@ ZPPDB_DEFINE_ROW_TYPE(
 		Whether or not the gene is currently active
 	*/
 	( (Integer)(active) )
+
+   /**
+   \brief the microsat id of the current infection
+   */
+   ((Integer) (msID))
 )
 
 /**

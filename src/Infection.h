@@ -66,17 +66,29 @@ public:
 	virtual void performEvent(zppsim::EventQueue & queue);
 };
 
+//adding microsat mutation event for each infection
+class MSmutationEvent: public InfectionProcessEvent
+{
+public:
+	MSmutationEvent(std::list<Infection>::iterator infectionItr,
+                    double rate, double initTime, zppsim::rng_t & rng);
+	virtual void performEvent(zppsim::EventQueue & queue);
+    
+};
+
 class Infection
 {
 friend class Host;
 public:
 	Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime);
-	
+    Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, GenePtr & msPtr, int64_t initialGeneIndex, double initialTime);
+
 	void prepareToEnd();
 	
 	Host * hostPtr;
 	StrainPtr strainPtr;
-	
+	GenePtr msPtr;
+    
 	int64_t id;
 	
 	int64_t geneIndex;
@@ -88,6 +100,7 @@ public:
 	std::unique_ptr<ClearanceEvent> clearanceEvent;
     std::unique_ptr<MutationEvent> mutationEvent;
     std::unique_ptr<RecombinationEvent> recombinationEvent;
+    std::unique_ptr<MSmutationEvent> msMutationEvent;
     
 	bool isActive();
 	GenePtr getCurrentGene();

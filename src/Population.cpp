@@ -57,8 +57,12 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
 		int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
 		StrainPtr strainPtr = simPtr->generateRandomStrain();
-		
+		if (simPtr->parPtr->genes.includeMicrosat){
+            GenePtr msPtr = simPtr->generateRandomMicrosat();
+            hosts[hostId]->receiveInfection(strainPtr,msPtr);
+        }else{
 		hosts[hostId]->receiveInfection(strainPtr);
+        }
 	}
 }
 
@@ -156,8 +160,11 @@ void Population::performBitingEvent()
 	
 	Host * dstHostPtr = simPtr->drawDestinationHost(id);
 //	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
-	
-	srcHostPtr->transmitTo(*dstHostPtr);
+	if (simPtr->parPtr->genes.includeMicrosat) {
+        srcHostPtr->transmitMSTo(*dstHostPtr);
+    }else{
+        srcHostPtr->transmitTo(*dstHostPtr);
+    }
 }
 
 //disable immigration first
@@ -178,7 +185,12 @@ void Population::performImmigrationEvent()
 //		cerr << "Generating strain with all old genes" << endl;
 		strain = simPtr->generateRandomStrain();
 	}
+    if (simPtr->parPtr->genes.includeMicrosat) {
+        GenePtr ms = simPtr->generateRandomMicrosat();
+        hosts[hostIndex]->receiveInfection(strain,ms);
+    }else{
 	hosts[hostIndex]->receiveInfection(strain);
+    }
 }
 
 double Population::getDistance(Population * popPtr)
