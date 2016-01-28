@@ -67,6 +67,8 @@ public:
 	void clearInfection(std::list<Infection>::iterator infectionItr);
     void hstMutateStrain(std::list<Infection>::iterator infectionItr);
     void RecombineStrain(std::list<Infection>::iterator infectionItr);
+    
+    void getSelectionMode(GenePtr genePtr);
 	
 	double getTime();
 	zppsim::rng_t * getRngPtr();

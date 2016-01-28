@@ -53,7 +53,7 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	);
 	addEvent(immigrationEvent.get());
 	
-	// Create initial infections
+	// Create initial infections, with microsatellites as well
 	for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
 		int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
 		StrainPtr strainPtr = simPtr->generateRandomStrain();

@@ -352,6 +352,20 @@ ZPPDB_DEFINE_ROW_TYPE(
     ((Integer)(alleleId))
 )
 
+/**
+ \brief Type defining rows `recordEIR` columns.
+ */
+ZPPDB_DEFINE_ROW_TYPE(
+   recordEIRRow,
+   /** Time of bit event occurred
+   */
+   ((Real)(time))
+   /**
+    Whether the bit is infectious
+   */
+   ((Integer)(infectious))
+)
+
 #endif // #define DOXYGEN_SHOULD_SKIP_THIS
 
 #endif // #ifndef __malariamodel__DatabaseTypes__

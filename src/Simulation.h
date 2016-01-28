@@ -81,6 +81,7 @@ public:
 	GenePtr mutateGene(GenePtr const & srcGene);
 	//GenePtr mutateGene2(GenePtr const & srcGene);
     int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
+    int64_t recLociId(std::vector<int64_t> & recGeneAlleles, std::vector<GenePtr> & searchSet);
     double parentsSimilarity(GenePtr const & pGene1, GenePtr const & pGene2, int64_t breakPoint);
     std::vector<GenePtr> ectopicRecomb(GenePtr const & pGene1, GenePtr const & pGene2, bool isConversion);
 	
@@ -90,7 +91,7 @@ public:
 	std::vector<GenePtr> mutateStrain(StrainPtr & strain);
     std::vector<GenePtr> ectopicRecStrain(StrainPtr & strain);
 	StrainPtr recombineStrains(StrainPtr const & s1, StrainPtr const & s2);
-	
+	GenePtr generateRandomMicrosat();
 	Host * drawDestinationHost(int64_t srcPopId);
 	
 	void updateRates();
@@ -99,6 +100,7 @@ public:
     void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
     void writeDuration(double initialTime, double duration);
+    void writeEIR(double time, int64_t infectious);
 
 	
 	bool verifyState();
@@ -133,7 +135,16 @@ private:
     // Loci tracking
     size_t locusNumber = parPtr->genes.locusNumber;
     std::vector<int64_t> alleleNumber;
-
+    
+    // microsat tracking, if required
+    std::vector<GenePtr> microsats;
+    std::vector<int64_t> microsatAlleles;
+    size_t microsatNumber = parPtr->genes.microsatNumber;
+    
+    // Genome tracking: one genome for each unique varStrain, microsat pair
+    //std::vector<std::pair<StrainPtr,GenePtr>> genomes;
+    //std::vector<GenomePtr> genomes;
+    //std::vector<tttPtr> tests;
     
 	int64_t transmissionCount;
     int64_t mutationCount;
@@ -152,6 +163,7 @@ private:
 	zppdb::Table<ImmunityRow> sampledHostClinicalImmunityTable;
     
 	zppdb::Table<InfectionDurationRow> InfectionDurationTable;
+    zppdb::Table<recordEIRRow> recordEIRTable;
 	zppdb::Table<TransmissionRow> sampledTransmissionTable;
 	zppdb::Table<TransmissionStrainRow> sampledTransmissionStrainTable;
 	zppdb::Table<TransmissionInfectionRow> sampledTransmissionInfectionTable;

@@ -55,7 +55,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	strainsTable("strains"),
 	hostsTable("hosts"),
     alleleImmunityTable("hostsAlleleImmunityHistory"),
-    InfectionDurationTable("InfectionDurationTable"),
+    InfectionDurationTable("InfectionDuration"),
+    recordEIRTable("recordEIR"),
     sampledHostsTable("sampledHosts"),
 	sampledHostInfectionTable("sampledHostInfections"),
 	sampledHostImmunityTable("sampledHostImmunity"),
@@ -202,6 +203,8 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledHostInfectionTable);
 	dbPtr->createTable(sampledHostImmunityTable);
 	dbPtr->createTable(sampledHostClinicalImmunityTable);
+    dbPtr->createTable(InfectionDurationTable);
+    dbPtr->createTable(recordEIRTable);
 	dbPtr->createTable(sampledTransmissionTable);
 	dbPtr->createTable(sampledTransmissionStrainTable);
 	dbPtr->createTable(sampledTransmissionInfectionTable);
@@ -472,6 +475,18 @@ void Simulation::writeDuration(double initialTime, double duration)
         row.duration = duration;
         dbPtr->insert(InfectionDurationTable, row);
     }
+}
+
+void Simulation::writeEIR(double time, int64_t infectious)
+{
+    bernoulli_distribution flipCoin(1.0/double(parPtr->sampleTransmissionEventEvery));
+    if(flipCoin(rng)) {
+        recordEIRRow row;
+        row.time = time;
+        row.infectious = infectious;
+        dbPtr->insert(recordEIRTable, row);
+    }
+    
 }
 
 

@@ -33,8 +33,8 @@ Host::Host(
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
-	immunity(this, false,popPtr->simPtr->locusNumber),
-	clinicalImmunity(this, true,popPtr->simPtr->locusNumber)
+	immunity(this, false,popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune),
+	clinicalImmunity(this, true,popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
@@ -139,8 +139,12 @@ void Host::transmitTo(Host & dstHost)
 	
 	if(infections.size() == 0) {
 	//	cerr << "No infections to transmit" << endl;
+        popPtr->simPtr->writeEIR(popPtr->getTime(),0);
 		return;
 	}
+    
+    popPtr->simPtr->writeEIR(popPtr->getTime(),1);
+    
 //	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
 	
 	// Get some current infections according to transmission probability
@@ -245,12 +249,13 @@ void Host::receiveInfection(StrainPtr & strainPtr)
 	// Create a clearance event
 	// (rate will depend on state as determined in clearanceRate()
 	// and may be zero)
-	infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
-		new ClearanceEvent(
-			infectionItr, infectionItr->clearanceRate(), time, *rngPtr
+    infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
+        new ClearanceEvent(
+		infectionItr, infectionItr->clearanceRate(), time, *rngPtr
 		)
-	);
+    );
 	addEvent(infectionItr->clearanceEvent.get());
+
 	
 //	cerr << time << ": " << infectionItr->toString() << " begun" << '\n';
 }
@@ -278,16 +283,7 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	if(infectionItr->active) {
 		GenePtr genePtr = infectionItr->getCurrentGene();
         
-        if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
-            immunity.gainImmunity(genePtr);
-            if(getSimulationParametersPtr()->trackClinicalImmunity) {
-                clinicalImmunity.gainImmunity(genePtr);
-            }
-        }else{
-            gainAlleleImmunity(genePtr);
-        }
-        
-        //immunity.gainGeneralImmunity();
+        getSelectionMode(genePtr);
 	}
 	
     // add table to record duration of infection
@@ -301,6 +297,27 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	if(shouldUpdateAllRates) {
 		updateInfectionRates();
 	}
+}
+
+void Host::getSelectionMode(GenePtr genePtr) {
+    int64_t selmode = popPtr->simPtr->parPtr->selectionMode;
+    if (selmode == 1) {
+        // specific immunity mode
+        if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
+            immunity.gainImmunity(genePtr);
+            if(getSimulationParametersPtr()->trackClinicalImmunity) {
+                clinicalImmunity.gainImmunity(genePtr);
+            }
+        }else{
+            gainAlleleImmunity(genePtr);
+        }
+        
+    }else if (selmode == 2) {
+        // general immunity mode
+        immunity.gainGeneralImmunity();
+    }
+    // if selmode == 3, do nothing
+    
 }
 
 void Host::hstMutateStrain(std::list<Infection>::iterator infectionItr)

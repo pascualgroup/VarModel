@@ -45,7 +45,7 @@ void AlleleImmuneLossEvent::performEvent(zppsim::EventQueue & queue)
 */
 /*** ImmuneHistory function implementations ***/
 
-ImmuneHistory::ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber) : hostPtr(hostPtr), clinical(clinical),locusNumber(locusNumber)
+ImmuneHistory::ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber, double infectionTimesToImmune) : hostPtr(hostPtr), clinical(clinical),locusNumber(locusNumber), infectionTimesToImmune(infectionTimesToImmune)
 {
 }
 
@@ -66,6 +66,20 @@ void ImmuneHistory::gainImmunity(GenePtr genePtr)
 		
 		hostPtr->updateInfectionRates();
 	}
+}
+
+void ImmuneHistory::gainGeneralImmunity() {
+        infectedTimes++;
+        hostPtr->updateInfectionRates();
+}
+
+double ImmuneHistory::checkGeneralImmunity() {
+    //can add this as a parameter later
+    if (infectedTimes >= infectionTimesToImmune) {
+        return 1.0;
+    }else{
+            return infectedTimes/infectionTimesToImmune;
+    }
 }
 
 void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr,bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table)

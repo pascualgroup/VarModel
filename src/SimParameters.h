@@ -203,6 +203,11 @@ ZPPJSON_DEFINE_TYPE(
 		and clearance rate.
 	*/
 	( (Double)(clearanceRatePower) )
+                    
+    /**
+        \brief The number of times required to gain general immunity
+     */
+    ((Double)(infectionTimesToImmune))
 )
 
 /**
@@ -257,7 +262,21 @@ ZPPJSON_DEFINE_TYPE(
       \brief Relative probabilities of mutation rates of each locus within a gene
      */
      ( (Array<Double>)(mutationWeights) )
-     
+
+    /**
+     \brief whether to include microsatellites
+     */
+     ( (Bool) (includeMicrosat))
+
+    /**
+    \brief how many microsat
+    */
+    ( (Int64) (microsatNumber))
+
+    /**
+    \brief number of alleles per microsat, can be different per microsat
+    */
+    ( (Array<Double>) (microsatAlleles))
 )
 
 /**
@@ -296,6 +315,11 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (Int64)(randomSeed) )
 	
+    /**
+     \brief selection mode: 1.specific immunity, 2. general immunity, 3. neutral
+     */
+     ((Int64)(selectionMode))
+    
 	/**
 		\brief Simulation end time
 	*/

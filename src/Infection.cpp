@@ -70,7 +70,7 @@ double Infection::getAgeAtTransitionTime()
 
 void Infection::performTransition()
 {
-	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
+	//SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	transitionTime = hostPtr->getTime();
 	
 	bool shouldUpdateAllInfections = transitionAffectsAllInfections();
@@ -82,14 +82,7 @@ void Infection::performTransition()
 	else if(active) {
 		assert(expressionIndex != strainPtr->size() - 1);
 		GenePtr genePtr = strainPtr->getGene(geneIndex);
-        if(!simParPtr->withinHost.useAlleleImmunity) {
-            hostPtr->immunity.gainImmunity(genePtr);
-            if(hostPtr->getSimulationParametersPtr()->trackClinicalImmunity) {
-                hostPtr->clinicalImmunity.gainImmunity(genePtr);
-            }
-        }else{
-            hostPtr->gainAlleleImmunity(genePtr);
-        }
+        hostPtr->getSelectionMode(genePtr);
 		expressionIndex++;
 		active = false;
 	}
@@ -167,9 +160,11 @@ double Infection::activationRate()
 	
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
 	
+    /*
 	if(power == 0.0) {
 		return constant;
 	}
+     */
 	
 	if(nActiveInfections == 0) {
 		return std::numeric_limits<double>::infinity();
@@ -193,20 +188,20 @@ double Infection::deactivationRate()
 
     //change the rule of immunity to be directly linked with deactivation rate,
     //not with clearance rate anymore. delete events regarding clearance rates
-    if(!simParPtr->withinHost.useAlleleImmunity){
-        if(isImmune()) {
-            constant = 1.0;
-        }
-    }else{
-        double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
-        if(geneImmuneLevel==1.0) {
-            constant = 1.0;
+    if (simParPtr->selectionMode == 1) {
+        if(!simParPtr->withinHost.useAlleleImmunity){
+            if(isImmune()) {
+                constant = 1.0;
+            }
         }else{
-            constant = constant/(1-geneImmuneLevel);
+            double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
+            if(geneImmuneLevel==1.0) {
+            constant = 1.0;
+            }else{
+                constant = constant/(1-geneImmuneLevel);
+            }
         }
-        //cout<<"clearRate "<<clearanceRateConstant<<endl;
     }
-  
     
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
 	
@@ -222,8 +217,6 @@ double Infection::clearanceRate()
 		return 0.0;
 	}
 	// Gene active: clearance rate depends on immunity
-    // ??Ed's bug??
-	//else if(!active) {
     else if(active) {
 		double clearanceRatePower = simParPtr->withinHost.clearanceRatePower;
 		assert(!std::isnan(clearanceRatePower));
@@ -232,37 +225,23 @@ double Infection::clearanceRate()
 		double nActiveInfections = hostPtr->getActiveInfectionCount();
 		double clearanceRateConstant;
         
-        /*
-        if(!simParPtr->withinHost.useAlleleImmunity){
-            if(isImmune()) {
-                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
-            }
-        else {
-                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
-            }
-        }else{
-            double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
+        if (simParPtr->selectionMode == 2) {
+            double geneImmuneLevel = hostPtr->immunity.checkGeneralImmunity();
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
             double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune / (1-geneImmuneLevel);
             if(geneImmuneLevel==1.0) {
                 clearanceRateConstant = r1;
-            }else if (geneImmuneLevel==0) {
-                clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantNotImmune;
             }else{
                 clearanceRateConstant = r2;
             }
-            //cout<<"clearRate "<<clearanceRateConstant<<endl;
+        }else{
+            // if selection mode is not general immunity, then there's effectively no clearance
+            clearanceRateConstant = 0.0;
         }
-        */
-        
-        //in the input, set constant immune to be small so that most likely, strains
-        //finished expressing all the genes before being cleared.
-        clearanceRateConstant = simParPtr->withinHost.clearanceRateConstantImmune;
-        
         
 		assert(!std::isnan(clearanceRateConstant));
 		assert(!std::isinf(clearanceRateConstant));
-		assert(clearanceRateConstant > 0.0);
+        //assert(clearanceRateConstant > 0.0);
 		
 		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
 	}

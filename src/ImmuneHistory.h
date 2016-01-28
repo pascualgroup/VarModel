@@ -48,13 +48,15 @@ class ImmuneHistory
 friend class ImmunityLossEvent;
 //friend class AlleleImmuneLossEvent;
 public:
-	ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber);
+	ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber, double infectionTimesToImmune);
 	
 	void gainImmunity(GenePtr genePtr);
 	void gainAlleleImmunity(GenePtr genePtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
     //void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
     double checkGeneImmunity(GenePtr genePtr);
-	void loseImmunity(GenePtr genePtr);
+	void gainGeneralImmunity();
+    double checkGeneralImmunity();
+    void loseImmunity(GenePtr genePtr);
     //void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
 	bool isImmune(GenePtr genePtr);
 	
@@ -70,6 +72,8 @@ private:
 	Host * hostPtr;
 	bool clinical;
     int64_t const locusNumber;
+    int64_t infectedTimes = 0;
+    double infectionTimesToImmune;
 };
 
 #endif /* defined(__malariamodel__ImmuneHistory__) */
