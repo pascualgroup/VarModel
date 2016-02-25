@@ -72,7 +72,7 @@ public:
     void hstMutateStrain(std::list<Infection>::iterator infectionItr);
     void RecombineStrain(std::list<Infection>::iterator infectionItr);
     
-    void getSelectionMode(GenePtr genePtr);
+    void getSelectionMode(GenePtr genePtr, bool clearInfection);
 	void microsatMutate(std::list<Infection>::iterator infectionItr);
     
 	double getTime();

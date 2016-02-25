@@ -166,7 +166,9 @@ void Host::transmitTo(Host & dstHost)
 	vector<StrainPtr> strainsToTransmit;
 	if(originalStrains.size() > 1) {
 		// Take each original strain with probability 1.0 - pRecombinant
-		double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+        // disable pRecombinant parameter, use rule of combinations
+        // given n strains, the probability of strains of recombined is 1-(1/n);
+		double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
 		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
 		strainsToTransmit = drawMultipleBernoulliRandomSubset(
 			*rngPtr, originalStrains, 1.0 - pRecombinant, false
@@ -233,7 +235,8 @@ void Host::transmitMSTo(Host & dstHost)
     vector<GenePtr> msToTransmit;
 	if(originalStrains.size() > 1) {
 		// Take each original strain with probability 1.0 - pRecombinant
-		double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+		//double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+        double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
 		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
         std::vector<size_t> indices = drawMultipleBernoulli(*rngPtr, originalStrains.size(), 1.0 - pRecombinant, false);
         strainsToTransmit.reserve(indices.size());
@@ -395,8 +398,8 @@ void Host::receiveInfection(StrainPtr & strainPtr, GenePtr & msPtr)
     addEvent(infectionItr->recombinationEvent.get());
     
     // Create an ms mutation event, change rate
-    infectionItr->msMutationEvent = unique_ptr<MSmutationEvent>(new MSmutationEvent(infectionItr,popPtr->simPtr->parPtr->pMsMutate * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->microsatNumber,time,*rngPtr));
-    addEvent(infectionItr->mutationEvent.get());
+    infectionItr->msMutationEvent = unique_ptr<MSmutationEvent>(new MSmutationEvent(infectionItr,popPtr->simPtr->parPtr->pMsMutate * popPtr->simPtr->microsatNumber,time,*rngPtr));
+    addEvent(infectionItr->msMutationEvent.get());
     
     
 	// Create a clearance event
@@ -436,12 +439,12 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	if(infectionItr->active) {
 		GenePtr genePtr = infectionItr->getCurrentGene();
         
-        getSelectionMode(genePtr);
+        getSelectionMode(genePtr, true);
 	}
 	
     // add table to record duration of infection
     double durationTime = getTime()-infectionItr->initialTime;
-    popPtr->simPtr->writeDuration(infectionItr->initialTime, durationTime);
+    popPtr->simPtr->writeDuration(infectionItr, durationTime);
     
 	// Remove infection
 	infectionItr->prepareToEnd();
@@ -452,8 +455,9 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	}
 }
 
-void Host::getSelectionMode(GenePtr genePtr) {
+void Host::getSelectionMode(GenePtr genePtr, bool clearInfection) {
     int64_t selmode = popPtr->simPtr->parPtr->selectionMode;
+    //cout<<"selmode is "<<selmode<<endl;
     if (selmode == 1) {
         // specific immunity mode
         if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
@@ -462,10 +466,12 @@ void Host::getSelectionMode(GenePtr genePtr) {
                 clinicalImmunity.gainImmunity(genePtr);
             }
         }else{
+            //cout<<"gainAlleleImmunity"<<endl;
             gainAlleleImmunity(genePtr);
+            
         }
         
-    }else if (selmode == 2) {
+    }else if ((selmode == 2) && clearInfection) {
         // general immunity mode
         immunity.gainGeneralImmunity();
     }

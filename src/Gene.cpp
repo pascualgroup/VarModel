@@ -17,12 +17,12 @@ using namespace zppsim;
 using namespace zppdb;
 
 Gene::Gene(
-           int64_t id, double transmissibility, double immunityLossRate, double clinicalImmunityLossRate,
+           int64_t id, double transmissibility, double immunityLossRate, int64_t const source,
            bool functionality, std::vector<int64_t> knownAlleles,bool writeToDatabaseGene, bool writeToDatabaseLoci, Database & db, Table<GeneRow> & GeneTable,Table<LociRow> & LociTable
 ) :
 	id(id),
 	transmissibility(transmissibility),
-	immunityLossRate(immunityLossRate), clinicalImmunityLossRate(clinicalImmunityLossRate),functionality(functionality),
+	immunityLossRate(immunityLossRate), source(source),functionality(functionality),
     Alleles(knownAlleles)
 {
 	if(writeToDatabaseGene) {
@@ -30,7 +30,7 @@ Gene::Gene(
 		row.geneId = id;
 		row.transmissibility = transmissibility;
 		row.immunityLossRate = immunityLossRate;
-		row.clinicalImmunityLossRate = clinicalImmunityLossRate;
+		row.source = source;
         row.functionality = functionality;
 		db.insert(GeneTable, row);
 	}

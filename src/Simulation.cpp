@@ -112,10 +112,6 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 		double immunityLossRate = getEntry(
 			parPtr->genes.immunityLossRate, i, parPtr->genePoolSize
 		);
-		double clinicalImmunityLossRate = getEntry(
-			parPtr->genes.clinicalImmunityLossRate, i, parPtr->genePoolSize
-		);
-
         std::vector<int64_t> Alleles(locusNumber);
         if (i== 0) {
             for(int64_t j = 0; j < locusNumber; j++) {
@@ -141,7 +137,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 			i,
 			transmissibility,
 			immunityLossRate,
-			clinicalImmunityLossRate,
+			0,
             true,
             Alleles,
 			parPtr->outputGenes,
@@ -180,7 +176,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	cerr << "# events: " << queuePtr->size() << '\n';
 }
 
-GenePtr Simulation::createGene(std::vector<int64_t> Alleles,bool const functionality)
+GenePtr Simulation::createGene(std::vector<int64_t> Alleles,bool const functionality,int64_t const source)
 {
 	assert(parPtr->genes.transmissibility.size() == 1);
 	double transmissibility = parPtr->genes.transmissibility[0];
@@ -188,15 +184,12 @@ GenePtr Simulation::createGene(std::vector<int64_t> Alleles,bool const functiona
 	assert(parPtr->genes.immunityLossRate.size() == 1);
 	double immunityLossRate = parPtr->genes.immunityLossRate[0];
 	
-	assert(parPtr->genes.clinicalImmunityLossRate.size() == 1);
-	double clinicalImmunityLossRate = parPtr->genes.clinicalImmunityLossRate[0];
-	
 	int64_t index = genes.size();
     genes.emplace_back(new Gene(
                                 index,
                                 transmissibility,
                                 immunityLossRate,
-                                clinicalImmunityLossRate,
+                                source,
                                 functionality,
                                 Alleles,
                                 parPtr->outputGenes,
@@ -221,6 +214,7 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledHostClinicalImmunityTable);
     dbPtr->createTable(InfectionDurationTable);
     dbPtr->createTable(recordEIRTable);
+    dbPtr->createTable(microsatTable);
 	dbPtr->createTable(sampledTransmissionTable);
 	dbPtr->createTable(sampledTransmissionStrainTable);
 	dbPtr->createTable(sampledTransmissionInfectionTable);
@@ -348,7 +342,7 @@ StrainPtr Simulation::generateRandomStrain()
 
 StrainPtr Simulation::generateRandomStrain(int64_t nNewGenes)
 {
-	cerr << "generating random strain with new genes " << endl;
+	//cerr << "generating random strain with new genes " << endl;
 	
 	int64_t genesPerStrain = parPtr->genesPerStrain;
 	
@@ -401,11 +395,12 @@ StrainPtr Simulation::recombineStrains(StrainPtr const & s1, StrainPtr const & s
 
 GenePtr Simulation::recombineMS(GenePtr const & ms1, GenePtr const & ms2)
 {
-    vector<int64_t> newMS;
-    newMS.reserve(ms1->Alleles.size());
+    vector<int64_t> newMS = ms1->Alleles;
     for (size_t i=0; i<ms1->Alleles.size(); ++i) {
-        newMS[i] = drawUniformIndex(rng,2) == 0
-        ? ms1->Alleles[i] : ms2->Alleles[i];
+        if (drawUniformIndex(rng,2) == 1) {
+            newMS[i] = ms2->Alleles[i];
+            //cout<<"ms2Allele is "<<ms2->Alleles[i]<<endl;
+        }
     }
     int64_t index = recLociId(newMS,microsats);
     if(index == microsats.size()) {
@@ -491,10 +486,13 @@ void Simulation::updateRates()
 
 void Simulation::sampleHosts()
 {
-	cerr << getTime() << ": sampling hosts" << '\n';
-	for(auto & popPtr : popPtrs) {
-		popPtr->sampleHosts();
-	}
+    double t = getTime();
+    if (t > parPtr->tEnd/2) {
+	   cerr << t << ": sampling hosts" << '\n';
+        for(auto & popPtr : popPtrs) {
+            popPtr->sampleHosts();
+        }
+    }
 }
 
 void Simulation::recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId) {
@@ -537,20 +535,22 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 	transmissionCount++;
 }
 
-void Simulation::writeDuration(double initialTime, double duration)
+void Simulation::writeDuration(std::list<Infection>::iterator infectionItr, double duration)
 {
-    bernoulli_distribution flipCoin(1.0/double(parPtr->sampleTransmissionEventEvery));
+    bernoulli_distribution flipCoin(0.001);
     if(flipCoin(rng)) {
         InfectionDurationRow row;
-        row.time = initialTime;
+        row.time = infectionItr->initialTime;
         row.duration = duration;
+        row.hostId = infectionItr->hostPtr->id;
+        row.infectionId = infectionItr->id;
         dbPtr->insert(InfectionDurationTable, row);
     }
 }
 
 void Simulation::writeEIR(double time, int64_t infectious)
 {
-    bernoulli_distribution flipCoin(1.0/double(parPtr->sampleTransmissionEventEvery));
+    bernoulli_distribution flipCoin(0.001);
     if(flipCoin(rng)) {
         recordEIRRow row;
         row.time = time;
@@ -597,7 +597,7 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     std::vector<int64_t> newLoci = srcLociAlleles;
     newLoci[mutateLocusId] = alleleNumber[mutateLocusId]-1;
     //cout<<newLoci[mutateLocusId]<<endl;
-    return createGene(newLoci,true);
+    return createGene(newLoci,true,2);
 }
 
 GenePtr Simulation::mutateMS(GenePtr const & srcMS) {
@@ -607,7 +607,7 @@ GenePtr Simulation::mutateMS(GenePtr const & srcMS) {
     microsatAlleles[mutateLocusId]++;
     std::vector<int64_t> newLoci = srcLociAlleles;
     newLoci[mutateLocusId] = microsatAlleles[mutateLocusId]-1;
-    return createGene(newLoci,true);
+    return createMicrosat(newLoci);
     
 }
 
@@ -680,7 +680,7 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
         int64_t recId = recLociId(recGene1Alleles,genes);
         if (recId == genes.size()) {
             //get whether the new recombinant is functional
-            GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0]);
+            GenePtr recGenePtr = createGene(recGene1Alleles,recFunction[0],1);
             if (recFunction[0]) {
                 returnGenes[0] = recGenePtr;
             }
@@ -696,7 +696,7 @@ std::vector<GenePtr> Simulation::ectopicRecomb(GenePtr const & pGene1, GenePtr c
         }else{
             recId = recLociId(recGene2Alleles,genes);
             if(recId == genes.size()) {
-                GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1]);
+                GenePtr recGenePtr = createGene(                                           recGene2Alleles,recFunction[1],1);
                 if (recFunction[1]) {
                     returnGenes[1] = recGenePtr;
                 }

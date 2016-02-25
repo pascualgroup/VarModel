@@ -132,6 +132,7 @@ private:
 	double activationRate();
 	double deactivationRate();
     std::vector<int64_t> expressionOrder;
+    double immuneClearRate(double immuneRate, double notImmuneRate, double immuneLevel);
 };
 
 #endif /* defined(__malariamodel__Infection__) */

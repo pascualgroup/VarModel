@@ -45,9 +45,9 @@ ZPPDB_DEFINE_ROW_TYPE(
 	( (Real)(immunityLossRate) )
 	
 	/**
-		\brief Rate of loss of "clinical immunity"
+		\brief source of genes, original pool = 0, recombination = 1, mutation = 2
 	*/
-	( (Real)(clinicalImmunityLossRate) )
+	( (Integer)(source) )
     /**
     \brief Functional gene or not
     */
@@ -309,6 +309,14 @@ ZPPDB_DEFINE_ROW_TYPE(
       duration of infection
       */
      ((Real)(duration))
+    /**
+     hostId
+     */
+     ((Integer)(hostId))
+      /**
+      infectionId
+      */
+     ((Integer)(infectionId))
 )
 
 ZPPDB_DEFINE_ROW_TYPE(

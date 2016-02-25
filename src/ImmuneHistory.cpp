@@ -55,9 +55,7 @@ void ImmuneHistory::gainImmunity(GenePtr genePtr)
 		genes.insert(genePtr);
 		
 		assert(lossEvents.find(genePtr) == lossEvents.end());
-		double immunityLossRate = clinical ?
-			genePtr->clinicalImmunityLossRate :
-			genePtr->immunityLossRate;
+		double immunityLossRate = genePtr->immunityLossRate;
 		ImmunityLossEvent * ilEvent = new ImmunityLossEvent(
 			this, genePtr, immunityLossRate, hostPtr->getTime()
 		);
@@ -73,12 +71,13 @@ void ImmuneHistory::gainGeneralImmunity() {
         hostPtr->updateInfectionRates();
 }
 
-double ImmuneHistory::checkGeneralImmunity() {
+double ImmuneHistory::checkGeneralImmunity(double a, double b) {
     //can add this as a parameter later
-    if (infectedTimes >= infectionTimesToImmune) {
-        return 1.0;
+    if (infectedTimes<infectionTimesToImmune) {
+        double y = exp(a-b*double(infectedTimes));
+        return 1/y;
     }else{
-            return infectedTimes/infectionTimesToImmune;
+        return 1;
     }
 }
 
@@ -89,11 +88,13 @@ void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr,bool writeToDatabase,Data
         for (int64_t i=0; i<locusNumber;i++) {
             std::unordered_map<int64_t,int64_t> tempMap({{geneAlleles[i],1}});
             immuneAlleles.push_back(tempMap);
+            //cout<<"addImmunity at locus "<<i<<" of allele "<<geneAlleles[i]<<endl;
         }
     }else{
         for (int64_t i=0; i<locusNumber;i++) {
             if(immuneAlleles[i].find(geneAlleles[i])==immuneAlleles[i].end()) {
                 immuneAlleles[i][geneAlleles[i]] = 1;
+                //cout<<"addImmunity at locus "<<i<<" of allele "<<geneAlleles[i]<<endl;
                 if(writeToDatabase) {
                     AlleleImmunityRow row;
                     row.time = hostPtr->getTime();
@@ -108,7 +109,7 @@ void ImmuneHistory::gainAlleleImmunity(GenePtr genePtr,bool writeToDatabase,Data
             }
         }
     }
-    hostPtr->updateInfectionRates();
+    //hostPtr->updateInfectionRates();
     
 }
 
@@ -125,16 +126,22 @@ void ImmuneHistory::setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double 
 
 double ImmuneHistory::checkGeneImmunity(GenePtr genePtr) {
     vector<int64_t> geneAlleles = genePtr->Alleles;
-    int64_t immuneLevel = locusNumber;
+    double immuneLevel = 0;
+    double immuneTime = 1.0;
+    std::unordered_map<int64_t,int64_t>::iterator it;
     if(immuneAlleles.empty()) {
         return 0;
     }else{
         for (int64_t i=0; i<locusNumber;i++) {
-            if(immuneAlleles[i].find(geneAlleles[i])==immuneAlleles[i].end()) {
-                immuneLevel--;
-            }
-        }
-        double immuneFraction = (double)immuneLevel/(double)locusNumber;
+            it = immuneAlleles[i].find(geneAlleles[i]);
+            if(it != immuneAlleles[i].end()) {
+                if (it->second<=immuneTime) {
+                    immuneLevel += 1/immuneTime*(it->second);
+                }else{
+                    immuneLevel += 1;
+                }
+            }        }
+        double immuneFraction = immuneLevel/(double)locusNumber;
         //cout<<immuneFraction<<endl;
         return immuneFraction;
     }

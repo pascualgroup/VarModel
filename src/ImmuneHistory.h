@@ -55,7 +55,7 @@ public:
     //void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
     double checkGeneImmunity(GenePtr genePtr);
 	void gainGeneralImmunity();
-    double checkGeneralImmunity();
+    double checkGeneralImmunity(double a, double b);
     void loseImmunity(GenePtr genePtr);
     //void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
 	bool isImmune(GenePtr genePtr);

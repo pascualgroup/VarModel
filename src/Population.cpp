@@ -26,7 +26,7 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	for(int64_t i = 0; i < parPtr->size; i++) {
 		int64_t hostId = simPtr->nextHostId++;
 		//double lifetime = simPtr->drawHostLifetime();
-        double lifetime = exponential_distribution<>(1.0/5400.0)(*rngPtr);
+        double lifetime = exponential_distribution<>(1.0/108000.0)(*rngPtr);
         //cout<<lifetime<<endl;
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
@@ -219,19 +219,29 @@ void Population::sampleHosts()
 {
 	Database * dbPtr = simPtr->dbPtr;
 	
-	vector<size_t> hostIndices = drawUniformIndices(
+	/*vector<size_t> hostIndices = drawUniformIndices(
 		*rngPtr, hosts.size(), size_t(parPtr->sampleSize), true
-	);
+	);*/
+    //change the samplingHosts to sample enough infected according to sampleSize
+    vector<size_t> hostIndices = drawUniformIndices(
+         *rngPtr, hosts.size(), hosts.size(), true);
+    size_t count = 0;
 	for(size_t index : hostIndices) {
 		SampledHostRow row;
 		row.time = getTime();
 		row.hostId = hosts[index]->id;
 		dbPtr->insert(simPtr->sampledHostsTable, row);
-		
-		hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable);
+		if (hosts[index]->infections.size()>0) {
+            hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable);
+            count += 1;
 		//hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
 		//hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
-	}
+        }
+        if (count == size_t(parPtr->sampleSize)) {
+            break;
+        }
+
+    }
 }
 
 std::string Population::toString()

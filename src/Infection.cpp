@@ -98,9 +98,12 @@ void Infection::performTransition()
 	}
 	else if(active) {
 		assert(expressionIndex != strainPtr->size() - 1);
+        //cout<<"host "<<hostPtr->id<<" deactivate gene "<<geneIndex<<" expInd "<<expressionIndex<<endl;
 		GenePtr genePtr = strainPtr->getGene(geneIndex);
-        hostPtr->getSelectionMode(genePtr);
+        hostPtr->getSelectionMode(genePtr, false);
 		expressionIndex++;
+        geneIndex = expressionOrder[expressionIndex];
+        //cout<<"turn on "<<geneIndex<<endl;
 		active = false;
 	}
 	else {
@@ -211,14 +214,13 @@ double Infection::deactivationRate()
                 constant = 1.0;
             }
         }else{
+            //cout<<"geneIndex is "<<geneIndex<<endl;
             double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
-            if(geneImmuneLevel==1.0) {
-            constant = 1.0;
-            }else{
-                constant = constant/(1-geneImmuneLevel);
-            }
+            //cout<<"here"<<endl;
+            constant = immuneClearRate(1000, constant, geneImmuneLevel);
         }
     }
+    //cout<<"host "<<hostPtr->id<<" deactivate gene "<<geneIndex<<" at rate"<<constant<<endl;
     
 	double nActiveInfections = hostPtr->getActiveInfectionCount();
 	
@@ -243,14 +245,9 @@ double Infection::clearanceRate()
 		double clearanceRateConstant;
         
         if (simParPtr->selectionMode == 2) {
-            double geneImmuneLevel = hostPtr->immunity.checkGeneralImmunity();
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
-            double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune / (1-geneImmuneLevel);
-            if(geneImmuneLevel==1.0) {
-                clearanceRateConstant = r1;
-            }else{
-                clearanceRateConstant = r2;
-            }
+            double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune;
+            clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(r1, r2);
         }else{
             // if selection mode is not general immunity, then there's effectively no clearance
             clearanceRateConstant = 0.0;
@@ -259,13 +256,22 @@ double Infection::clearanceRate()
 		assert(!std::isnan(clearanceRateConstant));
 		assert(!std::isinf(clearanceRateConstant));
         //assert(clearanceRateConstant > 0.0);
-		
+		//cout<<clearanceRateConstant<<endl;
 		return clearanceRateConstant * std::pow(nActiveInfections, clearanceRatePower);
 	}
 	// Gene inactive: clearance rate = 0
 	else {
 		return 0.0;
 	}
+}
+
+double Infection::immuneClearRate(double immuneRate, double notImmuneRate, double immuneLevel){
+    assert(immuneRate>notImmuneRate);
+    assert(immuneLevel>=0);
+    assert(immuneLevel<=1);
+    double clr = immuneRate*notImmuneRate/(immuneRate*(1-immuneLevel) + notImmuneRate*immuneLevel);
+    //cout<<"immuneClearRate is "<<clr<<endl;
+    return(clr);
 }
 
 bool Infection::isActive()
@@ -401,9 +407,11 @@ InfectionProcessEvent(infectionItr, rate, time, rng)
 void TransitionEvent::performEvent(zppsim::EventQueue &queue)
 {
 	// If this is the final deactivation, then it's equivalent to clearing
+    //cout<<"exId is "<<infectionItr->expressionIndex<<endl;
 	if(infectionItr->active
 		&& infectionItr->expressionIndex == infectionItr->strainPtr->size() - 1
 	) {
+        //cout<<"perform clearing"<<endl;
 		infectionItr->hostPtr->clearInfection(infectionItr);
 	}
 	// Otherwise, actually perform a transition
@@ -432,5 +440,5 @@ void RecombinationEvent::performEvent(zppsim::EventQueue &queue)
 void MSmutationEvent::performEvent(zppsim::EventQueue &queue)
 {
     infectionItr->hostPtr->microsatMutate(infectionItr);
-    //cout<<"recomb"<<endl;
+    //cout<<"microsatMutate"<<endl;
 }
