@@ -45,7 +45,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 	( (Real)(immunityLossRate) )
 	
 	/**
-		\brief source of genes, original pool = 0, recombination = 1, mutation = 2
+		\brief source of genes, original pool = 0, recombination = 1, mutation = 2, immigration = 3
 	*/
 	( (Integer)(source) )
     /**

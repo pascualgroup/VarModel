@@ -78,7 +78,7 @@ public:
 	
 	GenePtr drawRandomGene();
 	GenePtr drawRandomGeneExcept(int64_t geneId);
-	GenePtr mutateGene(GenePtr const & srcGene);
+	GenePtr mutateGene(GenePtr const & srcGene, int64_t const source);
 	//GenePtr mutateGene2(GenePtr const & srcGene);
     //int64_t recLociId(std::vector<int64_t> & recGeneAlleles);
     int64_t recLociId(std::vector<int64_t> & recGeneAlleles, std::vector<GenePtr> & searchSet);
@@ -104,7 +104,6 @@ public:
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
     void writeDuration(std::list<Infection>::iterator infectionItr, double duration);
     void writeEIR(double time, int64_t infectious);
-
 	
 	bool verifyState();
 private:

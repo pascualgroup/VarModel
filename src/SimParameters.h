@@ -208,6 +208,11 @@ ZPPJSON_DEFINE_TYPE(
         \brief The number of times required to gain general immunity
      */
     ((Double)(infectionTimesToImmune))
+    /**
+    \brief general immunity infection duration line fitting with selection, a, b, c, d
+    */
+    ( (Array<Double>)(generalImmunityParams) )
+                    
 )
 
 /**

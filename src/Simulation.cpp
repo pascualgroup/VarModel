@@ -362,7 +362,7 @@ StrainPtr Simulation::generateRandomStrain(int64_t nNewGenes)
 	for(int64_t i = 0; i < genesPerStrain; i++) {
 		if(newGeneLocations[i]) {
 			nNewGenesCheck++;
-			strainGenes[i] = mutateGene(drawRandomGene());
+			strainGenes[i] = mutateGene(drawRandomGene(),3);
 		}
 		else {
 			strainGenes[i] = drawRandomGene();
@@ -417,7 +417,7 @@ std::vector<GenePtr> Simulation::mutateStrain(StrainPtr & strain)
 {
 	int64_t index = drawUniformIndex(rng,strain->size());
     vector<GenePtr> genes = strain->getGenes();
-    genes[index] = mutateGene(genes[index]);
+    genes[index] = mutateGene(genes[index],2);
     mutationCount++;
     return genes;
 }
@@ -487,7 +487,7 @@ void Simulation::updateRates()
 void Simulation::sampleHosts()
 {
     double t = getTime();
-    if (t > parPtr->tEnd/2) {
+    if (t > 18000) {
 	   cerr << t << ": sampling hosts" << '\n';
         for(auto & popPtr : popPtrs) {
             popPtr->sampleHosts();
@@ -522,7 +522,7 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 		dbPtr->insert(sampledTransmissionTable, row);
 		
 		/**
-		srcHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
+		srcHost.writeInfectionks(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
 		dstHost.writeInfections(transmissionCount, *dbPtr, sampledTransmissionInfectionTable);
 		
 		srcHost.immunity.write(transmissionCount, *dbPtr, sampledTransmissionImmunityTable);
@@ -580,12 +580,12 @@ GenePtr Simulation::drawRandomGeneExcept(int64_t geneId)
 	return genes[newGeneId];
 }
 
-GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
+GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr, int64_t const source) {
     //cout<<"mutate gene\n";
     std::vector<int64_t> srcLociAlleles = srcGenePtr->Alleles;
     //not using mutationDistributions anymore, mutation weights are locus specific weight, sum(weight) = 1
     size_t mutateLocusId;
-    if(mutationDistributions.size() == 0) {
+    if(mutationDistributions.size() == 1) {
         mutateLocusId = drawUniformIndex(rng, srcLociAlleles.size());
     }else{
         assert(mutationDistributions.size()==srcLociAlleles.size());
@@ -597,7 +597,7 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr) {
     std::vector<int64_t> newLoci = srcLociAlleles;
     newLoci[mutateLocusId] = alleleNumber[mutateLocusId]-1;
     //cout<<newLoci[mutateLocusId]<<endl;
-    return createGene(newLoci,true,2);
+    return createGene(newLoci,true,source);
 }
 
 GenePtr Simulation::mutateMS(GenePtr const & srcMS) {

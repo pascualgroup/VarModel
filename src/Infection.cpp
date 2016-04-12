@@ -197,8 +197,9 @@ double Infection::deactivationRate()
 	assert(active);
 	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
-	
+	//whether linear to the number of epitopes?
 	double constant = simParPtr->withinHost.deactivationRateConstant;
+    double immuneRate = 1000.0;
 	assert(!std::isnan(constant));
 	assert(!std::isinf(constant));
 	assert(constant > 0.0);
@@ -217,7 +218,7 @@ double Infection::deactivationRate()
             //cout<<"geneIndex is "<<geneIndex<<endl;
             double geneImmuneLevel = hostPtr->immunity.checkGeneImmunity(strainPtr->getGene(geneIndex));
             //cout<<"here"<<endl;
-            constant = immuneClearRate(1000, constant, geneImmuneLevel);
+            constant = immuneClearRate(immuneRate, constant, geneImmuneLevel);
         }
     }
     //cout<<"host "<<hostPtr->id<<" deactivate gene "<<geneIndex<<" at rate"<<constant<<endl;
@@ -246,8 +247,9 @@ double Infection::clearanceRate()
         
         if (simParPtr->selectionMode == 2) {
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
-            double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune;
-            clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(r1, r2);
+            //double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune;
+            //clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(r1, r2);
+            clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(simParPtr->withinHost.generalImmunityParams.toDoubleVector(),r1);
         }else{
             // if selection mode is not general immunity, then there's effectively no clearance
             clearanceRateConstant = 0.0;

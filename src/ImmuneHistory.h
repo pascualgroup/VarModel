@@ -30,7 +30,7 @@ private:
 	GenePtr genePtr;
 };
 
-/*
+
 class AlleleImmuneLossEvent : public zppsim::RateEvent
 {
 public:
@@ -41,23 +41,24 @@ private:
 	int64_t locusId;
     int64_t AlleleId;
 };
- */
+
 
 class ImmuneHistory
 {
 friend class ImmunityLossEvent;
-//friend class AlleleImmuneLossEvent;
+friend class AlleleImmuneLossEvent;
 public:
 	ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber, double infectionTimesToImmune);
 	
 	void gainImmunity(GenePtr genePtr);
 	void gainAlleleImmunity(GenePtr genePtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
-    //void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
+    void setAlleleLossEvent(int64_t locusId, int64_t AlleleId,double lossrate);
     double checkGeneImmunity(GenePtr genePtr);
 	void gainGeneralImmunity();
     double checkGeneralImmunity(double a, double b);
+    double checkGeneralImmunity(std::vector<double> params, double & immuneRate);
     void loseImmunity(GenePtr genePtr);
-    //void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
+    void loseAlleleImmune(int64_t & locusId,int64_t & AlleleId);
 	bool isImmune(GenePtr genePtr);
 	
 	void prepareToDie();
@@ -68,6 +69,9 @@ public:
     std::vector<std::unordered_map<int64_t,int64_t>> immuneAlleles;
 	std::unordered_set<GenePtr> genes;
 	std::unordered_map<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
+    int64_t geneLocToHash(int64_t locusId, int64_t AlleleId);
+	std::unordered_map<int64_t, std::unique_ptr<AlleleImmuneLossEvent>> alleleLossEvents;
+    void updateAlleleLossRate(int64_t &  locusId, int64_t &  AlleleId,double newRate);
 private:
 	Host * hostPtr;
 	bool clinical;

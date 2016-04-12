@@ -3,7 +3,7 @@
 import os
 import sys
 
-EXEC_NAME = 'malariamodel'
+EXEC_NAME = sys.argv[1]
 
 # Compilers in preference order: tuple (cCompiler, cppCompiler, flags)
 COMPILERS = [
