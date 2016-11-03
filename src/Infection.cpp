@@ -288,7 +288,7 @@ double Infection::transmissionProbability()
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
 	GenePtr genePtr = getCurrentGene();
-	
+    
 	double p = genePtr->transmissibility;
 	assert(p > 0.0 && p < 1.0);
 	
@@ -306,13 +306,14 @@ std::string Infection::toString()
 	return ss.str();
 }
 
-void Infection::write(Database & db, Table<InfectionRow> & table)
+void Infection::write(Database & db, Table<InfectionRow> & table,Table<StrainRow> & strainsTable,Table<GeneRow> & GeneTable,Table<LociRow> & LociTable)
 {
     InfectionRow row;
 	row.time = hostPtr->getTime();
 	row.hostId = hostPtr->id;
 	row.infectionId = id;
 	row.strainId = strainPtr->id;
+    strainPtr->writeToDatabaseStrain(db, strainsTable, GeneTable, LociTable);
 	if(geneIndex == WAITING_STAGE) {
 		row.geneIndex.setNull();
 		row.active.setNull();
@@ -320,12 +321,12 @@ void Infection::write(Database & db, Table<InfectionRow> & table)
 	else {
 		row.geneIndex = geneIndex;
 		row.active = active;
+        if (msPtr != NULL){
+            row.msID = msPtr->id;
+        }else{
+            row.msID.setNull();
+        }
 	}
-    if (msPtr != NULL){
-         row.msID = msPtr->id;
-    }else{
-        row.msID.setNull();
-    }
 	db.insert(table, row);
 }
 

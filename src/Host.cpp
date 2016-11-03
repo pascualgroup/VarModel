@@ -133,6 +133,13 @@ void Host::prepareToDie()
 	removeEvent(deathEvent.get());
 }
 
+double Host::moiRegulate(Host & dstHost){
+    int64_t maxMOI = popPtr->simPtr->parPtr->withinHost.maxMOI;
+    int64_t t = dstHost.getActiveInfectionCount();
+    double p =  1-(1/(1+exp(-(t-maxMOI))));
+    return(p);
+}
+
 void Host::transmitTo(Host & dstHost)
 {
 	rng_t * rngPtr = getRngPtr();
@@ -146,12 +153,12 @@ void Host::transmitTo(Host & dstHost)
     popPtr->simPtr->writeEIR(popPtr->getTime(),1);
     
 //	cerr << "Transmitting to " << dstHost.popPtr->id << ", " << dstHost.id << '\n';
-	
+	double moiControl = moiRegulate(dstHost);
 	// Get some current infections according to transmission probability
 	vector<StrainPtr> originalStrains;
     for(auto infItr = infections.begin(); infItr != infections.end(); infItr++) {
 		if(infItr->isActive()) {
-			bernoulli_distribution flipCoin(infItr->transmissionProbability());
+			bernoulli_distribution flipCoin(infItr->transmissionProbability()*moiControl);
 			if(flipCoin(*rngPtr)) {
 				originalStrains.push_back(
 					infItr->strainPtr);
@@ -537,10 +544,11 @@ void Host::setEventRate(RateEvent * event, double rate)
 	popPtr->setEventRate(event, rate);
 }
 
-void Host::writeInfections(Database & db, Table<InfectionRow> & table)
+void Host::writeInfections(Database & db, Table<InfectionRow> & table,Table<StrainRow> & strainsTable,Table<GeneRow> & GeneTable,Table<LociRow> & LociTable)
 {
 	for(auto itr = infections.begin(); itr != infections.end(); itr++) {
-		itr->write(db, table);
+		itr->write(db, table,strainsTable,GeneTable,LociTable);
+        
 	}
 }
 

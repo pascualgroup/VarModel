@@ -47,6 +47,8 @@ public:
 	);
 	
 	void prepareToDie();
+    
+    double moiRegulate(Host & dstHost);
 	
 	void transmitTo(Host & dstHost);
 
@@ -85,7 +87,7 @@ public:
 	void removeEvent(zppsim::Event * event);
 	void setEventRate(zppsim::RateEvent * event, double rate);
 	
-	void writeInfections(Database & db, Table<InfectionRow> & table);
+	void writeInfections(Database & db, Table<InfectionRow> & table, Table<StrainRow> & strainsTable,Table<GeneRow> & GeneTable,Table<LociRow> & LociTable);
 	void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
 	
 	std::string toString();

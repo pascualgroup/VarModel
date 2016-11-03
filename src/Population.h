@@ -81,7 +81,10 @@ private:
 	Simulation * simPtr;
 	zppsim::rng_t * rngPtr;
 	PopulationParameters * parPtr;
-	
+
+    //record biting rate variation monthly
+    std::vector<double> monthlyBitingRateDistribution = parPtr->monthlyBitingRateDistribution.toDoubleVector();
+
 	std::vector<std::unique_ptr<Host>> hosts;
 	std::unordered_map<int64_t, int64_t> hostIdIndexMap;
 	
@@ -91,6 +94,10 @@ private:
 	int64_t drawSourcePopulation();
 	
 	int64_t transmissionCount;
+    
+    std::vector<std::vector<int64_t>> tempMS;
+    int64_t immigrationCount = 0;
+    int yearTrack = 0;
 };
 
 #endif /* defined(__malariamodel__Population__) */

@@ -26,7 +26,8 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	for(int64_t i = 0; i < parPtr->size; i++) {
 		int64_t hostId = simPtr->nextHostId++;
 		//double lifetime = simPtr->drawHostLifetime();
-        double lifetime = exponential_distribution<>(1.0/108000.0)(*rngPtr);
+        double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
+        if (lifetime > 28800.0) lifetime = 28800.0;
         //cout<<lifetime<<endl;
 		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
 		double deathTime = birthTime + lifetime;
@@ -54,13 +55,21 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	addEvent(immigrationEvent.get());
 	
 	// Create initial infections, with microsatellites as well
-	for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+    if (simPtr->parPtr->genes.includeMicrosat) {
+        size_t msSampleSize = (int)(parPtr->nInitialInfections + (parPtr->immigrationRate * 360.0))*1.5;
+        simPtr->runMSSimCoal(msSampleSize);
+        tempMS = simPtr->readMsArray(yearTrack);
+        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+            int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
+            StrainPtr strainPtr = simPtr->generateRandomStrain();
+            GenePtr msPtr = simPtr->storeMicrosat(tempMS[i]);
+            hosts[hostId]->receiveInfection(strainPtr,msPtr);
+        }
+        immigrationCount = parPtr->nInitialInfections;
+    }else{
+        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
 		int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
 		StrainPtr strainPtr = simPtr->generateRandomStrain();
-		if (simPtr->parPtr->genes.includeMicrosat){
-            GenePtr msPtr = simPtr->generateRandomMicrosat();
-            hosts[hostId]->receiveInfection(strainPtr,msPtr);
-        }else{
 		hosts[hostId]->receiveInfection(strainPtr);
         }
 	}
@@ -96,7 +105,8 @@ void Population::removeHost(Host * hostPtr)
 Host * Population::createNewHost()
 {
 	//double lifetime = simPtr->drawHostLifetime();
-    double lifetime = exponential_distribution<>(1.0/5400.0)(*rngPtr);
+    double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
+    if (lifetime > 28800.0) lifetime = 28800.0;
 	double birthTime = getTime();
 	double deathTime = birthTime + lifetime;
 	
@@ -121,7 +131,20 @@ double Population::getTime()
 
 double Population::getBitingRate()
 {
-	double perHostBitingRate = evaluateSinusoid(parPtr->bitingRate, getTime());
+    double t = getTime();
+    double perHostBitingRate;
+    double bt = parPtr->bitingRate.mean;
+	if (monthlyBitingRateDistribution.size()==12) {
+        perHostBitingRate = monthlyBitingRateDistribution[(int)(t/30)%12]*bt;
+    }else{
+        perHostBitingRate = evaluateSinusoid(parPtr->bitingRate, t);
+    }
+    if ((simPtr->parPtr->intervention.includeIntervention) &&
+        (t > simPtr->parPtr->intervention.TimeStart) &&
+        (t <= (simPtr->parPtr->intervention.TimeStart + simPtr->parPtr->intervention.duration))) {
+        perHostBitingRate = perHostBitingRate * simPtr->parPtr->intervention.amplitude;
+        //cout<<"reduced transmission"<<endl;
+    }
 	return hosts.size() * perHostBitingRate;
 }
 
@@ -186,8 +209,16 @@ void Population::performImmigrationEvent()
 		strain = simPtr->generateRandomStrain();
 	}
     if (simPtr->parPtr->genes.includeMicrosat) {
-        GenePtr ms = simPtr->generateRandomMicrosat();
+        int currentYear = floor(getTime()/360.0);
+        if (currentYear > yearTrack) {
+            tempMS = simPtr->readMsArray(currentYear);
+            yearTrack = currentYear;
+            immigrationCount = 0;
+            
+        }
+        GenePtr ms = simPtr->storeMicrosat(tempMS[immigrationCount]);
         hosts[hostIndex]->receiveInfection(strain,ms);
+        immigrationCount++;
     }else{
 	hosts[hostIndex]->receiveInfection(strain);
     }
@@ -226,22 +257,41 @@ void Population::sampleHosts()
     vector<size_t> hostIndices = drawUniformIndices(
          *rngPtr, hosts.size(), hosts.size(), true);
     size_t count = 0;
+    size_t moi1count = 0;
+    size_t sampledSize = 0;
 	for(size_t index : hostIndices) {
-		SampledHostRow row;
-		row.time = getTime();
-		row.hostId = hosts[index]->id;
-		dbPtr->insert(simPtr->sampledHostsTable, row);
-		if (hosts[index]->infections.size()>0) {
-            hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable);
+		//SampledHostRow row;
+		//row.time = getTime();
+        //this line records every sampled host
+		//row.hostId = hosts[index]->id;
+        //dbPtr->insert(simPtr->sampledHostsTable, row);
+        //instead, in this version record only how many hosts were sampled before reaching the infected sampleSize
+        sampledSize += 1;
+        int64_t numActiveInfection = hosts[index]->getActiveInfectionCount();
+		if (numActiveInfection>0) {
+            hosts[index]->writeInfections(*dbPtr, simPtr->sampledHostInfectionTable, simPtr->strainsTable,simPtr->genesTable,simPtr->lociTable);
             count += 1;
+            if (numActiveInfection ==1) {
+                moi1count += 1;
+            }
 		//hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
 		//hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
         }
-        if (count == size_t(parPtr->sampleSize)) {
+        //if (count == size_t(parPtr->sampleSize)) {
+        //    break;
+        //}
+        //ensure enough MOI=1
+        if (moi1count == size_t(parPtr->sampleSize)) {
             break;
         }
+       
 
     }
+    //cout<<"sampled count is "<<count<<endl;
+    SampledHostRow row;
+    row.time = getTime();
+    row.hostId = sampledSize;
+    dbPtr->insert(simPtr->sampledHostsTable, row);
 }
 
 std::string Population::toString()

@@ -6,6 +6,9 @@
 #include <sys/resource.h>
 #include <math.h>
 #include <algorithm>
+#include <string>
+#include <fstream>
+#include <iterator>
 
 // 100-millisecond delay between database commit retries
 #define DB_RETRY_DELAY 100000
@@ -87,7 +90,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
-
+    
     //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
 	if(vals.size() == 1) {
@@ -147,7 +150,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
             lociTable
 		));
 	}
-
+    
+    
     //create allele size range for microsatellites, if required
     if (microsatNumber>0){
         Array<Double> msvals = parPtr->genes.microsatAlleles;
@@ -174,6 +178,39 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	dbPtr->commitWithRetry(DB_RETRY_DELAY, DB_TIMEOUT, cerr);
 	
 	cerr << "# events: " << queuePtr->size() << '\n';
+}
+
+//5/17 new edits, microsats created from real distributions
+// create microsats pool
+
+std::vector<std::vector<int64_t>> Simulation::readMsArray(int year) {
+    int ttyear = (int)floor(parPtr->tEnd/360.0);
+    char temp[512];
+    sprintf(temp, "python readinMS.py %d %d", year, ttyear);
+    system((char *)temp);
+    std::string msFilename("tempMS.txt");
+    std::ifstream in(msFilename.c_str());
+	if(!in) {
+		cerr << "ms file " << msFilename << " cannot be opened.";
+	}
+    std::vector<std::vector<int64_t> > v;
+	
+    std::string line;
+    while ( getline( in, line ) ) {
+        std::istringstream is( line );
+        v.push_back(std::vector<int64_t>( std::istream_iterator<int64_t>(is),
+                                     std::istream_iterator<int64_t>() ) );
+    }
+    in.close();
+    return (v);
+}
+
+
+//function to run simcoal to generate microsatellites
+void Simulation::runMSSimCoal(size_t msSampleSize) {
+    char temp[512];
+    sprintf(temp, "python generateMS.py %zu %.1f %d %.10f", msSampleSize, (double)parPtr->tEnd, (int)parPtr->genes.microsatNumber, (double)parPtr->pMsMutate);
+    system((char *)temp);
 }
 
 GenePtr Simulation::createGene(std::vector<int64_t> Alleles,bool const functionality,int64_t const source)
@@ -456,6 +493,16 @@ GenePtr Simulation::generateRandomMicrosat()
     }
 }
 
+//check if the microsatellite haplotype exist, if not store in microSat vector
+GenePtr Simulation::storeMicrosat(std::vector<int64_t> Alleles){
+    int64_t checkId = recLociId(Alleles,microsats);
+    if (checkId == microsats.size()) {
+        return createMicrosat(Alleles);
+    }else{
+        return microsats[checkId];
+    }
+};
+
 //create new microsatellite alleles and store in microsats
 GenePtr Simulation::createMicrosat(std::vector<int64_t> Alleles)
 {
@@ -514,6 +561,7 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
             row.transmissionId = transmissionCount;
             row.strainId = strainPtr->id;
             dbPtr->insert(sampledTransmissionStrainTable, row);
+            strainPtr->writeToDatabaseStrain(*dbPtr, strainsTable, genesTable, lociTable);
         }
 		TransmissionRow row;
 		row.transmissionId = transmissionCount;
@@ -561,6 +609,7 @@ void Simulation::writeEIR(double time, int64_t infectious)
 }
 
 
+
 //for immigration events, only sample from the large pool that exists
 GenePtr Simulation::drawRandomGene()
 {
@@ -603,12 +652,14 @@ GenePtr Simulation::mutateGene(GenePtr const & srcGenePtr, int64_t const source)
 GenePtr Simulation::mutateMS(GenePtr const & srcMS) {
     std::vector<int64_t> srcLociAlleles = srcMS->Alleles;
     size_t mutateLocusId;
+    //stepwise mutation of microsatellite allele, by adding 1 or minus 1 length
     mutateLocusId = drawUniformIndex(rng, srcLociAlleles.size());
-    microsatAlleles[mutateLocusId]++;
     std::vector<int64_t> newLoci = srcLociAlleles;
-    newLoci[mutateLocusId] = microsatAlleles[mutateLocusId]-1;
-    return createMicrosat(newLoci);
-    
+    bernoulli_distribution flipCoin(0.5);
+    int incDecrease = (flipCoin(rng)-0.5)*2;//whether adding 1 or minus 1
+    //cout<<"incerase "<<incDecrease<<endl;
+    newLoci[mutateLocusId] += incDecrease;
+    return storeMicrosat(newLoci);
 }
 
 //test whether a new allele vector already exist in the genes allele vectors
@@ -738,19 +789,10 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
 
 	auto strainItr = geneVecToStrainIndexMap.find(strainGenes);
 	if(strainItr == geneVecToStrainIndexMap.end()) {
-		strains.emplace_back(new Strain(nextStrainId++, strainGenes));
+		strains.emplace_back(new Strain(nextStrainId++, strainGenes,parPtr->outputStrains,*dbPtr, strainsTable));
 		strainPtr = strains.back();
 		geneVecToStrainIndexMap[strainGenes] = strains.size() - 1;
 		
-		if(parPtr->outputStrains) {
-			StrainRow row;
-			row.strainId = strainPtr->id;
-			for(int64_t i = 0; i < strainPtr->size(); i++) {
-				row.geneIndex = i;
-				row.geneId = strainPtr->getGene(i)->id;
-				dbPtr->insert(strainsTable, row);
-			}
-		}
 	}
 	else {
 		strainPtr = strains[strainItr->second];

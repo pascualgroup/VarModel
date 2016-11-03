@@ -23,7 +23,7 @@ Gene::Gene(
 	id(id),
 	transmissibility(transmissibility),
 	immunityLossRate(immunityLossRate), source(source),functionality(functionality),
-    Alleles(knownAlleles)
+    Alleles(knownAlleles),recorded(writeToDatabaseGene)
 {
 	if(writeToDatabaseGene) {
 		GeneRow row;
@@ -44,6 +44,28 @@ Gene::Gene(
         }
     }
 }
+
+void Gene::writeToDatabaseGene(Database & db, Table<GeneRow> & GeneTable,Table<LociRow> & LociTable) {
+    if (! recorded){
+        GeneRow row;
+        row.geneId = id;
+        row.transmissibility = transmissibility;
+        row.immunityLossRate = immunityLossRate;
+        row.source = source;
+        row.functionality = functionality;
+        db.insert(GeneTable, row);
+        for(int64_t i = 0; i < Alleles.size(); i++) {
+            LociRow row;
+            row.geneId = id;
+            row.alleleIndex = i;
+            row.alleleId = Alleles[i];
+            db.insert(LociTable,row);
+        }
+        recorded = true;
+    }
+    
+}
+
 
 std::string Gene::toString()
 {

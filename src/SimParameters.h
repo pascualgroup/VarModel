@@ -94,6 +94,11 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (Sinusoid)(bitingRate) )
 
+    /**
+        \brief biting rate distribution, specified as different rate per month
+    */
+    ( (Array<Double>)(monthlyBitingRateDistribution) )
+
 	/**
 		\brief Immigration rate, in number of random infection events per unit
 		time (per population, not per capita).
@@ -212,7 +217,11 @@ ZPPJSON_DEFINE_TYPE(
     \brief general immunity infection duration line fitting with selection, a, b, c, d
     */
     ( (Array<Double>)(generalImmunityParams) )
-                    
+    
+    /**
+     \brief maximum MOI a host can get
+     */
+    ((Int64)(maxMOI))
 )
 
 /**
@@ -282,6 +291,33 @@ ZPPJSON_DEFINE_TYPE(
     \brief number of alleles per microsat, can be different per microsat
     */
     ( (Array<Double>) (microsatAlleles))
+)
+
+/**
+ \brief Type defining parameters governing intervention.
+ */
+ZPPJSON_DEFINE_TYPE(
+                    InterventionParameters,
+    /**
+     \brief time when intervention starts
+     */
+     ((Double) (TimeStart))
+                    
+     /**
+     \brief duration of intervention
+     */
+     ((Double) (duration))
+    
+     /**
+     \brief amplitude change of biting rate. If amplitude is a, biting rate if b, then the new biting rate during intervention is b*a
+     */
+     ((Double) (amplitude))
+
+     /**
+     \brief whether turn on the intervention mode
+     */
+     ((Bool) (includeIntervention))
+
 )
 
 /**
@@ -431,6 +467,12 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (GeneParameters)(genes) )
 	
+    /**
+    \brief Parameters governing interventions (see InterventionParameters class).
+    */
+    ( (InterventionParameters)(intervention) )
+                    
+                    
 	/**
 		\brief Whether or not clinical immunity is tracked.
 	*/

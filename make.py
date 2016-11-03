@@ -29,14 +29,15 @@ if __name__ == '__main__':
 		'zppdb/src',
 		'zppsim/src',
 		'preprocessor/include',
-		'libjson'
+		'libjson',
+		'/apps/amd64/libraries/sqlite/3.8.11.1/include'
 	]
 	
 	srcDirs = [
 		'src',
 		'zppjson/src',
 		'zppdb/src',
-		'zppsim/src',
+		'zppsim/src'
 	]
 	
 	os.system('mkdir -p bin')
