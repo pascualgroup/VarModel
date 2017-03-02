@@ -126,7 +126,41 @@ ZPPDB_DEFINE_ROW_TYPE(
 	( (Real)(deathTime) )
 )
 
-	
+/**
+ \brief Type defining rows in `followedHosts` table
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+     followedHostsRow,
+     /**
+      Sampling time
+     */
+     ( (Real)(time) )
+     /**
+     Unique identifier for host
+     */
+     ( (Integer)(hostId) )
+                      
+     /**
+     Population id for the host
+     */
+     ( (Integer)(popId) )
+
+     /**
+     infectionId
+     */
+     ((Integer)(infectionId))
+    
+     /**
+      strainId
+      */
+     ((Integer)(strainId))
+      /**
+       duration of infection
+       */
+     ((Real)(duration))
+                      
+)
+
 /**
 	\brief Type defining rows in `sampledHosts` table
 */

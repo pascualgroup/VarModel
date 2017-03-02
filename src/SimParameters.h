@@ -320,6 +320,25 @@ ZPPJSON_DEFINE_TYPE(
 
 )
 
+ZPPJSON_DEFINE_TYPE(
+     HostFollowingParameters,
+     /**
+                     \brief number of hosts to sample
+                     */
+                    ((Int64) (HostNumber))
+                    
+                    /**
+                     \brief whether turn on the host Sampling mode
+                     */
+                    ((Bool) (includeHostFollowing))
+                    
+                    /**
+                     \brief how long to follow each host
+                     */
+                    ((Double) (followDuration))
+                    
+                    )
+
 /**
 	\brief All simulation parameters.
 */
@@ -365,7 +384,12 @@ ZPPJSON_DEFINE_TYPE(
 		\brief Simulation end time
 	*/
 	( (Double)(tEnd) )
-	
+
+    /**
+       \brief Burnin time, all sampling starts after this burnin
+    */
+    ( (Double)(burnIn) )
+
 	/**
 		\brief How often to update seasonal rates.
 	*/
@@ -471,7 +495,11 @@ ZPPJSON_DEFINE_TYPE(
     \brief Parameters governing interventions (see InterventionParameters class).
     */
     ( (InterventionParameters)(intervention) )
-                    
+      
+    /**
+     \brief Parameters govering specific host following Parameters (see HostFollowingParameters class).
+     */
+     ((HostFollowingParameters)(following))
                     
 	/**
 		\brief Whether or not clinical immunity is tracked.

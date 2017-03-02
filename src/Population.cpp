@@ -120,7 +120,19 @@ Host * Population::createNewHost()
 	
 	// In the future, need to update rates
 //	updateRates();
-	
+	//add host to HostToFollow vector
+    if (simPtr->parPtr->following.includeHostFollowing) {
+        double t = getTime();
+        if ((t > simPtr->parPtr->burnIn) && (numberOfHostsFollowed < simPtr->parPtr->following.HostNumber))
+        {
+            //cout << "start following" <<endl;
+            //cout<<"birthTime is"<<t<<endl;
+            
+            HostsToFollow.push_back(hosts.back().get());
+            numberOfHostsFollowed += 1;
+            cout << "following hosts " <<hostId<<endl;
+        }
+    }
 	return hosts.back().get();
 }
 
@@ -293,6 +305,7 @@ void Population::sampleHosts()
     row.hostId = sampledSize;
     dbPtr->insert(simPtr->sampledHostsTable, row);
 }
+
 
 std::string Population::toString()
 {

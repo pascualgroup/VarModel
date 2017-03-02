@@ -453,6 +453,9 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
     double durationTime = getTime()-infectionItr->initialTime;
     popPtr->simPtr->writeDuration(infectionItr, durationTime);
     
+    // add table to record the infection for hosts being followed
+    popPtr->simPtr->writeFollowedHostInfection(infectionItr, durationTime);
+    
 	// Remove infection
 	infectionItr->prepareToEnd();
 	infections.erase(infectionItr);

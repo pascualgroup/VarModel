@@ -98,6 +98,8 @@ private:
     std::vector<std::vector<int64_t>> tempMS;
     int64_t immigrationCount = 0;
     int yearTrack = 0;
+    std::vector<Host *> HostsToFollow;
+    int64_t numberOfHostsFollowed = 0;
 };
 
 #endif /* defined(__malariamodel__Population__) */

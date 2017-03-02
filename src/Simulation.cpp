@@ -69,7 +69,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	sampledTransmissionStrainTable("sampledTransmissionStrains"),
 	sampledTransmissionInfectionTable("sampledTransmissionInfections"),
 	sampledTransmissionImmunityTable("sampledTransmissionImmunity"),
-	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity")
+	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity"),
+    followedHostsTable("followedHosts")
 {
 	// Construct transition probability distributions for genes
     /** turned off by hqx, new way of mutation, transition prob dist no use
@@ -88,6 +89,9 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
 	initializeDatabaseTables();
 	
+    //make sure burnin time is smaller than end time
+    assert(parPtr->burnIn<parPtr->tEnd);
+    
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
     
@@ -257,6 +261,7 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledTransmissionInfectionTable);
 	dbPtr->createTable(sampledTransmissionImmunityTable);
 	dbPtr->createTable(sampledTransmissionClinicalImmunityTable);
+    dbPtr->createTable(followedHostsTable);
 }
 
 void Simulation::run()
@@ -534,7 +539,7 @@ void Simulation::updateRates()
 void Simulation::sampleHosts()
 {
     double t = getTime();
-    if (t > 18000) {
+    if (t > parPtr->burnIn) {
 	   cerr << t << ": sampling hosts" << '\n';
         for(auto & popPtr : popPtrs) {
             popPtr->sampleHosts();
@@ -593,6 +598,36 @@ void Simulation::writeDuration(std::list<Infection>::iterator infectionItr, doub
         row.hostId = infectionItr->hostPtr->id;
         row.infectionId = infectionItr->id;
         dbPtr->insert(InfectionDurationTable, row);
+    }
+}
+
+void Simulation::writeFollowedHostInfection(std::list<Infection>::iterator infectionItr, double duration)
+{
+    if (parPtr->following.includeHostFollowing) {
+        std::vector<Host *>::iterator p = std::find(infectionItr->hostPtr->popPtr->HostsToFollow.begin(),infectionItr->hostPtr->popPtr->HostsToFollow.end(),infectionItr->hostPtr);
+        if (p != infectionItr->hostPtr->popPtr->HostsToFollow.end()) {
+            //cout<<"followingHostsId "<<infectionItr->hostPtr->id<<endl;
+            followedHostsRow row;
+            row.time = infectionItr->initialTime;
+            row.duration = duration;
+            row.hostId = infectionItr->hostPtr->id;
+            row.infectionId = infectionItr->id;
+            row.popId = infectionItr->hostPtr->popPtr->id;
+            row.strainId = infectionItr->strainPtr->id;
+            double t = infectionItr->initialTime + duration - infectionItr->hostPtr->birthTime;
+            
+            //if time surpass the tracking period
+            if (t > parPtr->following.followDuration) {
+                //cout<<"it's larger"<<t<<endl;
+                
+                infectionItr->hostPtr->popPtr->HostsToFollow.erase(p);
+            }else{
+                //cout<<"it's within duration"<<t<<endl;
+                dbPtr->insert(followedHostsTable, row);
+            }
+            
+
+        }
     }
 }
 

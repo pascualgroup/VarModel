@@ -102,11 +102,12 @@ public:
 	
 	void updateRates();
 	void sampleHosts();
-	
+    
     void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
     void writeDuration(std::list<Infection>::iterator infectionItr, double duration);
     void writeEIR(double time, int64_t infectious);
+    void writeFollowedHostInfection(std::list<Infection>::iterator infectionItr, double duration);
 	bool verifyState();
 private:
 	SimParameters * parPtr;
@@ -170,6 +171,7 @@ private:
 	zppdb::Table<TransmissionInfectionRow> sampledTransmissionInfectionTable;
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionImmunityTable;
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionClinicalImmunityTable;
+    zppdb::Table<followedHostsRow> followedHostsTable;
 	
 	GenePtr createGene(std::vector<int64_t> Alleles,bool const functionality, int64_t const source);
 	GenePtr createMicrosat(std::vector<int64_t> Alleles);
