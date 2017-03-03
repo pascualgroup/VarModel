@@ -285,12 +285,14 @@ void Population::sampleHosts()
 		//hosts[index]->immunity.write(*dbPtr, simPtr->sampledHostImmunityTable);
 		//hosts[index]->clinicalImmunity.write(*dbPtr, simPtr->sampledHostClinicalImmunityTable);
         }
-        //if (count == size_t(parPtr->sampleSize)) {
-        //    break;
-        //}
-        //ensure enough MOI=1
-        if (moi1count == size_t(parPtr->sampleSize)) {
-            break;
+        if (parPtr->moi1) {
+            if (moi1count == size_t(parPtr->sampleSize)) {
+                break;
+            }
+        }else{
+            if (count == size_t(parPtr->sampleSize)) {
+                break;
+            }
         }
        
 
@@ -298,7 +300,7 @@ void Population::sampleHosts()
     //cout<<"sampled count is "<<count<<endl;
     SampledHostRow row;
     row.time = getTime();
-    row.hostId = sampledSize;
+    row.sampledNumber = sampledSize;
     dbPtr->insert(simPtr->sampledHostsTable, row);
 }
 

@@ -81,6 +81,12 @@ ZPPJSON_DEFINE_TYPE(
 	*/
 	( (Int64)(sampleSize) )
 	
+    /**
+        \brief The sample size specified above means sampling at least n number of MOI
+         or n number of infected. If True, MOI 1 of sampleSize will be sampled; 
+        otherwise, sampleSize of infected will be sampled;
+     */
+    ((Bool)(moi1))
 	/**
 		\brief Number of initial infections in population.
 	*/

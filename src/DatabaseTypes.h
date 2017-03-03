@@ -173,9 +173,9 @@ ZPPDB_DEFINE_ROW_TYPE(
 	( (Real)(time) )
 	
 	/**
-		Host ID
+		Number of Host Sampled
 	*/
-	( (Integer)(hostId) )
+	( (Integer)(sampledNumber) )
 )
 
 /**
