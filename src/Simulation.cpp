@@ -604,9 +604,7 @@ void Simulation::writeDuration(std::list<Infection>::iterator infectionItr, doub
 void Simulation::writeFollowedHostInfection(std::list<Infection>::iterator infectionItr, double duration)
 {
     if (parPtr->following.includeHostFollowing) {
-        std::vector<Host *>::iterator p = std::find(infectionItr->hostPtr->popPtr->HostsToFollow.begin(),infectionItr->hostPtr->popPtr->HostsToFollow.end(),infectionItr->hostPtr);
-        if (p != infectionItr->hostPtr->popPtr->HostsToFollow.end()) {
-            //cout<<"followingHostsId "<<infectionItr->hostPtr->id<<endl;
+        if (infectionItr->hostPtr->toTrack) {
             followedHostsRow row;
             row.time = infectionItr->initialTime;
             row.duration = duration;
@@ -618,12 +616,14 @@ void Simulation::writeFollowedHostInfection(std::list<Infection>::iterator infec
             
             //if time surpass the tracking period
             if (t > parPtr->following.followDuration) {
-                //cout<<"it's larger"<<t<<endl;
+               // cout<<"it's larger"<<t<<endl;
                 
-                infectionItr->hostPtr->popPtr->HostsToFollow.erase(p);
+                infectionItr->hostPtr->toTrack = false;
+                
             }else{
                 //cout<<"it's within duration"<<t<<endl;
                 dbPtr->insert(followedHostsTable, row);
+                infectionItr->strainPtr->writeToDatabaseStrain(*dbPtr, strainsTable, genesTable, lociTable);
             }
             
 

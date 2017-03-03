@@ -46,6 +46,9 @@ public:
 		zppdb::Table<HostRow> & table
 	);
 	
+    //whether to track this hosts' entire infection histroy
+    bool toTrack = false;
+    
 	void prepareToDie();
     
     double moiRegulate(Host & dstHost);
