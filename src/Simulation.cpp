@@ -48,7 +48,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
-	hostStateSamplingEvent(this, 0.0, parPtr->sampleHostsEvery),
+	hostStateSamplingEvent(this, parPtr->burnIn, parPtr->sampleHostsEvery),
+    mdaEvent(this,parPtr->MDA.TimeStartMDA, parPtr->MDA.interval),
 	nextHostId(0),
 	nextStrainId(0),
 	transmissionCount(0),
@@ -94,6 +95,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
+    if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
     
     //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
@@ -539,11 +541,26 @@ void Simulation::updateRates()
 void Simulation::sampleHosts()
 {
     double t = getTime();
-    if (t > parPtr->burnIn) {
+    //if (t > parPtr->burnIn) {
 	   cerr << t << ": sampling hosts" << '\n';
         for(auto & popPtr : popPtrs) {
             popPtr->sampleHosts();
         }
+    //}
+}
+
+void Simulation::MDA()
+{
+    double t = getTime();
+    cerr << t << ": start MDA" << '\n';
+    for(auto & popPtr : popPtrs) {
+        popPtr->executeMDA(t+parPtr->MDA.drugEffDuration);
+    }
+    mdaCounts++;
+    cerr << "totalMDA " <<mdaCounts<< '\n';
+    if (mdaCounts == parPtr->MDA.totalNumber) {
+        cout<<"remove MDAs at "<<t<<endl;
+        removeEvent(&mdaEvent);
     }
 }
 
@@ -588,31 +605,31 @@ void Simulation::recordTransmission(Host &srcHost, Host &dstHost, std::vector<St
 	transmissionCount++;
 }
 
-void Simulation::writeDuration(std::list<Infection>::iterator infectionItr, double duration)
+void Simulation::writeDuration(std::list<Infection>::iterator infectionItr)
 {
     bernoulli_distribution flipCoin(0.001);
     if(flipCoin(rng)) {
         InfectionDurationRow row;
         row.time = infectionItr->initialTime;
-        row.duration = duration;
+        row.duration = getTime() - infectionItr->initialTime;
         row.hostId = infectionItr->hostPtr->id;
         row.infectionId = infectionItr->id;
         dbPtr->insert(InfectionDurationTable, row);
     }
 }
 
-void Simulation::writeFollowedHostInfection(std::list<Infection>::iterator infectionItr, double duration)
+void Simulation::writeFollowedHostInfection(std::list<Infection>::iterator infectionItr)
 {
     if (parPtr->following.includeHostFollowing) {
         if (infectionItr->hostPtr->toTrack) {
             followedHostsRow row;
             row.time = infectionItr->initialTime;
-            row.duration = duration;
+            row.duration = getTime()-infectionItr->initialTime;
             row.hostId = infectionItr->hostPtr->id;
             row.infectionId = infectionItr->id;
             row.popId = infectionItr->hostPtr->popPtr->id;
             row.strainId = infectionItr->strainPtr->id;
-            double t = infectionItr->initialTime + duration - infectionItr->hostPtr->birthTime;
+            double t = getTime() - infectionItr->hostPtr->birthTime;
             
             //if time surpass the tracking period
             if (t > parPtr->following.followDuration) {
@@ -855,3 +872,15 @@ void HostStateSamplingEvent::performEvent(zppsim::EventQueue & queue)
 {
 	simPtr->sampleHosts();
 }
+
+//add MDA events to simulate giving drugs to all hosts
+MDAEvent::MDAEvent(Simulation * simPtr, double initialTime, double period):
+    PeriodicEvent(initialTime,period),simPtr(simPtr)
+{
+}
+
+void MDAEvent::performEvent(zppsim::EventQueue & queue)
+{
+    simPtr->MDA();
+}
+

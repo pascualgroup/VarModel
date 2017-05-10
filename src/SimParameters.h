@@ -326,6 +326,48 @@ ZPPJSON_DEFINE_TYPE(
 
 )
 
+/**
+ \brief Type defining parameters governing intervention.
+ */
+ZPPJSON_DEFINE_TYPE(
+                    MDAParameters,
+                    /**
+                     \brief time when MDA starts
+                     */
+                    ((Double) (TimeStartMDA))
+                    
+                    /**
+                     \brief time interval between two MDA
+                     */
+                    ((Double) (interval))
+
+                    /**
+                     \brief total number times implementing MDA
+                     */
+                    ((Int64) (totalNumber))
+
+                    /**
+                     \brief failure rate per strain
+                     */
+                    ((Double) (strainFailRate))
+                    
+                    /**
+                     \brief failure rate per host
+                     */
+                    ((Double) (hostFailRate))
+
+                    /**
+                     \brief drug effective length
+                     */
+                    ((Double) (drugEffDuration))
+
+                    /**
+                     \brief whether turn on the MDA mode
+                     */
+                    ((Bool) (includeMDA))
+                    
+                    )
+
 ZPPJSON_DEFINE_TYPE(
      HostFollowingParameters,
      /**
@@ -501,6 +543,11 @@ ZPPJSON_DEFINE_TYPE(
     \brief Parameters governing interventions (see InterventionParameters class).
     */
     ( (InterventionParameters)(intervention) )
+    
+    /**
+    \brief Parameters governing MDA measures (see MDAParameters class).
+    */
+    ( (MDAParameters)(MDA) )
       
     /**
      \brief Parameters govering specific host following Parameters (see HostFollowingParameters class).

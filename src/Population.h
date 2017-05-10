@@ -72,6 +72,7 @@ public:
 	
 	void updateRates();
 	void sampleHosts();
+    void executeMDA(double time);
 	
 	std::string toString();
 	

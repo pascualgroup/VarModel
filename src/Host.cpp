@@ -89,6 +89,43 @@ std::vector<int64_t> Host::getActiveInfectionGeneIds()
 	return ids;
 }
 
+void Host::MDAClearInfection()
+{
+    rng_t * rngPtr = getRngPtr();
+    bernoulli_distribution flipCoin(1-popPtr->simPtr->parPtr->MDA.strainFailRate);
+    double t = getTime();
+    
+    std::list<Infection>::iterator itr;
+    itr = infections.begin();
+    while (itr != infections.end()) {
+        if(flipCoin(*rngPtr)) {
+            if(itr->isActive()) {
+                //if the infection is already active, give two days to be cleared
+                // add table to record duration of infection
+                popPtr->simPtr->writeDuration(itr);
+                
+                // add table to record the infection for hosts being followed
+                popPtr->simPtr->writeFollowedHostInfection(itr);
+                
+                // Remove infection
+                itr->prepareToEnd();
+                itr = infections.erase(itr);
+            }else if (popPtr->simPtr->parPtr->tLiverStage-(t-itr->initialTime)-popPtr->simPtr->parPtr->MDA.drugEffDuration <0)
+                // if the infection expresses is within the effectiveness
+            {
+                // Remove infection
+                itr->prepareToEnd();
+                itr = infections.erase(itr);
+                
+            }else{
+                ++itr;
+            }
+        }else{
+            ++itr;
+        }
+    }
+}
+
 int64_t Host::getActiveInfectionImmunityCount()
 {
 	int64_t count = 0;
@@ -450,11 +487,11 @@ void Host::clearInfection(std::list<Infection>::iterator infectionItr)
 	}
 	
     // add table to record duration of infection
-    double durationTime = getTime()-infectionItr->initialTime;
-    popPtr->simPtr->writeDuration(infectionItr, durationTime);
+    //double durationTime = getTime()-infectionItr->initialTime;
+    popPtr->simPtr->writeDuration(infectionItr);
     
     // add table to record the infection for hosts being followed
-    popPtr->simPtr->writeFollowedHostInfection(infectionItr, durationTime);
+    popPtr->simPtr->writeFollowedHostInfection(infectionItr);
     
 	// Remove infection
 	infectionItr->prepareToEnd();

@@ -68,6 +68,8 @@ public:
 	int64_t getActiveInfectionCount();
 	std::vector<GenePtr> getActiveInfectionGenes();
 	std::vector<int64_t> getActiveInfectionGeneIds();
+    
+    void MDAClearInfection();
 	
 	int64_t getActiveInfectionImmunityCount();
 	int64_t getActiveInfectionClinicalImmunityCount();
@@ -101,6 +103,8 @@ private:
 	
 	int64_t nextInfectionId;
 	
+    double MDAEndTime = 0;
+    
 	// Linked list of current infections
 	std::list<Infection> infections;
 	
