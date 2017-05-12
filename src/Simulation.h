@@ -47,6 +47,24 @@ private:
     Simulation * simPtr;
 };
 
+class IRSEvent : public zppsim::OneTimeEvent
+{
+public:
+    IRSEvent(Simulation * simPtr, double time);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
+class RemoveIRSEvent : public zppsim::OneTimeEvent
+{
+public:
+    RemoveIRSEvent(Simulation * simPtr, double time);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
 class HashGenePtrVec
 {
 public:
@@ -113,6 +131,8 @@ public:
 	void updateRates();
 	void sampleHosts();
     void MDA();
+    void IRS();
+    void RemoveIRS();
     
     void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
@@ -133,6 +153,8 @@ private:
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
     MDAEvent mdaEvent;
+    IRSEvent irsEvent;
+    RemoveIRSEvent removeirsEvent;
     int64_t mdaCounts = 0;
 	
 	int64_t nextHostId;

@@ -318,7 +318,10 @@ ZPPJSON_DEFINE_TYPE(
      \brief amplitude change of biting rate. If amplitude is a, biting rate if b, then the new biting rate during intervention is b*a
      */
      ((Double) (amplitude))
-
+     /**
+     \brief magtitude of change in migration rate, if so migration is reduced to current rate * magnitude
+     */
+     ((Double)(IRSMRateAmplitude))
      /**
      \brief whether turn on the intervention mode
      */
@@ -360,7 +363,10 @@ ZPPJSON_DEFINE_TYPE(
                      \brief drug effective length
                      */
                     ((Double) (drugEffDuration))
-
+                    /**
+                     \brief amplitude of change in migration rate, if so migration is reduced to current rate * amplitude
+                     */
+                     ((Double)(MDAMRateChange))
                     /**
                      \brief whether turn on the MDA mode
                      */

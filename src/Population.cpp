@@ -147,13 +147,8 @@ double Population::getBitingRate()
     }else{
         perHostBitingRate = evaluateSinusoid(parPtr->bitingRate, t);
     }
-    if ((simPtr->parPtr->intervention.includeIntervention) &&
-        (t > simPtr->parPtr->intervention.TimeStart) &&
-        (t <= (simPtr->parPtr->intervention.TimeStart + simPtr->parPtr->intervention.duration))) {
-        perHostBitingRate = perHostBitingRate * simPtr->parPtr->intervention.amplitude;
-        //cout<<"reduced transmission"<<endl;
-    }
-	return hosts.size() * perHostBitingRate;
+    //update according to IRS Biting rate amplitude change
+	return hosts.size() * perHostBitingRate * IRSBitingAmplitude;
 }
 
 double Population::getImmigrationRate()
@@ -334,6 +329,8 @@ void Population::sampleHosts()
 
 void Population::executeMDA(double time)
 {
+    //set migration rate
+    setEventRate(immigrationEvent.get(), getImmigrationRate() * simPtr->parPtr->MDA.MDAMRateChange);
     std::binomial_distribution<size_t> binoDist(hosts.size(),1-(simPtr->parPtr->MDA.hostFailRate));
     size_t totalHosts = binoDist(*rngPtr);
     vector<size_t> hostIndices = drawUniformIndices(

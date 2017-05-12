@@ -50,6 +50,8 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
 	hostStateSamplingEvent(this, parPtr->burnIn, parPtr->sampleHostsEvery),
     mdaEvent(this,parPtr->MDA.TimeStartMDA, parPtr->MDA.interval),
+    irsEvent(this,parPtr->intervention.TimeStart),
+    removeirsEvent(this,parPtr->intervention.TimeStart+parPtr->intervention.duration),
 	nextHostId(0),
 	nextStrainId(0),
 	transmissionCount(0),
@@ -96,6 +98,10 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
     if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
+    if (parPtr->intervention.includeIntervention) {
+        queuePtr->addEvent(&irsEvent);
+        queuePtr->addEvent(&removeirsEvent);
+    };
     
     //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
@@ -552,15 +558,41 @@ void Simulation::sampleHosts()
 void Simulation::MDA()
 {
     double t = getTime();
-    cerr << t << ": start MDA" << '\n';
-    for(auto & popPtr : popPtrs) {
-        popPtr->executeMDA(t+parPtr->MDA.drugEffDuration);
-    }
-    mdaCounts++;
-    cerr << "totalMDA " <<mdaCounts<< '\n';
-    if (mdaCounts == parPtr->MDA.totalNumber) {
+    if (mdaCounts > parPtr->MDA.totalNumber) {
         cout<<"remove MDAs at "<<t<<endl;
         removeEvent(&mdaEvent);
+        //restore the original migration rate
+        for(auto & popPtr : popPtrs) {
+            popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate());
+        }
+    }else{
+        cerr << t << ": start MDA" << '\n';
+        for(auto & popPtr : popPtrs) {
+            popPtr->executeMDA(t+parPtr->MDA.drugEffDuration);
+        }
+        mdaCounts++;
+        cerr << "totalMDA " <<mdaCounts<< '\n';
+    }
+}
+
+void Simulation::IRS()
+{
+    //set biting rate amplitude to IRS biting rate amplitude
+    //reduce immigration rate
+    for(auto & popPtr : popPtrs) {
+        popPtr->IRSBitingAmplitude = parPtr->intervention.amplitude;
+        popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate()*parPtr->intervention.IRSMRateAmplitude);
+    }
+    
+}
+
+void Simulation::RemoveIRS()
+{
+    //set biting rate amplitude to back to 1
+    //restore original immigration rate
+    for(auto & popPtr : popPtrs) {
+        popPtr->IRSBitingAmplitude = 1;
+        popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate());
     }
 }
 
@@ -884,3 +916,24 @@ void MDAEvent::performEvent(zppsim::EventQueue & queue)
     simPtr->MDA();
 }
 
+//add IRS event
+IRSEvent::IRSEvent(Simulation * simPtr, double time):
+    OneTimeEvent(time),simPtr(simPtr)
+{
+}
+
+void IRSEvent::performEvent(zppsim::EventQueue & queue)
+{
+    simPtr->IRS();
+}
+
+//remove IRS event
+RemoveIRSEvent::RemoveIRSEvent(Simulation * simPtr, double time):
+OneTimeEvent(time),simPtr(simPtr)
+{
+}
+
+void RemoveIRSEvent::performEvent(zppsim::EventQueue & queue)
+{
+    simPtr->RemoveIRS();
+}
