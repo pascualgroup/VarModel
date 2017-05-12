@@ -247,8 +247,6 @@ double Infection::clearanceRate()
         
         if (simParPtr->selectionMode == 2) {
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
-            //double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune;
-            //clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(r1, r2);
             clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(simParPtr->withinHost.generalImmunityParams.toDoubleVector(),r1);
         }else{
             // if selection mode is not general immunity, then there's effectively no clearance

@@ -67,13 +67,13 @@ Bitbucket also has a graphical view of commit history.
 To build the executable, simply run
 
 ```{bash}
-./make.py
+./make.py [varmodelName]
 ```
 
 in the root directory of the repository. This will create the executable in
 
 ```
-bin/malariamodel
+bin/[varmodelName]
 ```
 
 The build script chooses a compiler based on availability, preferring the Intel C++ compiler if available, then LLVM/Clang, and finally GCC.
@@ -98,7 +98,7 @@ The model requires a parameters file, in JSON format (see the next section). The
 
 ```{bash}
 cd [path-to]/output
-[path-to]/bin/malariamodel parameters.json
+[path-to]/bin/[varmodelName] parameters.json
 ```
 
 It's often useful to redirect standard error and standard output into files for later examination:
@@ -178,15 +178,19 @@ Database fields can be only `Integer` (64-bit integer), `Text` (string), or `Rea
 
 Current database tables include:
 
-* `genes`: a table of all var genes, including characteristics that affect dynamics
+* `genes`: a table of all var genes, including characteristics that affect dynamics, transmissibility, immunityLossRate, source (initial pool = 0, mutation = 1, recombination = 2), functionality (a gene can be non-functional if it's formed through recombination) 
+* `loci`: a table of all allele compositions of a specific geneid
 * `hosts`: a table of hosts, including birth and death time
+* `microsats`: a table of microsatellites allelic compositions
 * `strains`: a table of all strains generated in the simulation
-* `sampledHosts`: a list of hosts sampled at different sampling times
+* `InfectionDuration`: a table of sampled duration of infection, sampled every 1000 infections
+* `recordEIR`: a list of sampled mosquito bites, infectious = 0 means the donor host doesn't have infections, infectious = 1, means it's an infectious bites
+* `sampledHosts`: number of hosts sampled at different sampling times to achieve enough hosts with infections, set by parameter: populations.sampleSize. 
 * `sampledHostInfections`: a list of all the infections of sampled hosts, including progression of var expression
-* `sampledHostImmunity`: a list of immunity held by all sampled hosts
-* `sampledTransmissions`: a list of sampled transmission events
-* `sampledTransmissionInfections`: infection state of hosts involved in sampled transmission events
-* `sampledTransmissionImmunity`: immunity state of hosts involved in sampled transmission events
+* `sampledHostImmunity`: a list of immunity held by all sampled hosts (turned off by current implementation)
+* `sampledTransmissions`: a list of sampled transmission events (turned off by current implementation)
+* `sampledTransmissionInfections`: infection state of hosts involved in sampled transmission events (turned off by current implementation)
+* `sampledTransmissionImmunity`: immunity state of hosts involved in sampled transmission events (turned off by current implementation)
 
 (and corresponding tables for "clinical immunity").
 
@@ -247,15 +251,16 @@ A simulation follows these steps:
 		* Biting events, with rate `currentBitingRate * currentPopulationSize`, where `currentBitingRate` is a sinusoidal function of time:
 			* Choose a random transmitting host.
 			* Calculate which strains should be transmitted from the transmitting host (see description below).
-			* Modify strains to be transmitted via mutation and/or recombination, possibly with extra circulating strains.
+			* Modify strains to be transmitted via sexual recombination, possibly with extra circulating strains.
 			* Choose destination host, and transmit strains into host
-		* Immigration (introduction) events, with rate `currentIntroductionRate * currentPopulationSize`, where `currentIntroductionRate` is a sinusoidal function of time.
-		* Birth events (if birth-death processes are uncoupled; demography details to be worked out)
+		* Immigration (introduction) events, with rate `immigrationRate`, 
+		* Birth events (if birth-death processes are uncoupled), currently assuming a demography that is a exponential distribution, with mean life expectancy = 30; 
 		* Death events (if birth-death processes are uncoupled)
 		* Within-host events (see below)
 
 Individual var genes may be assigned different attributes:
 
+* functionality
 * transmissibility
 * mean duration of infection
 * duration of immunity
@@ -264,11 +269,15 @@ Individual var genes may be assigned different attributes:
 
 * Calculate P(transmission) of each active strain based on currently expressed var. To begin with, the probability of transmission will be inversely proportional to the number of concurrent infections.
 * Select strains to be transmitted based on their probability of transmission.
-* Randomly mutate transmitted strains: each gene in each strain has a constant probability of being sampled from the pool.
 * Reassort var genes between strains:
-	* Select pairs of strains to recombine, so that each pair has a constant probability of recombining. For each chosen pair, generate a daughter strain as a random reassortment of parent strains' genes.
 	* If `n` strains were picked up from source host, transmit `n` strains randomly sampled from the original strains and all generated daughter strains.
-
+    * percentage of recombined strain is not determined by a parameter, but rather determined by the number of co-infected strains:
+```
+    pRecombinant = 1.0-(1.0/double(originalStrains.size()))
+```
+    * Select pairs of strains to recombine, so that each pair has a constant probability of recombining. For each chosen pair, generate a daughter strain as a random reassortment of parent strains' genes.
+    * Shuffle genomes of microsatellites with the same fashion if microsattellites are also simulated. There is a big difference though: each microsatellite is a gene with a fixed location, when two genomes exchange, they exchange by position.
+* each host has a `maxMOI` parameter that sets the upper bound of how many co-infection each host can take.
 
 ### Within-host dynamics
 
@@ -278,10 +287,16 @@ The within-host dynamics for a single infection look like this:
 [LIVER STAGE] -> [VAR A INACTIVE] -> [VAR A ACTIVE] -> [VAR B INACTIVE] -> [VAR B ACTIVE] -> ...
 ```
 
+### Selection Mode `selectionMode`
+
+Three type of models (i.e., within-host dynamics) can be run in this implementation:
+1. immune selection (hosts build immunity towards specific epitope alleles or genes)
+2. generalized immunity (i.e., clearance is faster if the host is exposed to more times of infection)
+3. complete neutrality (i.e., clearance is determined by a clearance rate, and is not influenced by infection histories)
 
 #### Liver Stage
 
-The liver stage is always a fixed time period. During that period, the infection cannot be cleared.
+The liver stage is always a fixed time period. During that period, the infection cannot be cleared. This stage actually also include the time required in the mosquito midgut to develop to the asexual transmission stage, which is about 7 days. Therefore usually this parameter is set at 14 days.
 
 #### Activation
 
@@ -307,24 +322,70 @@ where deactivationRatePower may be positive, negative, or zero.
 
 Not understanding the biology fully, I suspect `deactivationRatePower = 0` (constant deactivation rate) is probably the most sensible?
 
+
+If selection mode is 1 (immunity selection):
+    deactivationRateConstant governs the rate when hosts are not immune to the gene
+    if `useAlleleImmunity = true`, hosts build immunity to specific alleles within genes,
+        deactivationRate per gene is determined by function `Infection::immuneClearRate`,increases with the number of alleles in the gene hosts are immuned to
+    if `useAlleleImmunity = false`, hosts build immunity to a specific gene,
+        deactivationRate per gene is 1 if hosts are immune to the gene
+
+if selection mode is 2 or 3, deactivationRate doesn't change
+
 #### Clearance
 
-Currently, clearance--which ends the infection course completely--can happen only when a var gene is active (expressed). The clearance rate varies with immunity to the var gene being expressed.
+Currently, clearance--which ends the infection course completely--can happen only when a var gene is active (expressed). The clearance rate varies with the selection mode.
 
-If immune:
+If selection mode is 1 (immunity selection) or 3 (complete neutrality):
+    there is no global clearance rate, the time to clearance is determined by cumulative time of expression of all the genes in the genome
+    therefore `clearanceRateConstant` is set to 0
+
+If selection mode is 2 (generalized immunity):
+    clearanceRateConstant is determined by the function `immunity.checkGeneralImmunity`, which has parameters: `clearanceRateConstantImmune`,`infectionTimesToImmune`
+    and generalize immunity fitting function parameters
+
 
 ```
-clearanceRateImmune = clearanceRateConstantImmune * nActiveInfections^clearanceRatePower
+clearanceRate = clearanceRateConstant * nActiveInfections^clearanceRatePower
 ```
-
-If not immune:
-
+#### Mutation
+During the course of infection in the host, strains can mutate, and is governed by the rate 
 ```
-clearanceRateNotImmune = clearanceRateConstantNotImmune * nActiveInfections^clearanceRatePower
+pMutation * locusNumber * genesPerStrain
 ```
+if a gene is selected to mutate, one of its epitope allele will mutate and have a new ID associated. this will create new ID for a gene, and a new ID for a strain,
+infectionItr will be redirected to the new strain pointer. related function: Simulation::mutateStrain, Host::hstMutateStrain
 
-Presumably it would make sense for `clearanceRateConstantImmune` to be much larger than `clearanceRateConstantNotImmune`.
+Similar microsatellite mutation events is also included. 
 
+#### ectopic recombination
+During the course of infection in the host, genes within a strain can exchange their alleles, which is called "ectopic recombination", and is governed by the rate 
+```
+pIntraRecomb*numGenes * (numGenes -1)/2
+```
+The more nubmer of genes per genome, the more frequent such recombination occurs. functions: `Host::RecombineStrain`, `Simulation::ectopicRecStrain`
+Ectopic recombination is to create a breakpoint between Var gene A and gene B, for example:
+Gene A: a1 b1 c1
+Gene B: a2 b2 c2
+if the breakpoint is between a and b, then resulting daughter genes are
+a1 b2 c2 and a2 b1 c1
+if any of the daughter is non-functional with a probability proportional to their distance to the parental genome, then the strain will still keep the parental genes
+Otherwise, the parental genes will be replaced by daughter genes, and strain ID will be changed, infectionItr will be redirected to the new strain pointer.
+
+These events do not occur in microsatellites
+
+Both mutation and ectopic recombination occur during the infection cycle, therefore the longer they stay in a host, the more likely they'll mutate into a different strain.
+
+### interventions
+Currently, interventions can by implemented as `interventions` (refers to IRS) or `MDA`
+IRS is a one time event, set with an initial time and a duration (which is another one time event to remove the IRS implementation).
+During IRS, biting rate and/or immigration rate can be changed through an mulplitication with the amplitude
+
+MDA is a period event with an interval of `interval` and a maximum count of events = "totalNumber", i.e., after `totalNumber` of implementation, MDA will be removed.
+During MDA, hosts' infections will be cleared, unless the host fails to take the drugs effectively (`hostFailRate`) or the strains are resistant (`strainFailRate`)
+The effectiveness of drugs are set by `drufEffDuration`.
+During MDA, migration rate can also be rescaled to be `immigrationRate * MDAMRateChange`
+Note that currently, all hosts whose age is under 3 months are not given MDA.
 
 ## Modifying transmission and within-host dynamics
 
@@ -346,3 +407,14 @@ If significant changes are desired, it will probably be necessary to modify
 
 The calculation for transmission probability can similarly be modified:
 * `Infection::transmissionProbability()`
+
+## following hosts
+
+Specific hosts can be followed and all of their infections will be recored for a period of time.
+This is governed by following.HostNumber and folloinwg.followDuration
+
+## save database after burn-in
+`burnIn` governs when the database will start sampling hosts, and writing genes, loci and strains, etc.
+*`genes` and `strains` classes have a bool variable to record whether this gene or strain has been written to the sqlite
+
+

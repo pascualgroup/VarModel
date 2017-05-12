@@ -193,20 +193,12 @@ ZPPJSON_DEFINE_TYPE(
 		\brief The constant controlling the relationship between # active infections
 		and clearance rate when not immune.
 		
-		If inactive, clearanceRate = 0.
-		If active and not immune:
-		clearanceRate = clearanceRateConstantNotImmune * nActiveInfections^clearanceRatePower
-	*/
-	( (Double)(clearanceRateConstantNotImmune) )
-
-	/**
-		\brief The power controlling the relationship between # active infections
-		and clearance rate when immune.
-		
-		If inactive, clearanceRate = 0.
-		If active and immune:
-		clearanceRate = clearanceRateConstantImmune * nActiveInfections^clearanceRatePower
-	*/
+		If inactive, clearanceRate = 0. for both selection mode 1 and 3
+        only effective for selection mode 2
+		If active:
+		clearanceRate is a function of clearanceRateConstantImmune, 
+        infectionTimesToImmune and generalImmunityParams
+     */
 	( (Double)(clearanceRateConstantImmune) )
 
 	/**
