@@ -72,6 +72,7 @@ public:
 	
 	void updateRates();
 	void sampleHosts();
+    void executeMDA(double time);
 	
 	std::string toString();
 	
@@ -81,7 +82,7 @@ private:
 	Simulation * simPtr;
 	zppsim::rng_t * rngPtr;
 	PopulationParameters * parPtr;
-
+    double IRSBitingAmplitude = 1;
     //record biting rate variation monthly
     std::vector<double> monthlyBitingRateDistribution = parPtr->monthlyBitingRateDistribution.toDoubleVector();
 

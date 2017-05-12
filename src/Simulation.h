@@ -37,6 +37,34 @@ private:
 	Simulation * simPtr;
 };
 
+//add MDA events to simulate giving drugs to all hosts
+class MDAEvent : public zppsim::PeriodicEvent
+{
+public:
+    MDAEvent(Simulation * simPtr, double initialTime, double period);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
+class IRSEvent : public zppsim::OneTimeEvent
+{
+public:
+    IRSEvent(Simulation * simPtr, double time);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
+class RemoveIRSEvent : public zppsim::OneTimeEvent
+{
+public:
+    RemoveIRSEvent(Simulation * simPtr, double time);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
 class HashGenePtrVec
 {
 public:
@@ -102,12 +130,15 @@ public:
 	
 	void updateRates();
 	void sampleHosts();
+    void MDA();
+    void IRS();
+    void RemoveIRS();
     
     void recordImmunity(Host & host, int64_t locusIndex, int64_t alleleId);
 	void recordTransmission(Host & srcHost, Host & dstHost, std::vector<StrainPtr> & strains);
-    void writeDuration(std::list<Infection>::iterator infectionItr, double duration);
+    void writeDuration(std::list<Infection>::iterator infectionItr);
     void writeEIR(double time, int64_t infectious);
-    void writeFollowedHostInfection(std::list<Infection>::iterator infectionItr, double duration);
+    void writeFollowedHostInfection(std::list<Infection>::iterator infectionItr);
 	bool verifyState();
 private:
 	SimParameters * parPtr;
@@ -121,6 +152,10 @@ private:
 	
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
+    MDAEvent mdaEvent;
+    IRSEvent irsEvent;
+    RemoveIRSEvent removeirsEvent;
+    int64_t mdaCounts = 0;
 	
 	int64_t nextHostId;
 	std::vector<std::unique_ptr<Population>> popPtrs;

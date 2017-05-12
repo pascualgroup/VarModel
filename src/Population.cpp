@@ -147,13 +147,8 @@ double Population::getBitingRate()
     }else{
         perHostBitingRate = evaluateSinusoid(parPtr->bitingRate, t);
     }
-    if ((simPtr->parPtr->intervention.includeIntervention) &&
-        (t > simPtr->parPtr->intervention.TimeStart) &&
-        (t <= (simPtr->parPtr->intervention.TimeStart + simPtr->parPtr->intervention.duration))) {
-        perHostBitingRate = perHostBitingRate * simPtr->parPtr->intervention.amplitude;
-        //cout<<"reduced transmission"<<endl;
-    }
-	return hosts.size() * perHostBitingRate;
+    //update according to IRS Biting rate amplitude change
+	return hosts.size() * perHostBitingRate * IRSBitingAmplitude;
 }
 
 double Population::getImmigrationRate()
@@ -191,10 +186,23 @@ void Population::performBitingEvent()
 	
 	Host * dstHostPtr = simPtr->drawDestinationHost(id);
 //	cerr << "dst pop, host: " << dstHostPtr->popPtr->id << ", " << dstHostPtr->id << '\n';
-	if (simPtr->parPtr->genes.includeMicrosat) {
-        srcHostPtr->transmitMSTo(*dstHostPtr);
-    }else{
-        srcHostPtr->transmitTo(*dstHostPtr);
+    bool NoMDAflag = true;
+    if ((simPtr->parPtr->MDA.includeMDA) &&
+    (dstHostPtr->MDAEndTime>(getTime()+simPtr->parPtr->tLiverStage)))
+    {
+        //express before the MDA is over, then do not perform biting
+        bernoulli_distribution flipCoin(1-simPtr->parPtr->MDA.strainFailRate);
+        if(flipCoin(*rngPtr)){
+            NoMDAflag = false;
+        }
+    }
+    
+    if (NoMDAflag) {
+        if (simPtr->parPtr->genes.includeMicrosat) {
+            srcHostPtr->transmitMSTo(*dstHostPtr);
+        }else{
+            srcHostPtr->transmitTo(*dstHostPtr);
+        }
     }
 }
 
@@ -203,33 +211,48 @@ void Population::performImmigrationEvent()
 {
 //	cerr << getTime() << ": immigration event, pop " << id << '\n';
 	int64_t hostIndex = drawUniformIndex(*rngPtr, hosts.size());
-	
-	bernoulli_distribution flipCoin(parPtr->pImmigrationIncludesNewGenes);
-	bool includesNewGenes = flipCoin(*rngPtr);
-	
-	StrainPtr strain;
-	if(includesNewGenes) {
-//		cerr << "Generating strain with new genes" << endl;
-		strain = simPtr->generateRandomStrain(parPtr->nImmigrationNewGenes);
-	}
-	else {
-//		cerr << "Generating strain with all old genes" << endl;
-		strain = simPtr->generateRandomStrain();
-	}
-    if (simPtr->parPtr->genes.includeMicrosat) {
-        int currentYear = floor(getTime()/360.0);
-        if (currentYear > yearTrack) {
-            tempMS = simPtr->readMsArray(currentYear);
-            yearTrack = currentYear;
-            immigrationCount = 0;
-            
+
+    
+    bool NoMDAflag = true;
+    if ((simPtr->parPtr->MDA.includeMDA) &&
+        (hosts[hostIndex]->MDAEndTime>(getTime()+simPtr->parPtr->tLiverStage)))
+    {
+        //express before the MDA is over, then do not perform biting
+        bernoulli_distribution flipCoin(1-simPtr->parPtr->MDA.strainFailRate);
+        if(flipCoin(*rngPtr)){
+            NoMDAflag = false;
         }
-        GenePtr ms = simPtr->storeMicrosat(tempMS[immigrationCount]);
-        hosts[hostIndex]->receiveInfection(strain,ms);
-        immigrationCount++;
-    }else{
-	hosts[hostIndex]->receiveInfection(strain);
     }
+    
+    
+    if(NoMDAflag){
+        bernoulli_distribution flipCoin(parPtr->pImmigrationIncludesNewGenes);
+        bool includesNewGenes = flipCoin(*rngPtr);
+	
+        StrainPtr strain;
+        if(includesNewGenes) {
+            //		cerr << "Generating strain with new genes" << endl;
+            strain = simPtr->generateRandomStrain(parPtr->nImmigrationNewGenes);
+        }
+        else {
+            //		cerr << "Generating strain with all old genes" << endl;
+            strain = simPtr->generateRandomStrain();
+        }
+        if (simPtr->parPtr->genes.includeMicrosat) {
+            int currentYear = floor(getTime()/360.0);
+            if (currentYear > yearTrack) {
+                tempMS = simPtr->readMsArray(currentYear);
+                yearTrack = currentYear;
+                immigrationCount = 0;
+            
+            }
+            GenePtr ms = simPtr->storeMicrosat(tempMS[immigrationCount]);
+            hosts[hostIndex]->receiveInfection(strain,ms);
+            immigrationCount++;
+        }else{
+            hosts[hostIndex]->receiveInfection(strain);
+        }
+        }
 }
 
 double Population::getDistance(Population * popPtr)
@@ -302,6 +325,23 @@ void Population::sampleHosts()
     row.time = getTime();
     row.sampledNumber = sampledSize;
     dbPtr->insert(simPtr->sampledHostsTable, row);
+}
+
+void Population::executeMDA(double time)
+{
+    //set migration rate
+    setEventRate(immigrationEvent.get(), getImmigrationRate() * simPtr->parPtr->MDA.MDAMRateChange);
+    std::binomial_distribution<size_t> binoDist(hosts.size(),1-(simPtr->parPtr->MDA.hostFailRate));
+    size_t totalHosts = binoDist(*rngPtr);
+    vector<size_t> hostIndices = drawUniformIndices(
+    *rngPtr, hosts.size(), totalHosts, true);
+    for (size_t index : hostIndices) {
+        //only give MDA to hosts whose age is older than 3 months
+        if ((time - simPtr->parPtr->MDA.drugEffDuration - hosts[index]->birthTime)>90) {
+            hosts[index]->MDAEndTime = time;
+            hosts[index]->MDAClearInfection();
+        }
+    }
 }
 
 

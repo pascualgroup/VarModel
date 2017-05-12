@@ -318,13 +318,61 @@ ZPPJSON_DEFINE_TYPE(
      \brief amplitude change of biting rate. If amplitude is a, biting rate if b, then the new biting rate during intervention is b*a
      */
      ((Double) (amplitude))
-
+     /**
+     \brief magtitude of change in migration rate, if so migration is reduced to current rate * magnitude
+     */
+     ((Double)(IRSMRateAmplitude))
      /**
      \brief whether turn on the intervention mode
      */
      ((Bool) (includeIntervention))
 
 )
+
+/**
+ \brief Type defining parameters governing intervention.
+ */
+ZPPJSON_DEFINE_TYPE(
+                    MDAParameters,
+                    /**
+                     \brief time when MDA starts
+                     */
+                    ((Double) (TimeStartMDA))
+                    
+                    /**
+                     \brief time interval between two MDA
+                     */
+                    ((Double) (interval))
+
+                    /**
+                     \brief total number times implementing MDA
+                     */
+                    ((Int64) (totalNumber))
+
+                    /**
+                     \brief failure rate per strain
+                     */
+                    ((Double) (strainFailRate))
+                    
+                    /**
+                     \brief failure rate per host
+                     */
+                    ((Double) (hostFailRate))
+
+                    /**
+                     \brief drug effective length
+                     */
+                    ((Double) (drugEffDuration))
+                    /**
+                     \brief amplitude of change in migration rate, if so migration is reduced to current rate * amplitude
+                     */
+                     ((Double)(MDAMRateChange))
+                    /**
+                     \brief whether turn on the MDA mode
+                     */
+                    ((Bool) (includeMDA))
+                    
+                    )
 
 ZPPJSON_DEFINE_TYPE(
      HostFollowingParameters,
@@ -501,6 +549,11 @@ ZPPJSON_DEFINE_TYPE(
     \brief Parameters governing interventions (see InterventionParameters class).
     */
     ( (InterventionParameters)(intervention) )
+    
+    /**
+    \brief Parameters governing MDA measures (see MDAParameters class).
+    */
+    ( (MDAParameters)(MDA) )
       
     /**
      \brief Parameters govering specific host following Parameters (see HostFollowingParameters class).
