@@ -45,7 +45,7 @@ void AlleleImmuneLossEvent::performEvent(zppsim::EventQueue & queue)
 
 /*** ImmuneHistory function implementations ***/
 
-ImmuneHistory::ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber, double infectionTimesToImmune) : hostPtr(hostPtr), clinical(clinical),locusNumber(locusNumber), infectionTimesToImmune(infectionTimesToImmune)
+ImmuneHistory::ImmuneHistory(Host * hostPtr, int64_t const locusNumber, double infectionTimesToImmune) : hostPtr(hostPtr), locusNumber(locusNumber), infectionTimesToImmune(infectionTimesToImmune)
 {
 }
 

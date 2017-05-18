@@ -72,7 +72,6 @@ public:
     void MDAClearInfection();
 	
 	int64_t getActiveInfectionImmunityCount();
-	int64_t getActiveInfectionClinicalImmunityCount();
 	
     void gainAlleleImmunity(GenePtr genePtr);
 	void clearInfection(std::list<Infection>::iterator infectionItr);
@@ -96,6 +95,8 @@ public:
 	void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
 	
 	std::string toString();
+    
+    void writeToCheckpoint(Database & cpdb);
 private:
 	Population * popPtr;
 	double const birthTime;
@@ -110,9 +111,7 @@ private:
 	
 	std::unique_ptr<DeathEvent> deathEvent;
 	
-	// Two sets of immune history (regular & "clinical")
 	ImmuneHistory immunity;
-	ImmuneHistory clinicalImmunity;
 };
 
 #endif

@@ -3,6 +3,8 @@
 
 
 #include "SimParameters.h"
+#include "DatabaseTypes.h"
+#include "CheckpointDatabaseTypes.h"
 #include "Host.h"
 #include "Population.h"
 #include "Strain.h"
@@ -18,6 +20,15 @@
 
 
 class Simulation;
+
+class CheckpointEvent : public zppsim::PeriodicEvent
+{
+public:
+    CheckpointEvent(Simulation * simPtr, double initialTime, double period);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
 
 class RateUpdateEvent : public zppsim::PeriodicEvent
 {
@@ -89,6 +100,7 @@ friend class Population;
 friend class BitingEvent;
 friend class Host;
 friend class ImmuneHistory;
+friend class CheckpointEvent;
 public:
 	Simulation(SimParameters * parPtr, zppdb::Database * dbPtr);
 	
@@ -150,6 +162,8 @@ private:
 	// MAIN EVENT QUEUE
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
 	
+    CheckpointEvent checkpointEvent;
+    
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
     MDAEvent mdaEvent;
@@ -197,7 +211,6 @@ private:
 	zppdb::Table<SampledHostRow> sampledHostsTable;
 	zppdb::Table<InfectionRow> sampledHostInfectionTable;
 	zppdb::Table<ImmunityRow> sampledHostImmunityTable;
-	zppdb::Table<ImmunityRow> sampledHostClinicalImmunityTable;
     
 	zppdb::Table<InfectionDurationRow> InfectionDurationTable;
     zppdb::Table<recordEIRRow> recordEIRTable;
@@ -205,13 +218,27 @@ private:
 	zppdb::Table<TransmissionStrainRow> sampledTransmissionStrainTable;
 	zppdb::Table<TransmissionInfectionRow> sampledTransmissionInfectionTable;
 	zppdb::Table<TransmissionImmunityRow> sampledTransmissionImmunityTable;
-	zppdb::Table<TransmissionImmunityRow> sampledTransmissionClinicalImmunityTable;
     zppdb::Table<followedHostsRow> followedHostsTable;
 	
 	GenePtr createGene(std::vector<int64_t> Alleles,bool const functionality, int64_t const source);
 	GenePtr createMicrosat(std::vector<int64_t> Alleles);
     void runMSSimCoal(size_t msSampleSize);
 	void initializeDatabaseTables();
+    
+    void saveCheckpoint();
+    void writeMetaToCheckpoint(Database & cpdb, Table<CheckpointMetaRow> & metaTable);
+    void writeGenesAndStrainsToCheckpoint(Database & cpdb,
+        Table<CheckpointAlleleCountRow> & alleleCountsTable,
+        Table<GeneRow> & genesTable,
+        Table<LociRow> & geneAllelesTable,
+        Table<StrainRow> & strainsTable
+    );
+    void writePopulationsToCheckpoint(Database & cpdb,
+        Table<CheckpointHostRow> & hostsTable,
+        Table<CheckpointInfectionRow> & infectionsTable,
+        Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+        Table<CheckpointImmunityRow> & immunityTable
+    );
 };
 
 #endif /* defined(__malariamodel__Simulation__) */

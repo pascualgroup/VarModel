@@ -119,6 +119,7 @@
 		694E202518EF70AD0000D563 /* Gene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gene.h; sourceTree = "<group>"; };
 		694E202818EF7C0A0000D563 /* TestGene.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestGene.cpp; sourceTree = "<group>"; };
 		694E202B18EF83550000D563 /* TestStrain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TestStrain.cpp; sourceTree = "<group>"; };
+		69894B401EC8E86C00BE7CEF /* CheckpointDatabaseTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CheckpointDatabaseTypes.h; sourceTree = "<group>"; };
 		69A421541917D4D70081DA06 /* ImmuneHistory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImmuneHistory.cpp; sourceTree = "<group>"; };
 		69A421551917D4D70081DA06 /* ImmuneHistory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImmuneHistory.h; sourceTree = "<group>"; };
 		69BEDEA21A1A9CA300A08D9F /* DatabaseTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DatabaseTypes.h; sourceTree = "<group>"; };
@@ -173,6 +174,7 @@
 				692A381E18B949590085986A /* SimParameters.h */,
 				69BEDEBA1A1BBF4B00A08D9F /* SimParameters.cpp */,
 				69BEDEA21A1A9CA300A08D9F /* DatabaseTypes.h */,
+				69894B401EC8E86C00BE7CEF /* CheckpointDatabaseTypes.h */,
 				692A382018B949590085986A /* Simulation.h */,
 				692A381F18B949590085986A /* Simulation.cpp */,
 				69BEE5C91905A30D00E39AA1 /* Population.h */,

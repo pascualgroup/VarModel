@@ -48,6 +48,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 		\brief source of genes, original pool = 0, recombination = 1, mutation = 2, immigration = 3
 	*/
 	( (Integer)(source) )
+    
     /**
     \brief Functional gene or not
     */
@@ -258,8 +259,7 @@ ZPPDB_DEFINE_ROW_TYPE(
 )
 
 /**
-	\brief Type defining rows in `sampledTransmissionImmunity and
-	`sampledTransmissionClinicalImmunity` tables.
+	\brief Type defining rows in `sampledTransmissionImmunity` table.
 */
 ZPPDB_DEFINE_ROW_TYPE(
 	TransmissionImmunityRow,
@@ -329,9 +329,8 @@ ZPPDB_DEFINE_ROW_TYPE(
 )
 
 /**
-	\brief Type defining rows in `sampledHostImmunity`,
-	`sampledHostClinicalImmunity`, `sampledTransmissionImmunity, and
-	`sampledTransmissionClinicalImmunity` columns.
+	\brief Type defining rows in `sampledHostImmunity` and
+	`sampledTransmissionImmunity` tables.
 */
 ZPPDB_DEFINE_ROW_TYPE(
     InfectionDurationRow,

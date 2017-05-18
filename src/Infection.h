@@ -106,7 +106,6 @@ public:
 	GenePtr getCurrentGene();
 	int64_t getCurrentGeneId();
 	bool isImmune();
-	bool isClinicallyImmune();
 	double getTransitionTime();
 	double getAgeAtTransitionTime();
 	

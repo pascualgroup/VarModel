@@ -352,6 +352,7 @@ std::string Population::toString()
 	return ss.str();
 }
 
+
 /*** BITING EVENT ***/
 
 BitingEvent::BitingEvent(Population * popPtr, double rate, zppsim::rng_t & rng) :

@@ -10,6 +10,9 @@
 	// (prevents database from becoming bottleneck).
 	"dbCommitPeriod" : 30,
 	
+	"checkpointSaveFilename" : "checkpoint.sqlite",
+	"checkpointPeriod" : 360,
+	
 	// Whether to output hosts, genes, strains
 	"outputHosts" : true,
 	"outputGenes" : true,

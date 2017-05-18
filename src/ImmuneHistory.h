@@ -48,7 +48,7 @@ class ImmuneHistory
 friend class ImmunityLossEvent;
 friend class AlleleImmuneLossEvent;
 public:
-	ImmuneHistory(Host * hostPtr, bool clinical, int64_t const locusNumber, double infectionTimesToImmune);
+	ImmuneHistory(Host * hostPtr, int64_t const locusNumber, double infectionTimesToImmune);
 	
 	void gainImmunity(GenePtr genePtr);
 	void gainAlleleImmunity(GenePtr genePtr, bool writeToDatabase,Database & db,zppdb::Table<AlleleImmunityRow> & table);
@@ -66,7 +66,11 @@ public:
 	void write(Database & db, Table<ImmunityRow> & table);
 	void write(int64_t transmissionId, Database & db, Table<TransmissionImmunityRow> & table);
 	
+    // Vector of maps such that
+    // immuneAlleles[i] is a map: locus number -> immunity level;
+    // immuneAlleles[i][j] is the immunity level at locus i for allele j
     std::vector<std::unordered_map<int64_t,int64_t>> immuneAlleles;
+    
 	std::unordered_set<GenePtr> genes;
 	std::unordered_map<GenePtr, std::unique_ptr<ImmunityLossEvent>> lossEvents;
     int64_t geneLocToHash(int64_t locusId, int64_t AlleleId);
@@ -74,7 +78,6 @@ public:
     void updateAlleleLossRate(int64_t &  locusId, int64_t &  AlleleId,double newRate);
 private:
 	Host * hostPtr;
-	bool clinical;
     int64_t const locusNumber;
     int64_t infectedTimes = 0;
     double infectionTimesToImmune;

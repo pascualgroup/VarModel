@@ -93,6 +93,8 @@ private:
 	std::unique_ptr<ImmigrationEvent> immigrationEvent;
 	
 	int64_t drawSourcePopulation();
+    
+    void writeToCheckpoint(Database & cpdb);
 	
 	int64_t transmissionCount;
     

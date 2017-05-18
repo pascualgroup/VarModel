@@ -48,6 +48,11 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	),
 	queuePtr(new EventQueue(rng)),
 	rateUpdateEvent(this, 0.0, parPtr->seasonalUpdateEvery),
+    checkpointEvent(
+        this,
+        (parPtr->checkpointPeriod.present()) ? double(parPtr->checkpointPeriod) : nan(""),
+        (parPtr->checkpointPeriod.present()) ? double(parPtr->checkpointPeriod) : nan("")
+    ),
 	hostStateSamplingEvent(this, parPtr->burnIn, parPtr->sampleHostsEvery),
     mdaEvent(this,parPtr->MDA.TimeStartMDA, parPtr->MDA.interval),
     irsEvent(this,parPtr->intervention.TimeStart),
@@ -67,12 +72,10 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     sampledHostsTable("sampledHosts"),
 	sampledHostInfectionTable("sampledHostInfections"),
 	sampledHostImmunityTable("sampledHostImmunity"),
-	sampledHostClinicalImmunityTable("sampledHostClinicalImmunity"),
 	sampledTransmissionTable("sampledTransmissions"),
 	sampledTransmissionStrainTable("sampledTransmissionStrains"),
 	sampledTransmissionInfectionTable("sampledTransmissionInfections"),
 	sampledTransmissionImmunityTable("sampledTransmissionImmunity"),
-	sampledTransmissionClinicalImmunityTable("sampledTransmissionClinicalImmunity"),
     followedHostsTable("followedHosts")
 {
 	// Construct transition probability distributions for genes
@@ -94,6 +97,10 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	
     //make sure burnin time is smaller than end time
     assert(parPtr->burnIn<parPtr->tEnd);
+    
+    if(parPtr->checkpointPeriod.present() && parPtr->checkpointSaveFilename.present()) {
+        queuePtr->addEvent(&checkpointEvent);
+    }
     
 	queuePtr->addEvent(&rateUpdateEvent);
 	queuePtr->addEvent(&hostStateSamplingEvent);
@@ -260,7 +267,6 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledHostsTable);
 	dbPtr->createTable(sampledHostInfectionTable);
 	dbPtr->createTable(sampledHostImmunityTable);
-	dbPtr->createTable(sampledHostClinicalImmunityTable);
     dbPtr->createTable(InfectionDurationTable);
     dbPtr->createTable(recordEIRTable);
     dbPtr->createTable(microsatTable);
@@ -268,8 +274,180 @@ void Simulation::initializeDatabaseTables()
 	dbPtr->createTable(sampledTransmissionStrainTable);
 	dbPtr->createTable(sampledTransmissionInfectionTable);
 	dbPtr->createTable(sampledTransmissionImmunityTable);
-	dbPtr->createTable(sampledTransmissionClinicalImmunityTable);
     dbPtr->createTable(followedHostsTable);
+}
+
+void Simulation::saveCheckpoint()
+{
+    cerr << "WRITING CHECKPOINT..." << endl;
+    
+    string cpFilename(parPtr->checkpointSaveFilename);
+    string cpTmpFilename(cpFilename + "~");
+    
+    {
+        Database cpdb(cpTmpFilename);
+        cpdb.beginTransaction();
+        
+        // Tables all have to be created here to work around a
+        // newly discovered pointer bug in zppdb
+        
+        Table<CheckpointMetaRow> metaTable("meta");
+        cpdb.createTable(metaTable);
+        
+        Table<CheckpointAlleleCountRow> alleleCountsTable("alleleCounts");
+        cpdb.createTable(alleleCountsTable);
+        
+        Table<GeneRow> genesTable("genes");
+        cpdb.createTable(genesTable);
+        
+        Table<LociRow> geneAllelesTable("geneAlleles");
+        cpdb.createTable(geneAllelesTable);
+        
+        Table<StrainRow> strainsTable("strains");
+        cpdb.createTable(strainsTable);
+        
+        Table<CheckpointHostRow> hostsTable("hosts");
+        cpdb.createTable(hostsTable);
+        
+        Table<CheckpointInfectionRow> infectionsTable("infections");
+        cpdb.createTable(infectionsTable);
+        
+        Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
+        Table<CheckpointImmunityRow> immunityTable("immunity");
+        if(parPtr->withinHost.useAlleleImmunity) {
+            cpdb.createTable(alleleImmunityTable);
+        }
+        else {
+            cpdb.createTable(immunityTable);
+        }
+        
+        writeMetaToCheckpoint(cpdb, metaTable);
+        writeGenesAndStrainsToCheckpoint(cpdb, alleleCountsTable, genesTable, geneAllelesTable, strainsTable);
+        writePopulationsToCheckpoint(cpdb, hostsTable, infectionsTable, alleleImmunityTable, immunityTable);
+        
+        cpdb.commit();
+    } // End of scope causes DB to automatically close
+    rename(cpTmpFilename.c_str(), cpFilename.c_str());
+    
+    cerr << "DONE WRITING CHECKPOINT." << endl;
+}
+
+void Simulation::writeMetaToCheckpoint(Database & cpdb, Table<CheckpointMetaRow> & metaTable)
+{
+    stringstream paramsStrStream;
+    parPtr->printJsonToStream(paramsStrStream);
+    
+    CheckpointMetaRow row;
+    row.time = getTime();
+    row.parameters = paramsStrStream.str(); 
+    
+    cpdb.insert(metaTable, row);
+}
+
+void Simulation::writeGenesAndStrainsToCheckpoint(Database & cpdb,
+    Table<CheckpointAlleleCountRow> & alleleCountsTable,
+    Table<GeneRow> & genesTable,
+    Table<LociRow> & geneAllelesTable,
+    Table<StrainRow> & strainsTable
+) {
+    for(int64_t i = 0; i < parPtr->genes.locusNumber; i++) {
+        CheckpointAlleleCountRow row;
+        row.locusIndex = i;
+        row.alleleCount = alleleNumber[i];
+        cpdb.insert(alleleCountsTable, row);
+    }
+    
+    for(auto & genePtr : genes) {
+        GeneRow geneRow;
+        
+        geneRow.geneId = genePtr->id;
+        geneRow.transmissibility = genePtr->transmissibility;
+        geneRow.immunityLossRate = genePtr->immunityLossRate;
+        geneRow.source = genePtr->source;
+        geneRow.functionality = genePtr->functionality;
+        cpdb.insert(genesTable, geneRow);
+        
+        for(int64_t i = 0; i < parPtr->genes.locusNumber; i++) {
+            LociRow geneAlleleRow;
+            geneAlleleRow.geneId = genePtr->id;
+            geneAlleleRow.alleleIndex = i;
+            geneAlleleRow.alleleId = genePtr->Alleles[i];
+            cpdb.insert(geneAllelesTable, geneAlleleRow);
+        }
+    }
+    
+    for(auto & strainPtr : strains) {
+        for(int64_t i = 0; i < parPtr->genesPerStrain; i++) {
+            StrainRow strainRow;
+            strainRow.strainId = strainPtr->id;
+            strainRow.geneIndex = i;
+            strainRow.geneId = strainPtr->genes[i]->id;
+            cpdb.insert(strainsTable, strainRow);
+        }
+    }
+}
+
+void Simulation::writePopulationsToCheckpoint(Database & cpdb,
+    Table<CheckpointHostRow> & hostsTable,
+    Table<CheckpointInfectionRow> & infectionsTable,
+    Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+    Table<CheckpointImmunityRow> & immunityTable
+) {
+	for(auto & popPtr : popPtrs) {
+        for(auto & hostPtr : popPtr->hosts) {
+            CheckpointHostRow hrow;
+            hrow.hostId = hostPtr->id;
+            hrow.popId = popPtr->id;
+            hrow.birthTime = hostPtr->birthTime;
+            hrow.deathTime = hostPtr->deathTime;
+            hrow.nextInfectionId = hostPtr->nextInfectionId;
+            hrow.MDAEndTime = hostPtr->MDAEndTime;
+            cpdb.insert(hostsTable, hrow);
+            
+            for(auto & infection : hostPtr->infections) {
+                CheckpointInfectionRow infRow;
+                infRow.hostId = hostPtr->id;
+                infRow.infectionId = infection.id;
+                infRow.strainId = infection.strainPtr->id;
+                if(infection.msPtr != NULL) {
+                    infRow.msId = infection.msPtr->id;
+                }
+                if(infection.geneIndex != WAITING_STAGE) {
+                    infRow.geneIndex = infection.geneIndex;
+                }
+                infRow.active = infection.active;
+                infRow.transitionTime = infection.transitionTime;
+                infRow.initialTime = infection.initialTime;
+                
+                cpdb.insert(infectionsTable, infRow);
+            }
+            
+            int64_t nLoci = parPtr->genes.locusNumber;
+            ImmuneHistory & immunity = hostPtr->immunity;
+            if(parPtr->withinHost.useAlleleImmunity) {
+                if(!immunity.immuneAlleles.empty()) {
+                    for(int64_t i = 0; i < nLoci; i++) {
+                        for(auto & immPair : immunity.immuneAlleles[i]) {
+                            CheckpointAlleleImmunityRow immRow;
+                            immRow.hostId = hostPtr->id;
+                            immRow.locusIndex = i;
+                            immRow.alleleId = immPair.first;
+                            immRow.level = immPair.second;
+                            cpdb.insert(alleleImmunityTable, immRow);
+                        } 
+                    }
+                }
+            }
+            else {
+                for(auto & genePtr : immunity.genes) {
+                    CheckpointImmunityRow immRow;
+                    immRow.hostId = hostPtr->id;
+                    immRow.geneId = genePtr->id;
+                    cpdb.insert(immunityTable, immRow);
+                }
+            }
+        }
+	}
 }
 
 void Simulation::run()
@@ -882,6 +1060,16 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
 		strainPtr = strains[strainItr->second];
 	}
 	return strainPtr;
+}
+
+CheckpointEvent::CheckpointEvent(Simulation * simPtr, double initialTime, double period) :
+    PeriodicEvent(initialTime, period), simPtr(simPtr)
+{
+}
+
+void CheckpointEvent::performEvent(zppsim::EventQueue & queue)
+{
+    simPtr->saveCheckpoint();
 }
 
 

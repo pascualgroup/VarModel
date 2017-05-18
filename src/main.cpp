@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	
-	try {
+	/*try */{
 		// Load parameters from JSON file
 		JsonElement paramsJson = parseJson(paramsStream);
 		paramsStream.close();
@@ -89,10 +89,13 @@ int main(int argc, char **argv)
 		unique_ptr<Simulation> simPtr(new Simulation(&params, &db));
 		simPtr->run();
 	}
-	catch(runtime_error & e) {
+	/*catch(runtime_error & e) {
 		cerr << "An error occurred:" << endl;
 		cerr << e.what() << endl;
 		cerr << "Terminating execution." << endl;
+        
+        throw e;
+        
 		return 1;
-	}
+	}*/
 }

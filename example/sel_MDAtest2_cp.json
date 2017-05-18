@@ -1,0 +1,121 @@
+{
+	"checkpointSaveFilename" : "checkpoint.sqlite",
+	"checkpointPeriod" : 360,
+	
+    "randomSeed": 6706, 
+    "burnIn": 270,
+    "tEnd": 2000, 
+    "seasonalUpdateEvery": 1.0, 
+    "sampleHostsEvery": 120.0, 
+    "sampleTransmissionEventEvery": 100000000000000, 
+    "dbCommitPeriod": 30, 
+    "outputHosts": true, 
+    "outputStrains": true, 
+    "outputGenes": true, 
+    "outputLoci": true, 
+    "overwriteDatabase": true, 
+    "selectionMode": 1, 
+    "distancePower": 1.0, 
+    "populations": [
+        {
+            "pImmigrationIncludesNewGenes": 0, 
+            "nInitialInfections": 20, 
+            "immigrationRate": 1.0, 
+            "sampleSize": 100, 
+            "moi1": false,
+            "selfDistance": 0.5, 
+            "y": 0, 
+            "x": 0, 
+            "size": 10000, 
+            "nImmigrationNewGenes": 0, 
+            "bitingRate": {
+                "phase": 0.0, 
+                "period": 360.0, 
+                "relativeAmplitude": 0.0, 
+                "mean": 0.05
+            }
+        }
+    ], 
+    "genes": {
+        "locusNumber": 2, 
+        "includeMicrosat": false, 
+        "immunityLossRate": [
+            0.001
+        ], 
+        "mutationWeights": [
+            1
+        ], 
+        "transmissibility": [
+            0.5
+        ], 
+        "microsatAlleles": [
+            10
+        ], 
+        "alleleNumber": [
+            120
+        ], 
+        "microsatNumber": 4, 
+        "clinicalImmunityLossRate": [
+            0.1
+        ]
+    }, 
+   "withinHost": {
+        "maxMOI": 10, 
+        //immune selection will use
+        "useAlleleImmunity": true, 
+        //immune selection and neutrality will use
+        "activationRateConstant": 100.0, 
+        "activationRatePower": 0.0, 
+        "deactivationRateConstant": 0.083333333, 
+        "deactivationRatePower": 0, 
+		//generalized immunity will use        
+        "infectionTimesToImmune": 500, 
+        "clearanceRateConstantImmune": 1, 
+        "clearanceRatePower": 0.0
+    }, 
+    "following": {
+         "HostNumber":10,
+         "includeHostFollowing": false,
+         "followDuration":360
+    },
+    "MDA":{
+    	"TimeStartMDA":500,
+    	"interval":30,
+    	"totalNumber":3,
+    	"strainFailRate":0.08,
+    	"hostFailRate":0.08,
+    	"drugEffDuration":10,
+    	"MDAMRateChange":0.1,
+    	"includeMDA":false    	
+    },
+    "intervention": {
+        "includeIntervention": true,
+        "TimeStart": 300,
+        "duration": 360,
+        "amplitude": 0.5,
+        "IRSMRateAmplitude":0.1
+    },
+    "trackClinicalImmunity": false, 
+    "pIntraRecomb": 1.8e-07, 
+    "pMutation": 1.42e-08, 
+    "genePoolSize": 1200, 
+    "genesPerStrain": 20,
+    //gene conversion ratio in gene recombination events 
+    "percConversion": 0.0, 
+    "tLiverStage": 14.0, 
+    "pMsMutate": 3e-05, 
+    "dbFilename": "sel_MDAtest2.sqlite", 
+    "coinfectionReducesTransmission": true, 
+    "hostLifetimeDistribution": {
+        "pdf": [
+            3091, 
+            3274
+        ], 
+        "x0": 0.0, 
+        "dx": [
+            0, 
+            1800, 
+            3600
+        ]
+    }
+}

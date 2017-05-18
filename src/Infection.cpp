@@ -70,11 +70,6 @@ bool Infection::isImmune()
 	return hostPtr->immunity.isImmune(getCurrentGene());
 }
 
-bool Infection::isClinicallyImmune()
-{
-	return hostPtr->clinicalImmunity.isImmune(getCurrentGene());
-}
-
 double Infection::getTransitionTime()
 {
 	return transitionTime;
@@ -159,13 +154,11 @@ double Infection::activationRate()
 //	GenePtr genePtr = getCurrentGene();
 //	int64_t geneId = getCurrentGeneId();
 //	bool immune = isImmune();
-//	bool clinicallyImmune = isClinicallyImmune();
 //	double age = getAgeAtTransitionTime();
 //	int64_t activeCount = hostPtr->getActiveInfectionCount();
 //	vector<GenePtr> activeGenes = hostPtr->getActiveInfectionGenes();
 //	vector<int64_t> activeGeneIds = hostPtr->getActiveInfectionGeneIds();
 //	int64_t immunityCount = hostPtr->getActiveInfectionImmunityCount();
-//	int64_t clinicalImmunityCount = hostPtr->getActiveInfectionClinicalImmunityCount();
 	
 	SimParameters * simParPtr = hostPtr->getSimulationParametersPtr();
 	
@@ -247,8 +240,6 @@ double Infection::clearanceRate()
         
         if (simParPtr->selectionMode == 2) {
             double r1 = simParPtr->withinHost.clearanceRateConstantImmune;
-            //double r2 = simParPtr->withinHost.clearanceRateConstantNotImmune;
-            //clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(r1, r2);
             clearanceRateConstant = hostPtr->immunity.checkGeneralImmunity(simParPtr->withinHost.generalImmunityParams.toDoubleVector(),r1);
         }else{
             // if selection mode is not general immunity, then there's effectively no clearance

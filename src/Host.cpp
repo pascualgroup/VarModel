@@ -33,8 +33,7 @@ Host::Host(
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
-	immunity(this, false,popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune),
-	clinicalImmunity(this, true,popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune)
+	immunity(this, popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
 	
@@ -139,19 +138,6 @@ int64_t Host::getActiveInfectionImmunityCount()
 	return count;
 }
 
-int64_t Host::getActiveInfectionClinicalImmunityCount()
-{
-	int64_t count = 0;
-	for(auto & infection : infections) {
-		if(infection.isActive()) {
-			if(clinicalImmunity.isImmune(infection.getCurrentGene())) {
-				count++;
-			}
-		}
-	}
-	return count;
-}
-
 void Host::gainAlleleImmunity(GenePtr genePtr) {
     immunity.gainAlleleImmunity(genePtr,false,*popPtr->simPtr->dbPtr,popPtr->simPtr->alleleImmunityTable);
 }
@@ -165,7 +151,6 @@ void Host::prepareToDie()
 		infection.prepareToEnd();
 	}
 	immunity.prepareToDie();
-	clinicalImmunity.prepareToDie();
 	
 	removeEvent(deathEvent.get());
 }
@@ -509,9 +494,6 @@ void Host::getSelectionMode(GenePtr genePtr, bool clearInfection) {
         // specific immunity mode
         if(!popPtr->simPtr->parPtr->withinHost.useAlleleImmunity) {
             immunity.gainImmunity(genePtr);
-            if(getSimulationParametersPtr()->trackClinicalImmunity) {
-                clinicalImmunity.gainImmunity(genePtr);
-            }
         }else{
             //cout<<"gainAlleleImmunity"<<endl;
             gainAlleleImmunity(genePtr);
