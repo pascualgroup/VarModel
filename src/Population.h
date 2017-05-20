@@ -47,7 +47,10 @@ friend class ImmuneHistory;
 public:
 	int64_t const id;
 	
-	Population(Simulation * simPtr, int64_t id);
+	Population(
+        Simulation * simPtr, int64_t id,
+        bool willLoadFromCheckpoint
+    );
 	
 	double bitingRate();
 	int64_t size();

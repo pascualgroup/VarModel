@@ -16,31 +16,36 @@
 using namespace std;
 using namespace zppsim;
 
-Population::Population(Simulation * simPtr, int64_t id) :
+Population::Population(
+    Simulation * simPtr, int64_t id,
+    bool willLoadFromCheckpoint
+) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
 	parPtr(&(simPtr->parPtr->populations[id])),
 	transmissionCount(0)
 {
-	// Create hosts
-	hosts.reserve(parPtr->size);
-	for(int64_t i = 0; i < parPtr->size; i++) {
-		int64_t hostId = simPtr->nextHostId++;
-		//double lifetime = simPtr->drawHostLifetime();
-        double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
-        if (lifetime > 28800.0) lifetime = 28800.0;
-        //cout<<lifetime<<endl;
-		double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
-		double deathTime = birthTime + lifetime;
-		
-		bool writeToDatabase = simPtr->parPtr->outputHosts;
-		hosts.emplace_back(new Host(
-			this, hostId, birthTime, deathTime,
-			writeToDatabase,
-			*(simPtr->dbPtr),
-			simPtr->hostsTable
-		));
-		hostIdIndexMap[hostId] = hosts.size() - 1;
-	}
+    if(!willLoadFromCheckpoint) {
+        // Create hosts
+        hosts.reserve(parPtr->size);
+        for(int64_t i = 0; i < parPtr->size; i++) {
+            int64_t hostId = simPtr->nextHostId++;
+            //double lifetime = simPtr->drawHostLifetime();
+            double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
+            if (lifetime > 28800.0) lifetime = 28800.0;
+            //cout<<lifetime<<endl;
+            double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
+            double deathTime = birthTime + lifetime;
+            
+            bool writeToDatabase = simPtr->parPtr->outputHosts;
+            hosts.emplace_back(new Host(
+                this, hostId, birthTime, deathTime,
+                writeToDatabase,
+                *(simPtr->dbPtr),
+                simPtr->hostsTable
+            ));
+            hostIdIndexMap[hostId] = hosts.size() - 1;
+        }
+    }
 	
 	// Create biting event
 	bitingEvent = unique_ptr<BitingEvent>(
@@ -54,25 +59,27 @@ Population::Population(Simulation * simPtr, int64_t id) :
 	);
 	addEvent(immigrationEvent.get());
 	
-	// Create initial infections, with microsatellites as well
-    if (simPtr->parPtr->genes.includeMicrosat) {
-        size_t msSampleSize = (int)(parPtr->nInitialInfections + (parPtr->immigrationRate * 360.0))*1.5;
-        simPtr->runMSSimCoal(msSampleSize);
-        tempMS = simPtr->readMsArray(yearTrack);
-        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+    if(!willLoadFromCheckpoint) {
+        // Create initial infections, with microsatellites as well
+        if (simPtr->parPtr->genes.includeMicrosat) {
+            size_t msSampleSize = (int)(parPtr->nInitialInfections + (parPtr->immigrationRate * 360.0))*1.5;
+            simPtr->runMSSimCoal(msSampleSize);
+            tempMS = simPtr->readMsArray(yearTrack);
+            for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+                int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
+                StrainPtr strainPtr = simPtr->generateRandomStrain();
+                GenePtr msPtr = simPtr->storeMicrosat(tempMS[i]);
+                hosts[hostId]->receiveInfection(strainPtr,msPtr);
+            }
+            immigrationCount = parPtr->nInitialInfections;
+        }else{
+            for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
             int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
             StrainPtr strainPtr = simPtr->generateRandomStrain();
-            GenePtr msPtr = simPtr->storeMicrosat(tempMS[i]);
-            hosts[hostId]->receiveInfection(strainPtr,msPtr);
+            hosts[hostId]->receiveInfection(strainPtr);
+            }
         }
-        immigrationCount = parPtr->nInitialInfections;
-    }else{
-        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
-		int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
-		StrainPtr strainPtr = simPtr->generateRandomStrain();
-		hosts[hostId]->receiveInfection(strainPtr);
-        }
-	}
+    }
 }
 
 int64_t Population::size()

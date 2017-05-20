@@ -1,6 +1,6 @@
 {
-	"checkpointSaveFilename" : "checkpoint.sqlite",
-	"checkpointPeriod" : 360,
+    "dbFilename": "sel_MDAtest2_loadcp.sqlite", 
+	"checkpointLoadFilename" : "sel_MDAtest2-checkpoint.sqlite",
 	
     "randomSeed": 6706, 
     "burnIn": 270,
@@ -104,7 +104,6 @@
     "percConversion": 0.0, 
     "tLiverStage": 14.0, 
     "pMsMutate": 3e-05, 
-    "dbFilename": "sel_MDAtest2.sqlite", 
     "coinfectionReducesTransmission": true, 
     "hostLifetimeDistribution": {
         "pdf": [

@@ -98,6 +98,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     //make sure burnin time is smaller than end time
     assert(parPtr->burnIn<parPtr->tEnd);
     
+    bool shouldLoadFromCheckpoint = parPtr->checkpointLoadFilename.present();
     if(parPtr->checkpointPeriod.present() && parPtr->checkpointSaveFilename.present()) {
         queuePtr->addEvent(&checkpointEvent);
     }
@@ -110,6 +111,20 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
         queuePtr->addEvent(&removeirsEvent);
     };
     
+    if(shouldLoadFromCheckpoint) {
+        loadCheckpoint();
+    }
+    else {
+        initialize();
+    }
+	
+	dbPtr->commitWithRetry(DB_RETRY_DELAY, DB_TIMEOUT, cerr);
+	
+	cerr << "# events: " << queuePtr->size() << '\n';
+}
+
+void Simulation::initialize()
+{
     //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
 	if(vals.size() == 1) {
@@ -191,13 +206,109 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
 	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
-		popPtrs.emplace_back(new Population(this, popId));
+		popPtrs.emplace_back(new Population(this, popId, false));
 	}
-	
-	dbPtr->commitWithRetry(DB_RETRY_DELAY, DB_TIMEOUT, cerr);
-	
-	cerr << "# events: " << queuePtr->size() << '\n';
 }
+
+void Simulation::loadCheckpoint()
+{
+    Database cpdb(parPtr->checkpointLoadFilename);
+    cpdb.beginTransaction();
+    
+    Table<CheckpointMetaRow> metaTable("meta");
+    vector<CheckpointMetaRow> metaRows = cpdb.readTable(metaTable);
+    
+    Table<CheckpointAlleleCountRow> alleleCountsTable("alleleCounts");
+    vector<CheckpointAlleleCountRow> alleleCountRows = cpdb.readTable(alleleCountsTable);
+    
+    Table<GeneRow> genesTable("genes");
+    vector<GeneRow> geneRows = cpdb.readTable(genesTable);
+    
+    Table<LociRow> geneAllelesTable("geneAlleles");
+    vector<LociRow> geneAlleleRows = cpdb.readTable(geneAllelesTable);
+    
+    Table<StrainRow> strainsTable("strains");
+    vector<StrainRow> strainRows = cpdb.readTable(strainsTable);
+    
+    Table<CheckpointAlleleCountRow> msAlleleCountsTable("microsatAlleleCounts");
+    vector<CheckpointAlleleCountRow> msAlleleCountRows = cpdb.readTable(msAlleleCountsTable);
+    
+    Table<GeneRow> msTable("microsats");
+    vector<GeneRow> msRows = cpdb.readTable(msTable);
+    
+    Table<LociRow> msAllelesTable("microsatAlleles");
+    vector<LociRow> msAlleleRows = cpdb.readTable(msAllelesTable);
+    
+    Table<CheckpointHostRow> hostsTable("hosts");
+    vector<CheckpointHostRow> hostRows = cpdb.readTable(hostsTable);
+    
+    Table<CheckpointInfectionRow> infectionsTable("infections");
+    vector<CheckpointInfectionRow> infectionRows = cpdb.readTable(infectionsTable);
+    
+    Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
+    vector<CheckpointAlleleImmunityRow> alleleImmunityRows = parPtr->withinHost.useAlleleImmunity ? cpdb.readTable(alleleImmunityTable) :  vector<CheckpointAlleleImmunityRow>();
+    
+    Table<CheckpointImmunityRow> immunityTable("immunity");
+    vector<CheckpointImmunityRow> immunityRows = !parPtr->withinHost.useAlleleImmunity ? cpdb.readTable(immunityTable) : vector<CheckpointImmunityRow>();
+    
+    loadAlleleCounts(alleleCountRows, alleleNumber, parPtr->genes.locusNumber);
+    loadGenes(geneRows, geneAlleleRows, genes, parPtr->genes.locusNumber);
+    
+    if(parPtr->genes.includeMicrosat) {
+        loadAlleleCounts(msAlleleCountRows, microsatAlleles, parPtr->genes.microsatNumber);
+        loadGenes(msRows, msAlleleRows, microsats, parPtr->genes.microsatNumber);
+    }
+}
+
+void Simulation::loadAlleleCounts(
+    std::vector<CheckpointAlleleCountRow> & alleleCountRows,
+    std::vector<int64_t> & alleleCounts,
+    int64_t nLoci
+) {
+    for(int64_t i = 0; i < nLoci; i++) {
+        assert(alleleCountRows[i].locusIndex.integerValue() == i);
+        alleleCounts.push_back(alleleCountRows[i].alleleCount.integerValue());
+    }
+}
+
+void Simulation::loadGenes(
+    std::vector<GeneRow> & geneRows,
+    std::vector<LociRow> & geneAlleleRows,
+    std::vector<GenePtr> & genes,
+    int64_t nLoci
+) {
+    vector<vector<int64_t>> geneAlleles;
+    int64_t alleleRowIndex = 0;
+    for(int64_t geneIndex = 0; geneIndex < geneRows.size(); geneIndex++) {
+        geneAlleles.push_back(vector<int64_t>());
+        for(int64_t locus = 0; locus < nLoci; locus++) {
+            assert(locus == geneAlleleRows[alleleRowIndex].alleleIndex.integerValue());
+            geneAlleles[geneIndex].push_back(
+                geneAlleleRows[alleleRowIndex].alleleId.integerValue()
+            );
+            alleleRowIndex++;
+        } 
+    }
+    
+    for(int64_t geneIndex = 0; geneIndex < geneRows.size(); geneIndex++) {
+        GeneRow & geneRow = geneRows[geneIndex];
+        genes.emplace_back(new Gene(
+            geneRow.geneId.integerValue(),
+            geneRow.transmissibility.realValue(),
+            geneRow.immunityLossRate.realValue(),
+            geneRow.source.integerValue(),
+            (geneRow.functionality.integerValue() > 0),
+            geneAlleles[geneIndex],
+            parPtr->outputGenes,
+            parPtr->outputLoci,
+            *dbPtr,
+            genesTable,
+            lociTable
+        ));
+    }
+}
+
+
 
 //5/17 new edits, microsats created from real distributions
 // create microsats pool
@@ -306,6 +417,15 @@ void Simulation::saveCheckpoint()
         Table<StrainRow> strainsTable("strains");
         cpdb.createTable(strainsTable);
         
+        Table<CheckpointAlleleCountRow> msAlleleCountsTable("microsatAlleleCounts");
+        cpdb.createTable(msAlleleCountsTable);
+        
+        Table<GeneRow> msTable("microsats");
+        cpdb.createTable(msTable);
+        
+        Table<LociRow> msAllelesTable("microsatAlleles");
+        cpdb.createTable(msAllelesTable);
+        
         Table<CheckpointHostRow> hostsTable("hosts");
         cpdb.createTable(hostsTable);
         
@@ -323,6 +443,9 @@ void Simulation::saveCheckpoint()
         
         writeMetaToCheckpoint(cpdb, metaTable);
         writeGenesAndStrainsToCheckpoint(cpdb, alleleCountsTable, genesTable, geneAllelesTable, strainsTable);
+        if(parPtr->genes.includeMicrosat) {
+            writeMicrosatsToCheckpoint(cpdb, msAlleleCountsTable, msTable, msAllelesTable);
+        }
         writePopulationsToCheckpoint(cpdb, hostsTable, infectionsTable, alleleImmunityTable, immunityTable);
         
         cpdb.commit();
@@ -387,6 +510,38 @@ void Simulation::writeGenesAndStrainsToCheckpoint(Database & cpdb,
     }
 }
 
+void Simulation::writeMicrosatsToCheckpoint(Database & cpdb,
+    Table<CheckpointAlleleCountRow> & msAlleleCountsTable,
+    Table<GeneRow> & msTable,
+    Table<LociRow> & msAllelesTable
+) {
+    for(int64_t i = 0; i < parPtr->genes.microsatNumber; i++) {
+        CheckpointAlleleCountRow row;
+        row.locusIndex = i;
+        row.alleleCount = microsatAlleles[i];
+        cpdb.insert(msAlleleCountsTable, row);
+    }
+    
+    for(auto & genePtr : microsats) {
+        GeneRow msRow;
+        
+        msRow.geneId = genePtr->id;
+        msRow.transmissibility = genePtr->transmissibility;
+        msRow.immunityLossRate = genePtr->immunityLossRate;
+        msRow.source = genePtr->source;
+        msRow.functionality = genePtr->functionality;
+        cpdb.insert(genesTable, msRow);
+        
+        for(int64_t i = 0; i < parPtr->genes.microsatNumber; i++) {
+            LociRow geneAlleleRow;
+            geneAlleleRow.geneId = genePtr->id;
+            geneAlleleRow.alleleIndex = i;
+            geneAlleleRow.alleleId = genePtr->Alleles[i];
+            cpdb.insert(msAllelesTable, geneAlleleRow);
+        }
+    }
+}
+
 void Simulation::writePopulationsToCheckpoint(Database & cpdb,
     Table<CheckpointHostRow> & hostsTable,
     Table<CheckpointInfectionRow> & infectionsTable,
@@ -400,15 +555,16 @@ void Simulation::writePopulationsToCheckpoint(Database & cpdb,
             hrow.popId = popPtr->id;
             hrow.birthTime = hostPtr->birthTime;
             hrow.deathTime = hostPtr->deathTime;
-            hrow.nextInfectionId = hostPtr->nextInfectionId;
-            hrow.MDAEndTime = hostPtr->MDAEndTime;
             cpdb.insert(hostsTable, hrow);
             
             for(auto & infection : hostPtr->infections) {
                 CheckpointInfectionRow infRow;
                 infRow.hostId = hostPtr->id;
                 infRow.infectionId = infection.id;
-                infRow.strainId = infection.strainPtr->id;
+                
+                if(infRow.strainPtr != NULL) {
+                    infRow.strainId = infection.strainPtr->id;
+                }
                 if(infection.msPtr != NULL) {
                     infRow.msId = infection.msPtr->id;
                 }

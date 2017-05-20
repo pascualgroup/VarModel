@@ -233,11 +233,31 @@ private:
         Table<LociRow> & geneAllelesTable,
         Table<StrainRow> & strainsTable
     );
+    void writeMicrosatsToCheckpoint(Database & cpdb,
+        Table<CheckpointAlleleCountRow> & msAlleleCountsTable,
+        Table<GeneRow> & msTable,
+        Table<LociRow> & msAllelesTable
+    );
     void writePopulationsToCheckpoint(Database & cpdb,
         Table<CheckpointHostRow> & hostsTable,
         Table<CheckpointInfectionRow> & infectionsTable,
         Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
         Table<CheckpointImmunityRow> & immunityTable
+    );
+    
+    void initialize();
+    
+    void loadCheckpoint();
+    void loadAlleleCounts(
+        std::vector<CheckpointAlleleCountRow> & alleleCountRows,
+        std::vector<int64_t> & alleleCounts,
+        int64_t nLoci
+    );
+    void loadGenes(
+        std::vector<GeneRow> & geneRows,
+        std::vector<LociRow> & geneAlleleRows,
+        std::vector<GenePtr> & genes,
+        int64_t nLoci
     );
 };
 

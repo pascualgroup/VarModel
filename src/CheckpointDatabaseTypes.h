@@ -48,9 +48,6 @@ ZPPDB_DEFINE_ROW_TYPE(
 		Host death time
 	*/
 	( (Real)(deathTime) )
-    
-    ( (Integer)(nextInfectionId) )
-    ( (Real)(MDAEndTime) )
 )
 
 /**
@@ -160,7 +157,6 @@ ZPPDB_DEFINE_ROW_TYPE(
      */
     ((Integer)(alleleCount))
 )
-
 
 #endif // #define DOXYGEN_SHOULD_SKIP_THIS
 
