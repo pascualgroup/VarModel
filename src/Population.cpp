@@ -28,13 +28,13 @@ Population::Population(
 	bitingEvent = unique_ptr<BitingEvent>(
 		new BitingEvent(this, getBitingRate(), simPtr->rng)
 	);
-	//addEvent(bitingEvent.get());
+	addEvent(bitingEvent.get());
 	
 	// Create immigration event
 	immigrationEvent = unique_ptr<ImmigrationEvent>(
 		new ImmigrationEvent(this, getImmigrationRate(), simPtr->rng)
 	);
-    //addEvent(immigrationEvent.get());
+    addEvent(immigrationEvent.get());
 }
 
 void Population::initializeHosts()
@@ -113,6 +113,11 @@ void Population::verifyHostIdIndexMap()
 
 void Population::loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows)
 {
+    for(auto & row : infectionRows) {
+        int64_t hostId = row.hostId.integerValue();
+        if(hostIdIndexMap.find(hostId) != hostIdIndexMap.end()) {
+        }
+    }
 }
 
 void Population::loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows)

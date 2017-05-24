@@ -108,13 +108,13 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
         // queuePtr->addEvent(&checkpointEvent);
     }
     
-//	queuePtr->addEvent(&rateUpdateEvent);
-//    queuePtr->addEvent(&hostStateSamplingEvent);
-//    if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
-//    if (parPtr->intervention.includeIntervention) {
-//        queuePtr->addEvent(&irsEvent);
-//        queuePtr->addEvent(&removeirsEvent);
-//    };
+	queuePtr->addEvent(&rateUpdateEvent);
+    queuePtr->addEvent(&hostStateSamplingEvent);
+    if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
+    if (parPtr->intervention.includeIntervention) {
+        queuePtr->addEvent(&irsEvent);
+        queuePtr->addEvent(&removeirsEvent);
+    };
     
     if(shouldLoadFromCheckpoint) {
         loadCheckpoint();
@@ -322,6 +322,19 @@ void Simulation::loadGenes(
 
 void Simulation::loadStrains(std::vector<StrainRow> & strainRows)
 {
+    int64_t strainId = strainRows[0].strainId.integerValue();
+    std::vector<GenePtr> strainGenes;
+    for(auto & row : strainRows) {
+        if(strainId != row.strainId.integerValue()) {
+            StrainPtr strainPtr = getStrain(strainGenes);
+            strainGenes.clear();
+            strainId = row.strainId.integerValue();
+        } 
+        strainGenes.push_back(genes[row.geneId.integerValue()]);
+    }
+    if(strainGenes.size() > 0) {
+        StrainPtr strainPtr = getStrain(strainGenes);
+    }
 }
 
 void Simulation::loadPopulations(
