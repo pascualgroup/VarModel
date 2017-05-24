@@ -30,6 +30,15 @@ private:
     Simulation * simPtr;
 };
 
+class VerificationEvent : public zppsim::PeriodicEvent
+{
+public:
+    VerificationEvent(Simulation * simPtr, double initialTime, double period);
+    virtual void performEvent(zppsim::EventQueue & queue);
+private:
+    Simulation * simPtr;
+};
+
 class RateUpdateEvent : public zppsim::PeriodicEvent
 {
 public:
@@ -151,7 +160,7 @@ public:
     void writeDuration(std::list<Infection>::iterator infectionItr);
     void writeEIR(double time, int64_t infectious);
     void writeFollowedHostInfection(std::list<Infection>::iterator infectionItr);
-	bool verifyState();
+	void verifyState();
 private:
 	SimParameters * parPtr;
 	zppdb::Database * dbPtr;
@@ -163,6 +172,7 @@ private:
 	std::unique_ptr<zppsim::EventQueue> queuePtr;
 	
     CheckpointEvent checkpointEvent;
+    VerificationEvent verificationEvent;
     
 	RateUpdateEvent rateUpdateEvent;
 	HostStateSamplingEvent hostStateSamplingEvent;
@@ -258,6 +268,15 @@ private:
         std::vector<LociRow> & geneAlleleRows,
         std::vector<GenePtr> & genes,
         int64_t nLoci
+    );
+    void loadStrains(std::vector<StrainRow> & strainRows);
+    
+    void loadPopulations(
+        double time,
+        std::vector<CheckpointHostRow> & hostRows,
+        std::vector<CheckpointInfectionRow> & infectionRows,
+        std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
+        std::vector<CheckpointImmunityRow> & immunityRows
     );
 };
 

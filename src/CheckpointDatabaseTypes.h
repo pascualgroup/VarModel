@@ -22,6 +22,11 @@ ZPPDB_DEFINE_ROW_TYPE(
         \brief Parameter values in JSON format.
     */
     ((Text)(parameters))
+    
+    /**
+        \brief Simulation::nextHostId.
+    */
+    ((Integer)(nextHostId))
 )
 
 /**

@@ -408,6 +408,11 @@ ZPPJSON_DEFINE_TYPE(
     ( (Double)(dbCommitPeriod) )
     
     /**
+        \brief How often, in simulation time units, to verify correctness of simulation data structures.
+    */
+    ( (Double)(verificationPeriod) )
+    
+    /**
         \brief Checkpoint filename, from a previous simulation, to load from at the start of the simulation.
     */
     ( (String)(checkpointLoadFilename) )

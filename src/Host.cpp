@@ -25,6 +25,7 @@ std::unordered_map<size_t,size_t> ordered(std::vector<T> const& values) {
 }
 
 Host::Host(
+    SimParameters * parPtr,
 	Population * popPtr, int64_t id, double birthTime, double deathTime,
 	bool writeToDatabase,
 	Database & db,
@@ -33,10 +34,9 @@ Host::Host(
 	id(id), popPtr(popPtr),
 	birthTime(birthTime), deathTime(deathTime), nextInfectionId(0),
 	deathEvent(new DeathEvent(this)),
-	immunity(this, popPtr->simPtr->locusNumber,popPtr->simPtr->parPtr->withinHost.infectionTimesToImmune)
+	immunity(this, parPtr->genes.locusNumber, parPtr->withinHost.infectionTimesToImmune)
 {
 //	cerr << "Created host " << id << ", deathTime " << deathTime << '\n';
-	
 	if(writeToDatabase) {
 		HostRow row;
 		row.hostId = id;
@@ -597,4 +597,9 @@ void DeathEvent::performEvent(zppsim::EventQueue & queue)
 {
 	hostPtr->prepareToDie();
 	hostPtr->popPtr->removeHost(hostPtr);
+}
+
+std::string DeathEvent::eventName()
+{
+    return "DeathEvent";
 }

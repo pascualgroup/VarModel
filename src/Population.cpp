@@ -9,6 +9,7 @@
 #include "Population.h"
 #include "Simulation.h"
 #include "SimParameters.h"
+#include "CheckpointDatabaseTypes.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -17,69 +18,109 @@ using namespace std;
 using namespace zppsim;
 
 Population::Population(
-    Simulation * simPtr, int64_t id,
-    bool willLoadFromCheckpoint
+    Simulation * simPtr, int64_t id
 ) :
 	id(id), simPtr(simPtr), rngPtr(&(simPtr->rng)),
 	parPtr(&(simPtr->parPtr->populations[id])),
 	transmissionCount(0)
 {
-    if(!willLoadFromCheckpoint) {
-        // Create hosts
-        hosts.reserve(parPtr->size);
-        for(int64_t i = 0; i < parPtr->size; i++) {
-            int64_t hostId = simPtr->nextHostId++;
-            //double lifetime = simPtr->drawHostLifetime();
-            double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
-            if (lifetime > 28800.0) lifetime = 28800.0;
-            //cout<<lifetime<<endl;
-            double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
-            double deathTime = birthTime + lifetime;
-            
-            bool writeToDatabase = simPtr->parPtr->outputHosts;
-            hosts.emplace_back(new Host(
-                this, hostId, birthTime, deathTime,
-                writeToDatabase,
-                *(simPtr->dbPtr),
-                simPtr->hostsTable
-            ));
-            hostIdIndexMap[hostId] = hosts.size() - 1;
-        }
-    }
-	
 	// Create biting event
 	bitingEvent = unique_ptr<BitingEvent>(
 		new BitingEvent(this, getBitingRate(), simPtr->rng)
 	);
-	addEvent(bitingEvent.get());
+	//addEvent(bitingEvent.get());
 	
 	// Create immigration event
 	immigrationEvent = unique_ptr<ImmigrationEvent>(
 		new ImmigrationEvent(this, getImmigrationRate(), simPtr->rng)
 	);
-	addEvent(immigrationEvent.get());
-	
-    if(!willLoadFromCheckpoint) {
-        // Create initial infections, with microsatellites as well
-        if (simPtr->parPtr->genes.includeMicrosat) {
-            size_t msSampleSize = (int)(parPtr->nInitialInfections + (parPtr->immigrationRate * 360.0))*1.5;
-            simPtr->runMSSimCoal(msSampleSize);
-            tempMS = simPtr->readMsArray(yearTrack);
-            for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
-                int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
-                StrainPtr strainPtr = simPtr->generateRandomStrain();
-                GenePtr msPtr = simPtr->storeMicrosat(tempMS[i]);
-                hosts[hostId]->receiveInfection(strainPtr,msPtr);
-            }
-            immigrationCount = parPtr->nInitialInfections;
-        }else{
-            for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+    //addEvent(immigrationEvent.get());
+}
+
+void Population::initializeHosts()
+{
+    // Create hosts
+    hosts.reserve(parPtr->size);
+    for(int64_t i = 0; i < parPtr->size; i++) {
+        int64_t hostId = simPtr->nextHostId++;
+        //double lifetime = simPtr->drawHostLifetime();
+        double lifetime = exponential_distribution<>(1.0/10800.0)(*rngPtr);
+        if (lifetime > 28800.0) lifetime = 28800.0;
+        //cout<<lifetime<<endl;
+        double birthTime = -uniform_real_distribution<>(0, lifetime)(*rngPtr);
+        double deathTime = birthTime + lifetime;
+        
+        bool writeToDatabase = simPtr->parPtr->outputHosts;
+        hosts.emplace_back(new Host(
+            simPtr->parPtr,
+            this, hostId, birthTime, deathTime,
+            writeToDatabase,
+            *(simPtr->dbPtr),
+            simPtr->hostsTable
+        ));
+        hostIdIndexMap[hostId] = hosts.size() - 1;
+    }
+}
+
+void Population::initializeInfections()
+{
+    // Create initial infections, with microsatellites as well
+    if (simPtr->parPtr->genes.includeMicrosat) {
+        size_t msSampleSize = (int)(parPtr->nInitialInfections + (parPtr->immigrationRate * 360.0))*1.5;
+        simPtr->runMSSimCoal(msSampleSize);
+        tempMS = simPtr->readMsArray(yearTrack);
+        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
+            int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
+            StrainPtr strainPtr = simPtr->generateRandomStrain();
+            GenePtr msPtr = simPtr->storeMicrosat(tempMS[i]);
+            hosts[hostId]->receiveInfection(strainPtr,msPtr);
+        }
+        immigrationCount = parPtr->nInitialInfections;
+    }else{
+        for(int64_t i = 0; i < parPtr->nInitialInfections; i++) {
             int64_t hostId = drawUniformIndex(simPtr->rng, hosts.size());
             StrainPtr strainPtr = simPtr->generateRandomStrain();
             hosts[hostId]->receiveInfection(strainPtr);
-            }
         }
     }
+}
+
+void Population::loadHosts(double timeOffset, std::vector<CheckpointHostRow> & hostRows)
+{
+    for(auto & row : hostRows) {
+        if(row.popId.integerValue() == id) {
+            hosts.emplace_back(new Host(
+                simPtr->parPtr, this,
+                row.hostId.integerValue(),
+                row.birthTime.realValue() - timeOffset,
+                row.deathTime.realValue() - timeOffset,
+                simPtr->parPtr->outputHosts,
+                *(simPtr->dbPtr),
+                simPtr->hostsTable
+            ));
+            hostIdIndexMap[row.hostId.integerValue()] = hosts.size() - 1;
+        }
+    }
+    verifyHostIdIndexMap();
+}
+
+void Population::verifyHostIdIndexMap()
+{
+    for(int64_t i = 0; i < hosts.size(); i++) {
+        assert(hostIdIndexMap[hosts[i]->id] == i);
+    }
+}
+
+void Population::loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows)
+{
+}
+
+void Population::loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows)
+{
+}
+
+void Population::loadImmunity(double timeOffset, std::vector<CheckpointImmunityRow> & immunityRows)
+{
 }
 
 int64_t Population::size()
@@ -120,6 +161,7 @@ Host * Population::createNewHost()
 	int64_t hostId = simPtr->nextHostId++;
 	bool writeToDatabase = simPtr->parPtr->outputHosts;
 	hosts.emplace_back(new Host(
+        simPtr->parPtr,
 		this, hostId, birthTime, deathTime,
 		writeToDatabase, *(simPtr->dbPtr), simPtr->hostsTable
 	));

@@ -53,6 +53,11 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
         (parPtr->checkpointPeriod.present()) ? double(parPtr->checkpointPeriod) : nan(""),
         (parPtr->checkpointPeriod.present()) ? double(parPtr->checkpointPeriod) : nan("")
     ),
+    verificationEvent(
+        this,
+        0.0,
+        parPtr->verificationPeriod.present() ? double(parPtr->verificationPeriod) : 360.0
+    ),
 	hostStateSamplingEvent(this, parPtr->burnIn, parPtr->sampleHostsEvery),
     mdaEvent(this,parPtr->MDA.TimeStartMDA, parPtr->MDA.interval),
     irsEvent(this,parPtr->intervention.TimeStart),
@@ -100,16 +105,16 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     
     bool shouldLoadFromCheckpoint = parPtr->checkpointLoadFilename.present();
     if(parPtr->checkpointPeriod.present() && parPtr->checkpointSaveFilename.present()) {
-        queuePtr->addEvent(&checkpointEvent);
+        // queuePtr->addEvent(&checkpointEvent);
     }
     
-	queuePtr->addEvent(&rateUpdateEvent);
-	queuePtr->addEvent(&hostStateSamplingEvent);
-    if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
-    if (parPtr->intervention.includeIntervention) {
-        queuePtr->addEvent(&irsEvent);
-        queuePtr->addEvent(&removeirsEvent);
-    };
+//	queuePtr->addEvent(&rateUpdateEvent);
+//    queuePtr->addEvent(&hostStateSamplingEvent);
+//    if (parPtr->MDA.includeMDA) queuePtr->addEvent(&mdaEvent);
+//    if (parPtr->intervention.includeIntervention) {
+//        queuePtr->addEvent(&irsEvent);
+//        queuePtr->addEvent(&removeirsEvent);
+//    };
     
     if(shouldLoadFromCheckpoint) {
         loadCheckpoint();
@@ -206,7 +211,10 @@ void Simulation::initialize()
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
 	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
-		popPtrs.emplace_back(new Population(this, popId, false));
+        Population * popPtr = new Population(this, popId);
+        popPtr->initializeHosts();
+        popPtr->initializeInfections();
+		popPtrs.emplace_back(popPtr);
 	}
 }
 
@@ -246,18 +254,22 @@ void Simulation::loadCheckpoint()
     vector<CheckpointInfectionRow> infectionRows = cpdb.readTable(infectionsTable);
     
     Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
-    vector<CheckpointAlleleImmunityRow> alleleImmunityRows = parPtr->withinHost.useAlleleImmunity ? cpdb.readTable(alleleImmunityTable) :  vector<CheckpointAlleleImmunityRow>();
+    vector<CheckpointAlleleImmunityRow> alleleImmunityRows = cpdb.readTable(alleleImmunityTable);
     
     Table<CheckpointImmunityRow> immunityTable("immunity");
-    vector<CheckpointImmunityRow> immunityRows = !parPtr->withinHost.useAlleleImmunity ? cpdb.readTable(immunityTable) : vector<CheckpointImmunityRow>();
+    vector<CheckpointImmunityRow> immunityRows = cpdb.readTable(immunityTable);
     
     loadAlleleCounts(alleleCountRows, alleleNumber, parPtr->genes.locusNumber);
     loadGenes(geneRows, geneAlleleRows, genes, parPtr->genes.locusNumber);
+    loadStrains(strainRows);
     
     if(parPtr->genes.includeMicrosat) {
         loadAlleleCounts(msAlleleCountRows, microsatAlleles, parPtr->genes.microsatNumber);
         loadGenes(msRows, msAlleleRows, microsats, parPtr->genes.microsatNumber);
     }
+    
+    nextHostId = metaRows[0].nextHostId.integerValue();
+    loadPopulations(metaRows[0].time.realValue(), hostRows, infectionRows, alleleImmunityRows, immunityRows);
 }
 
 void Simulation::loadAlleleCounts(
@@ -308,6 +320,90 @@ void Simulation::loadGenes(
     }
 }
 
+void Simulation::loadStrains(std::vector<StrainRow> & strainRows)
+{
+}
+
+void Simulation::loadPopulations(
+    double time,
+    std::vector<CheckpointHostRow> & hostRows,
+    std::vector<CheckpointInfectionRow> & infectionRows,
+    std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
+    std::vector<CheckpointImmunityRow> & immunityRows
+) {
+                
+	// Create populations
+	popPtrs.reserve(parPtr->populations.size());
+	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
+        Population * popPtr = new Population(this, popId);
+        popPtr->loadHosts(time, hostRows);
+        popPtr->loadInfections(time, infectionRows);
+        if(parPtr->withinHost.useAlleleImmunity) {
+            popPtr->loadAlleleImmunity(time, alleleImmunityRows);
+        }
+        else {
+            popPtr->loadImmunity(time, immunityRows);
+        }
+		popPtrs.emplace_back(popPtr);
+	}
+    
+	/*for(auto & popPtr : popPtrs) {
+        for(auto & hostPtr : popPtr->hosts) {
+            CheckpointHostRow hrow;
+            hrow.hostId = hostPtr->id;
+            hrow.popId = popPtr->id;
+            hrow.birthTime = hostPtr->birthTime;
+            hrow.deathTime = hostPtr->deathTime;
+            cpdb.insert(hostsTable, hrow);
+            
+            for(auto & infection : hostPtr->infections) {
+                CheckpointInfectionRow infRow;
+                infRow.hostId = hostPtr->id;
+                infRow.infectionId = infection.id;
+                
+                if(infection.strainPtr != NULL) {
+                    infRow.strainId = infection.strainPtr->id;
+                }
+                if(infection.msPtr != NULL) {
+                    infRow.msId = infection.msPtr->id;
+                }
+                if(infection.geneIndex != WAITING_STAGE) {
+                    infRow.geneIndex = infection.geneIndex;
+                }
+                infRow.active = infection.active;
+                infRow.transitionTime = infection.transitionTime;
+                infRow.initialTime = infection.initialTime;
+                
+                cpdb.insert(infectionsTable, infRow);
+            }
+            
+            int64_t nLoci = parPtr->genes.locusNumber;
+            ImmuneHistory & immunity = hostPtr->immunity;
+            if(parPtr->withinHost.useAlleleImmunity) {
+                if(!immunity.immuneAlleles.empty()) {
+                    for(int64_t i = 0; i < nLoci; i++) {
+                        for(auto & immPair : immunity.immuneAlleles[i]) {
+                            CheckpointAlleleImmunityRow immRow;
+                            immRow.hostId = hostPtr->id;
+                            immRow.locusIndex = i;
+                            immRow.alleleId = immPair.first;
+                            immRow.level = immPair.second;
+                            cpdb.insert(alleleImmunityTable, immRow);
+                        } 
+                    }
+                }
+            }
+            else {
+                for(auto & genePtr : immunity.genes) {
+                    CheckpointImmunityRow immRow;
+                    immRow.hostId = hostPtr->id;
+                    immRow.geneId = genePtr->id;
+                    cpdb.insert(immunityTable, immRow);
+                }
+            }
+        }
+	}*/
+}
 
 
 //5/17 new edits, microsats created from real distributions
@@ -433,13 +529,9 @@ void Simulation::saveCheckpoint()
         cpdb.createTable(infectionsTable);
         
         Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
+        cpdb.createTable(alleleImmunityTable);
         Table<CheckpointImmunityRow> immunityTable("immunity");
-        if(parPtr->withinHost.useAlleleImmunity) {
-            cpdb.createTable(alleleImmunityTable);
-        }
-        else {
-            cpdb.createTable(immunityTable);
-        }
+        cpdb.createTable(immunityTable);
         
         writeMetaToCheckpoint(cpdb, metaTable);
         writeGenesAndStrainsToCheckpoint(cpdb, alleleCountsTable, genesTable, geneAllelesTable, strainsTable);
@@ -462,7 +554,8 @@ void Simulation::writeMetaToCheckpoint(Database & cpdb, Table<CheckpointMetaRow>
     
     CheckpointMetaRow row;
     row.time = getTime();
-    row.parameters = paramsStrStream.str(); 
+    row.parameters = paramsStrStream.str();
+    row.nextHostId = nextHostId; 
     
     cpdb.insert(metaTable, row);
 }
@@ -562,7 +655,7 @@ void Simulation::writePopulationsToCheckpoint(Database & cpdb,
                 infRow.hostId = hostPtr->id;
                 infRow.infectionId = infection.id;
                 
-                if(infRow.strainPtr != NULL) {
+                if(infection.strainPtr != NULL) {
                     infRow.strainId = infection.strainPtr->id;
                 }
                 if(infection.msPtr != NULL) {
@@ -1218,6 +1311,16 @@ StrainPtr Simulation::getStrain(std::vector<GenePtr> const & oriStrainGenes)
 	return strainPtr;
 }
 
+void Simulation::verifyState()
+{
+    cerr << "Verifying data structures..." << endl;
+    for(auto & popPtr : popPtrs) {
+        popPtr->verifyHostIdIndexMap();
+    }
+    assert(queuePtr->verify());
+    cerr << "Verified." << endl;
+}
+
 CheckpointEvent::CheckpointEvent(Simulation * simPtr, double initialTime, double period) :
     PeriodicEvent(initialTime, period), simPtr(simPtr)
 {
@@ -1226,6 +1329,16 @@ CheckpointEvent::CheckpointEvent(Simulation * simPtr, double initialTime, double
 void CheckpointEvent::performEvent(zppsim::EventQueue & queue)
 {
     simPtr->saveCheckpoint();
+}
+
+VerificationEvent::VerificationEvent(Simulation * simPtr, double initialTime, double period) :
+    PeriodicEvent(initialTime, period), simPtr(simPtr)
+{
+}
+
+void VerificationEvent::performEvent(zppsim::EventQueue & queue)
+{
+    simPtr->verifyState();
 }
 
 

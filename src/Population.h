@@ -14,6 +14,8 @@
 #include "EventQueue.hpp"
 #include "SimParameters.h"
 #include "Host.h"
+#include "DatabaseTypes.h"
+#include "CheckpointDatabaseTypes.h"
 
 class Population;
 class Simulation;
@@ -47,10 +49,17 @@ friend class ImmuneHistory;
 public:
 	int64_t const id;
 	
-	Population(
-        Simulation * simPtr, int64_t id,
-        bool willLoadFromCheckpoint
-    );
+	Population(Simulation * simPtr, int64_t id);
+    
+    void initializeHosts();
+    void initializeInfections();
+    
+    void loadHosts(double timeOffset, std::vector<CheckpointHostRow> & hostRows);
+    void loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows);
+    void loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows);
+    void loadImmunity(double timeOffset, std::vector<CheckpointImmunityRow> & immunityRows);
+    
+    void verifyHostIdIndexMap();
 	
 	double bitingRate();
 	int64_t size();

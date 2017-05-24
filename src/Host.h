@@ -24,6 +24,7 @@ class DeathEvent : public zppsim::Event
 public:
 	DeathEvent(Host * hostPtr);
 	virtual void performEvent(zppsim::EventQueue & queue);
+    virtual std::string eventName();
 	
 	Host * hostPtr;
 };
@@ -40,6 +41,7 @@ public:
 	int64_t const id;
 	
 	Host(
+        SimParameters * parPtr,
 		Population * popPtr, int64_t id, double birthTime, double deathTime,
 		bool writeToDatabase,
 		Database & db,
