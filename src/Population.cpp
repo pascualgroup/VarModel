@@ -111,7 +111,7 @@ void Population::verifyHostIdIndexMap()
     }
 }
 
-void Population::loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows)
+void Population::loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows, std::vector<CheckpointExpressionOrderRow> & expOrderRows)
 {
     for(auto & row : infectionRows) {
         int64_t hostId = row.hostId.integerValue();

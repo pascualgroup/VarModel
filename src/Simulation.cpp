@@ -105,7 +105,7 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
     
     bool shouldLoadFromCheckpoint = parPtr->checkpointLoadFilename.present();
     if(parPtr->checkpointPeriod.present() && parPtr->checkpointSaveFilename.present()) {
-        // queuePtr->addEvent(&checkpointEvent);
+         queuePtr->addEvent(&checkpointEvent);
     }
     
 	queuePtr->addEvent(&rateUpdateEvent);
@@ -253,6 +253,9 @@ void Simulation::loadCheckpoint()
     Table<CheckpointInfectionRow> infectionsTable("infections");
     vector<CheckpointInfectionRow> infectionRows = cpdb.readTable(infectionsTable);
     
+    Table<CheckpointExpressionOrderRow> expOrderTable("expressionOrder");
+    vector<CheckpointExpressionOrderRow> expOrderRows = cpdb.readTable(expOrderTable);
+    
     Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
     vector<CheckpointAlleleImmunityRow> alleleImmunityRows = cpdb.readTable(alleleImmunityTable);
     
@@ -269,7 +272,7 @@ void Simulation::loadCheckpoint()
     }
     
     nextHostId = metaRows[0].nextHostId.integerValue();
-    loadPopulations(metaRows[0].time.realValue(), hostRows, infectionRows, alleleImmunityRows, immunityRows);
+    loadPopulations(metaRows[0].time.realValue(), hostRows, infectionRows, expOrderRows, alleleImmunityRows, immunityRows);
 }
 
 void Simulation::loadAlleleCounts(
@@ -341,6 +344,7 @@ void Simulation::loadPopulations(
     double time,
     std::vector<CheckpointHostRow> & hostRows,
     std::vector<CheckpointInfectionRow> & infectionRows,
+    std::vector<CheckpointExpressionOrderRow> & expOrderRows,
     std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
     std::vector<CheckpointImmunityRow> & immunityRows
 ) {
@@ -350,7 +354,7 @@ void Simulation::loadPopulations(
 	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
         Population * popPtr = new Population(this, popId);
         popPtr->loadHosts(time, hostRows);
-        popPtr->loadInfections(time, infectionRows);
+        popPtr->loadInfections(time, infectionRows, expOrderRows);
         if(parPtr->withinHost.useAlleleImmunity) {
             popPtr->loadAlleleImmunity(time, alleleImmunityRows);
         }
@@ -541,6 +545,9 @@ void Simulation::saveCheckpoint()
         Table<CheckpointInfectionRow> infectionsTable("infections");
         cpdb.createTable(infectionsTable);
         
+        Table<CheckpointExpressionOrderRow> expOrderTable("expressionOrder");
+        cpdb.createTable(expOrderTable);
+        
         Table<CheckpointAlleleImmunityRow> alleleImmunityTable("alleleImmunity");
         cpdb.createTable(alleleImmunityTable);
         Table<CheckpointImmunityRow> immunityTable("immunity");
@@ -551,7 +558,7 @@ void Simulation::saveCheckpoint()
         if(parPtr->genes.includeMicrosat) {
             writeMicrosatsToCheckpoint(cpdb, msAlleleCountsTable, msTable, msAllelesTable);
         }
-        writePopulationsToCheckpoint(cpdb, hostsTable, infectionsTable, alleleImmunityTable, immunityTable);
+        writePopulationsToCheckpoint(cpdb, hostsTable, infectionsTable, expOrderTable, alleleImmunityTable, immunityTable);
         
         cpdb.commit();
     } // End of scope causes DB to automatically close
@@ -651,6 +658,7 @@ void Simulation::writeMicrosatsToCheckpoint(Database & cpdb,
 void Simulation::writePopulationsToCheckpoint(Database & cpdb,
     Table<CheckpointHostRow> & hostsTable,
     Table<CheckpointInfectionRow> & infectionsTable,
+    Table<CheckpointExpressionOrderRow> & expOrderTable,
     Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
     Table<CheckpointImmunityRow> & immunityTable
 ) {
@@ -682,6 +690,16 @@ void Simulation::writePopulationsToCheckpoint(Database & cpdb,
                 infRow.initialTime = infection.initialTime;
                 
                 cpdb.insert(infectionsTable, infRow);
+                
+                for(int64_t i = 0; i < parPtr->genesPerStrain; i++) {
+                    CheckpointExpressionOrderRow expRow;
+                    expRow.hostId = hostPtr->id;
+                    expRow.infectionId = infection.id;
+                    expRow.expressionOrder = i;
+                    expRow.geneIndex = infection.expressionOrder[i];
+                    
+                    cpdb.insert(expOrderTable, expRow);
+                }
             }
             
             int64_t nLoci = parPtr->genes.locusNumber;

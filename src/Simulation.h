@@ -251,6 +251,7 @@ private:
     void writePopulationsToCheckpoint(Database & cpdb,
         Table<CheckpointHostRow> & hostsTable,
         Table<CheckpointInfectionRow> & infectionsTable,
+        Table<CheckpointExpressionOrderRow> & expOrderTable,
         Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
         Table<CheckpointImmunityRow> & immunityTable
     );
@@ -275,6 +276,7 @@ private:
         double time,
         std::vector<CheckpointHostRow> & hostRows,
         std::vector<CheckpointInfectionRow> & infectionRows,
+        std::vector<CheckpointExpressionOrderRow> & expOrderRows,
         std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
         std::vector<CheckpointImmunityRow> & immunityRows
     );

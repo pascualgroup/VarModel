@@ -126,8 +126,7 @@ public:
 	void write(Database & db, Table<InfectionRow> & table,Table<StrainRow> & strainsTable,Table<GeneRow> & GeneTable,Table<LociRow> & LociTable);
 	void write(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
     int expressionIndex;
-	
-private:
+    
 	double activationRate();
 	double deactivationRate();
     std::vector<int64_t> expressionOrder;

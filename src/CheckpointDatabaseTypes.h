@@ -103,6 +103,33 @@ ZPPDB_DEFINE_ROW_TYPE(
 )
 
 /**
+ \brief Type defining rows in the checkpoint `expressionOrder` table
+*/
+ZPPDB_DEFINE_ROW_TYPE(
+	CheckpointExpressionOrderRow,
+	
+	/**
+		\brief Host ID
+	*/
+	( (Integer)(hostId) )
+	
+	/**
+		\brief Infection ID
+	*/
+	( (Integer)(infectionId) )
+	
+	/**
+		\brief Expression order
+	*/
+	( (Integer)(expressionOrder) )
+	
+	/**
+		\brief Index of gene within strain
+	*/
+	( (Integer)(geneIndex) )
+)
+
+/**
  \brief Type defining rows in checkpoint `immunity` table.
 */
 ZPPDB_DEFINE_ROW_TYPE(

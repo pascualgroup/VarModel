@@ -55,7 +55,7 @@ public:
     void initializeInfections();
     
     void loadHosts(double timeOffset, std::vector<CheckpointHostRow> & hostRows);
-    void loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows);
+    void loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows, std::vector<CheckpointExpressionOrderRow> & expOrderRows);
     void loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows);
     void loadImmunity(double timeOffset, std::vector<CheckpointImmunityRow> & immunityRows);
     
