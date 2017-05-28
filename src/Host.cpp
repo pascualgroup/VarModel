@@ -316,6 +316,22 @@ void Host::transmitMSTo(Host & dstHost)
 
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
+	double time = popPtr->getTime();
+	
+	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
+	int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
+    
+    receiveInfection(
+        strainPtr,
+        initialGeneIndex,
+        false,
+        time, time
+    );
+}
+
+void Host::receiveInfection(
+    StrainPtr & strainPtr, int64_t geneIndex, bool active, double initialTime, double transitionTime
+) {
 	assert(strainPtr->size() > 0);
 	
 	rng_t * rngPtr = getRngPtr();

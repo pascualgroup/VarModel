@@ -80,7 +80,9 @@ class Infection
 {
 friend class Host;
 public:
-	Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime);
+	Infection(
+        Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime, double transitionTime
+    );
     Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, GenePtr & msPtr, int64_t initialGeneIndex, double initialTime);
 
 	void prepareToEnd();

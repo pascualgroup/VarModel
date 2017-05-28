@@ -85,21 +85,38 @@ void Population::initializeInfections()
     }
 }
 
-void Population::loadHosts(double timeOffset, std::vector<CheckpointHostRow> & hostRows)
-{
-    for(auto & row : hostRows) {
-        if(row.popId.integerValue() == id) {
-            hosts.emplace_back(new Host(
-                simPtr->parPtr, this,
-                row.hostId.integerValue(),
-                row.birthTime.realValue() - timeOffset,
-                row.deathTime.realValue() - timeOffset,
-                simPtr->parPtr->outputHosts,
-                *(simPtr->dbPtr),
-                simPtr->hostsTable
-            ));
-            hostIdIndexMap[row.hostId.integerValue()] = hosts.size() - 1;
+void Population::loadHosts(
+    Database & cpdb, double timeOffset, Table<CheckpointHostRow> & hostsTable,
+    Table<CheckpointInfectionRow> & infectionsTable,
+    Table<CheckpointExpressionOrderRow> & expOrderTable,
+    Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+    Table<CheckpointImmunityRow> & immunityTable
+) {
+    stringstream wherePopId;
+    wherePopId << "WHERE popId = " << id;
+    std::vector<CheckpointHostRow> hostRows = cpdb.readTable(hostsTable, wherePopId.str());
+    
+    for(auto & hostRow : hostRows) {
+        assert(hostRow.popId.integerValue() == id);
+        Host * hostPtr = new Host(
+            simPtr->parPtr, this,
+            hostRow.hostId.integerValue(),
+            hostRow.birthTime.realValue() - timeOffset,
+            hostRow.deathTime.realValue() - timeOffset,
+            simPtr->parPtr->outputHosts,
+            *(simPtr->dbPtr),
+            simPtr->hostsTable
+        );
+        
+        stringstream whereHostId;
+        whereHostId << "WHERE hostId = " << hostPtr->id;
+        std::vector<CheckpointInfectionRow> infectionRows = cpdb.readTable(infectionsTable, whereHostId.str());
+        for(auto & infRow : infectionRows) {
+            
         }
+        
+        hosts.emplace_back(hostPtr);
+        hostIdIndexMap[hostRow.hostId.integerValue()] = hosts.size() - 1;
     }
     verifyHostIdIndexMap();
 }
@@ -109,23 +126,6 @@ void Population::verifyHostIdIndexMap()
     for(int64_t i = 0; i < hosts.size(); i++) {
         assert(hostIdIndexMap[hosts[i]->id] == i);
     }
-}
-
-void Population::loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows, std::vector<CheckpointExpressionOrderRow> & expOrderRows)
-{
-    for(auto & row : infectionRows) {
-        int64_t hostId = row.hostId.integerValue();
-        if(hostIdIndexMap.find(hostId) != hostIdIndexMap.end()) {
-        }
-    }
-}
-
-void Population::loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows)
-{
-}
-
-void Population::loadImmunity(double timeOffset, std::vector<CheckpointImmunityRow> & immunityRows)
-{
 }
 
 int64_t Population::size()

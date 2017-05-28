@@ -220,6 +220,8 @@ void Simulation::initialize()
 
 void Simulation::loadCheckpoint()
 {
+    cerr << "LOADING CHECKPOINT..." << endl;
+    
     Database cpdb(parPtr->checkpointLoadFilename);
     cpdb.beginTransaction();
     
@@ -264,6 +266,8 @@ void Simulation::loadCheckpoint()
     
     loadAlleleCounts(alleleCountRows, alleleNumber, parPtr->genes.locusNumber);
     loadGenes(geneRows, geneAlleleRows, genes, parPtr->genes.locusNumber);
+    
+    nextStrainId = metaRows[0].nextStrainId.integerValue();
     loadStrains(strainRows);
     
     if(parPtr->genes.includeMicrosat) {
@@ -272,7 +276,9 @@ void Simulation::loadCheckpoint()
     }
     
     nextHostId = metaRows[0].nextHostId.integerValue();
-    loadPopulations(metaRows[0].time.realValue(), hostRows, infectionRows, expOrderRows, alleleImmunityRows, immunityRows);
+    loadPopulations(cpdb, metaRows[0].time.realValue(), hostsTable, infectionsTable, expOrderTable, alleleImmunityTable, immunityTable);
+    
+    cerr << "CHECKPOINT LOADED." << endl;
 }
 
 void Simulation::loadAlleleCounts(
@@ -326,41 +332,45 @@ void Simulation::loadGenes(
 void Simulation::loadStrains(std::vector<StrainRow> & strainRows)
 {
     int64_t strainId = strainRows[0].strainId.integerValue();
+    assert(strainId < nextStrainId);
     std::vector<GenePtr> strainGenes;
     for(auto & row : strainRows) {
         if(strainId != row.strainId.integerValue()) {
-            StrainPtr strainPtr = getStrain(strainGenes);
+            loadStrain(strainId, strainGenes);
             strainGenes.clear();
             strainId = row.strainId.integerValue();
         } 
         strainGenes.push_back(genes[row.geneId.integerValue()]);
     }
     if(strainGenes.size() > 0) {
-        StrainPtr strainPtr = getStrain(strainGenes);
+        loadStrain(strainId, strainGenes);
     }
 }
 
+void Simulation::loadStrain(int64_t strainId, std::vector<GenePtr> strainGenes)
+{
+    std::sort(strainGenes.begin(),strainGenes.end());
+    
+    assert(geneVecToStrainIndexMap.find(strainGenes) == geneVecToStrainIndexMap.end()); 
+    Strain * strainPtr = new Strain(strainId, strainGenes, parPtr->outputStrains, *dbPtr, strainsTable);
+    strains.emplace_back(strainPtr);
+    geneVecToStrainIndexMap[strainGenes] = strains.size() - 1;
+}
+
 void Simulation::loadPopulations(
+    Database & cpdb,
     double time,
-    std::vector<CheckpointHostRow> & hostRows,
-    std::vector<CheckpointInfectionRow> & infectionRows,
-    std::vector<CheckpointExpressionOrderRow> & expOrderRows,
-    std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
-    std::vector<CheckpointImmunityRow> & immunityRows
+    Table<CheckpointHostRow> & hostsTable,
+    Table<CheckpointInfectionRow> & infectionsTable,
+    Table<CheckpointExpressionOrderRow> & expOrderTable,
+    Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+    Table<CheckpointImmunityRow> & immunityTable
 ) {
-                
 	// Create populations
 	popPtrs.reserve(parPtr->populations.size());
 	for(int64_t popId = 0; popId < parPtr->populations.size(); popId++) {
         Population * popPtr = new Population(this, popId);
-        popPtr->loadHosts(time, hostRows);
-        popPtr->loadInfections(time, infectionRows, expOrderRows);
-        if(parPtr->withinHost.useAlleleImmunity) {
-            popPtr->loadAlleleImmunity(time, alleleImmunityRows);
-        }
-        else {
-            popPtr->loadImmunity(time, immunityRows);
-        }
+        popPtr->loadHosts(cpdb, time, hostsTable, infectionsTable, expOrderTable, alleleImmunityTable, immunityTable);
 		popPtrs.emplace_back(popPtr);
 	}
     
@@ -560,6 +570,8 @@ void Simulation::saveCheckpoint()
         }
         writePopulationsToCheckpoint(cpdb, hostsTable, infectionsTable, expOrderTable, alleleImmunityTable, immunityTable);
         
+        cpdb.execute("CREATE INDEX expressionOrderIndex ON expressionOrder (hostId, infectionId)");
+        
         cpdb.commit();
     } // End of scope causes DB to automatically close
     rename(cpTmpFilename.c_str(), cpFilename.c_str());
@@ -575,7 +587,8 @@ void Simulation::writeMetaToCheckpoint(Database & cpdb, Table<CheckpointMetaRow>
     CheckpointMetaRow row;
     row.time = getTime();
     row.parameters = paramsStrStream.str();
-    row.nextHostId = nextHostId; 
+    row.nextHostId = nextHostId;
+    row.nextStrainId = nextStrainId; 
     
     cpdb.insert(metaTable, row);
 }

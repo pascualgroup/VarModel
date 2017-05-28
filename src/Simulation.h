@@ -271,14 +271,16 @@ private:
         int64_t nLoci
     );
     void loadStrains(std::vector<StrainRow> & strainRows);
+    void loadStrain(int64_t strainId, std::vector<GenePtr> strainGenes);
     
     void loadPopulations(
+        Database & cpdb,
         double time,
-        std::vector<CheckpointHostRow> & hostRows,
-        std::vector<CheckpointInfectionRow> & infectionRows,
-        std::vector<CheckpointExpressionOrderRow> & expOrderRows,
-        std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows,
-        std::vector<CheckpointImmunityRow> & immunityRows
+        Table<CheckpointHostRow> & hostTable,
+        Table<CheckpointInfectionRow> & infectionTable,
+        Table<CheckpointExpressionOrderRow> & expOrderTable,
+        Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+        Table<CheckpointImmunityRow> & immunityTable
     );
 };
 

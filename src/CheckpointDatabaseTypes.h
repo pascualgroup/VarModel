@@ -27,6 +27,11 @@ ZPPDB_DEFINE_ROW_TYPE(
         \brief Simulation::nextHostId.
     */
     ((Integer)(nextHostId))
+    
+    /**
+        \brief Simulation::nextStrainId.
+    */
+    ((Integer)(nextStrainId))
 )
 
 /**

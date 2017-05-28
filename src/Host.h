@@ -60,6 +60,9 @@ public:
     void transmitMSTo(Host & dstHost);
 
 	void receiveInfection(StrainPtr & strain);
+    void receiveInfection(
+        StrainPtr & strainPtr, int64_t geneIndex, bool active, double initialTime, double transitionTime
+    );
 	
     void receiveInfection(StrainPtr & strain, GenePtr & msPtr);
 	

@@ -14,12 +14,14 @@
 
 using namespace std;
 
-Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime) :
+Infection::Infection(
+    Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime, double transitionTime
+) :
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
 	geneIndex(initialGeneIndex), active(false),
-	initialTime(initialTime)
+	initialTime(initialTime),
+    transitionTime(transitionTime)
 {
-    transitionTime = initialTime;
     for (int64_t i=0; i<strainPtr->size(); i++) {
         expressionOrder.push_back(i);
     }

@@ -54,10 +54,13 @@ public:
     void initializeHosts();
     void initializeInfections();
     
-    void loadHosts(double timeOffset, std::vector<CheckpointHostRow> & hostRows);
-    void loadInfections(double timeOffset, std::vector<CheckpointInfectionRow> & infectionRows, std::vector<CheckpointExpressionOrderRow> & expOrderRows);
-    void loadAlleleImmunity(double timeOffset, std::vector<CheckpointAlleleImmunityRow> & alleleImmunityRows);
-    void loadImmunity(double timeOffset, std::vector<CheckpointImmunityRow> & immunityRows);
+    void loadHosts(
+        Database & cpdb, double timeOffset, Table<CheckpointHostRow> & hostsTable,
+        Table<CheckpointInfectionRow> & infectionsTable,
+        Table<CheckpointExpressionOrderRow> & expOrderTable,
+        Table<CheckpointAlleleImmunityRow> & alleleImmunityTable,
+        Table<CheckpointImmunityRow> & immunityTable
+    );
     
     void verifyHostIdIndexMap();
 	
