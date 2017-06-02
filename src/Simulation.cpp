@@ -103,6 +103,9 @@ Simulation::Simulation(SimParameters * parPtr, Database * dbPtr) :
         queuePtr->addEvent(&removeirsEvent);
     };
     
+    //set migrationPoolSize equal to the initial gene pool size
+    migrationPoolSize = parPtr->genePoolSize;
+    
     //create variant size for each locus
     Array<Double> vals = parPtr->genes.alleleNumber;
 	if(vals.size() == 1) {
@@ -559,7 +562,7 @@ void Simulation::MDA()
 {
     double t = getTime();
     //change the global pool size for immigration
-    parPtr->genePoolSize = parPtr->genePoolSize * parPtr->MDA.MDAGenePoolChange;
+    migrationPoolSize = parPtr->genePoolSize * parPtr->MDA.MDAGenePoolChange;
     if (mdaCounts > parPtr->MDA.totalNumber) {
         cout<<"remove MDAs at "<<t<<endl;
         removeEvent(&mdaEvent);
@@ -582,7 +585,7 @@ void Simulation::IRS()
 {
     //set biting rate amplitude to IRS biting rate amplitude
     //reduce immigration rate
-    parPtr->genePoolSize = parPtr->genePoolSize * parPtr->intervention.IRSGenePoolChange;
+    migrationPoolSize = parPtr->genePoolSize * parPtr->intervention.IRSGenePoolChange;
     for(auto & popPtr : popPtrs) {
         popPtr->IRSBitingAmplitude = parPtr->intervention.amplitude;
         popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate()*parPtr->intervention.IRSMRateAmplitude);
@@ -703,9 +706,8 @@ GenePtr Simulation::drawRandomGene()
 {
     bool func = false;
     int64_t geneIndex;
-    int64_t s = parPtr->genePoolSize;
     while(!func) {
-        geneIndex = drawUniformIndex(rng, s);
+        geneIndex = drawUniformIndex(rng, migrationPoolSize);
         func = genes[geneIndex]->functionality;
     }
 	return genes[geneIndex];

@@ -156,6 +156,7 @@ private:
     IRSEvent irsEvent;
     RemoveIRSEvent removeirsEvent;
     int64_t mdaCounts = 0;
+    int64_t migrationPoolSize;
 	
 	int64_t nextHostId;
 	std::vector<std::unique_ptr<Population>> popPtrs;
