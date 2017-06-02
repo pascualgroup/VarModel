@@ -558,13 +558,16 @@ void Simulation::sampleHosts()
 void Simulation::MDA()
 {
     double t = getTime();
+    //change the global pool size for immigration
+    parPtr->genePoolSize = parPtr->genePoolSize * parPtr->MDA.MDAGenePoolChange;
     if (mdaCounts > parPtr->MDA.totalNumber) {
         cout<<"remove MDAs at "<<t<<endl;
         removeEvent(&mdaEvent);
         //restore the original migration rate
-        for(auto & popPtr : popPtrs) {
+        //shai preferred the migration and global pool to be kept low
+        /*for(auto & popPtr : popPtrs) {
             popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate());
-        }
+        }*/
     }else{
         cerr << t << ": start MDA" << '\n';
         for(auto & popPtr : popPtrs) {
@@ -579,6 +582,7 @@ void Simulation::IRS()
 {
     //set biting rate amplitude to IRS biting rate amplitude
     //reduce immigration rate
+    parPtr->genePoolSize = parPtr->genePoolSize * parPtr->intervention.IRSGenePoolChange;
     for(auto & popPtr : popPtrs) {
         popPtr->IRSBitingAmplitude = parPtr->intervention.amplitude;
         popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate()*parPtr->intervention.IRSMRateAmplitude);
@@ -589,10 +593,10 @@ void Simulation::IRS()
 void Simulation::RemoveIRS()
 {
     //set biting rate amplitude to back to 1
-    //restore original immigration rate
+    //not changing migration rate, nor the global pool size
     for(auto & popPtr : popPtrs) {
         popPtr->IRSBitingAmplitude = 1;
-        popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate());
+        //popPtr->setEventRate(popPtr->immigrationEvent.get(),popPtr->getImmigrationRate());
     }
 }
 

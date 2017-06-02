@@ -318,6 +318,10 @@ ZPPJSON_DEFINE_TYPE(
      \brief whether turn on the intervention mode
      */
      ((Bool) (includeIntervention))
+     /**
+     \brief amplitude of change in gene pool size, gene pool size will be reduced to current size * amplitude
+      */
+     ((Double) (IRSGenePoolChange))
 
 )
 
@@ -363,6 +367,10 @@ ZPPJSON_DEFINE_TYPE(
                      \brief whether turn on the MDA mode
                      */
                     ((Bool) (includeMDA))
+                    /**
+                     \brief amplitude of change in gene pool size, gene pool size will be reduced to current size * amplitude
+                    */
+                    ((Double) (MDAGenePoolChange))
                     
                     )
 
