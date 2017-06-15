@@ -212,7 +212,8 @@ void Host::transmitTo(Host & dstHost)
 		// Take each original strain with probability 1.0 - pRecombinant
         // disable pRecombinant parameter, use rule of combinations
         // given n strains, the probability of strains of recombined is 1-(1/n);
-		double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
+        double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+		//double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
 		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
 		strainsToTransmit = drawMultipleBernoulliRandomSubset(
 			*rngPtr, originalStrains, 1.0 - pRecombinant, false
@@ -279,8 +280,8 @@ void Host::transmitMSTo(Host & dstHost)
     vector<GenePtr> msToTransmit;
 	if(originalStrains.size() > 1) {
 		// Take each original strain with probability 1.0 - pRecombinant
-		//double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
-        double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
+		double pRecombinant = popPtr->simPtr->parPtr->pRecombinant;
+        //double pRecombinant = 1.0-(1.0/double(originalStrains.size()));
 		assert(pRecombinant >= 0.0 && pRecombinant <= 1.0);
         std::vector<size_t> indices = drawMultipleBernoulli(*rngPtr, originalStrains.size(), 1.0 - pRecombinant, false);
         strainsToTransmit.reserve(indices.size());
