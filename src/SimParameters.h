@@ -370,8 +370,7 @@ ZPPJSON_DEFINE_TYPE(
                     /**
                      \brief amplitude of change in gene pool size, gene pool size will be reduced to current size * amplitude
                     */
-                    ((Double) (MDAGenePoolChange))
-                    
+                    ((Double) (MDAGenePoolChange))                    
                     )
 
 ZPPJSON_DEFINE_TYPE(
@@ -503,9 +502,9 @@ ZPPJSON_DEFINE_TYPE(
     */
     ( (Double)(percConversion))
                    
-	/**
-		\brief Probability that a transmitted strain will be a recombinant.
-	*/
+    /**
+     \brief amplitude of change in recombination rate, percentage of recombinants will be reduced to current rate * pRecombinant, if there is MDA or IRS
+    */
 	( (Double)(pRecombinant) )
 	
 	/**

@@ -94,7 +94,7 @@ public:
 	
 	void writeInfections(Database & db, Table<InfectionRow> & table, Table<StrainRow> & strainsTable,Table<GeneRow> & GeneTable,Table<LociRow> & LociTable);
 	void writeInfections(int64_t transmissionId, Database & db, Table<TransmissionInfectionRow> & table);
-	
+    double getRecombinationRate(int64_t strSize);
 	std::string toString();
 private:
 	Population * popPtr;
