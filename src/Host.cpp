@@ -316,30 +316,35 @@ void Host::transmitMSTo(Host & dstHost)
 
 void Host::receiveInfection(StrainPtr & strainPtr)
 {
-	double time = popPtr->getTime();
-	
-	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
+	double initialTime = popPtr->getTime();
+	double transitionTime = initialTime;
+    double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
 	int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
     
     receiveInfection(
         strainPtr,
         initialGeneIndex,
         false,
-        time, time
+        initialTime, transitionTime,
+        std::vector<int64_t>(),
+        0
     );
 }
 
 void Host::receiveInfection(
-    StrainPtr & strainPtr, int64_t geneIndex, bool active, double initialTime, double transitionTime
+    StrainPtr & strainPtr, int64_t initialGeneIndex, bool active, double initialTime, double transitionTime,
+    std::vector<int64_t> const & expressionOrder, int expressionIndex
 ) {
 	assert(strainPtr->size() > 0);
+    
+    double currentTime = popPtr->getTime();
 	
 	rng_t * rngPtr = getRngPtr();
-	double time = popPtr->getTime();
-	
-	double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
-	int64_t initialGeneIndex = tLiverStage == 0 ? 0 : WAITING_STAGE;
-	infections.emplace_back(this, nextInfectionId++, strainPtr, initialGeneIndex, time);
+	infections.emplace_back(
+        this, nextInfectionId++, strainPtr, initialGeneIndex,
+        initialTime, transitionTime,
+        expressionOrder, expressionIndex
+    );
 	
 	
 	// Get an iterator to the infection so that events can
@@ -351,8 +356,10 @@ void Host::receiveInfection(
 	// If starting in liver stage, create a fixed-time transition event
 	// (liver stage -> first gene not yet active)
 	if(initialGeneIndex == WAITING_STAGE) {
+        assert(initialTime == transitionTime);
+        double tLiverStage = popPtr->simPtr->parPtr->tLiverStage;
 		infectionItr->transitionEvent = unique_ptr<TransitionEvent>(
-			new TransitionEvent(infectionItr, time + tLiverStage)
+			new TransitionEvent(infectionItr, transitionTime + tLiverStage)
 		);
 		addEvent(infectionItr->transitionEvent.get());
 	}
@@ -363,7 +370,7 @@ void Host::receiveInfection(
 			new TransitionEvent(
 				infectionItr,
 				infectionItr->transitionRate(),
-				time,
+				currentTime,
 				*rngPtr
 			)
 		);
@@ -371,12 +378,24 @@ void Host::receiveInfection(
 	}
 	
     //Create a mutation event, rate equals pMutation * genesPerStrain
-    infectionItr->mutationEvent = unique_ptr<MutationEvent>(new MutationEvent(infectionItr,popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->locusNumber,time,*rngPtr));
+    infectionItr->mutationEvent = unique_ptr<MutationEvent>(
+        new MutationEvent(
+            infectionItr,
+            popPtr->simPtr->parPtr->pMutation * popPtr->simPtr->parPtr->genesPerStrain * popPtr->simPtr->locusNumber,
+            currentTime, *rngPtr
+        )
+    );
     addEvent(infectionItr->mutationEvent.get());
 
     //Create a ectopic recombination event, rate equals pIntraRecomb * C(genesPerStrain,2)
     int64_t numGenes = popPtr->simPtr->parPtr->genesPerStrain;
-    infectionItr->recombinationEvent = unique_ptr<RecombinationEvent>(new RecombinationEvent(infectionItr,popPtr->simPtr->parPtr->pIntraRecomb * numGenes * (numGenes -1)/2,time,*rngPtr));
+    infectionItr->recombinationEvent = unique_ptr<RecombinationEvent>(
+        new RecombinationEvent(
+            infectionItr,
+            popPtr->simPtr->parPtr->pIntraRecomb * numGenes * (numGenes -1)/2,
+            currentTime, *rngPtr
+        )
+    );
     addEvent(infectionItr->recombinationEvent.get());
 
 	// Create a clearance event
@@ -384,7 +403,8 @@ void Host::receiveInfection(
 	// and may be zero)
     infectionItr->clearanceEvent = unique_ptr<ClearanceEvent>(
         new ClearanceEvent(
-		infectionItr, infectionItr->clearanceRate(), time, *rngPtr
+            infectionItr, infectionItr->clearanceRate(),
+            currentTime, *rngPtr
 		)
     );
 	addEvent(infectionItr->clearanceEvent.get());

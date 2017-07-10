@@ -61,7 +61,8 @@ public:
 
 	void receiveInfection(StrainPtr & strain);
     void receiveInfection(
-        StrainPtr & strainPtr, int64_t geneIndex, bool active, double initialTime, double transitionTime
+        StrainPtr & strainPtr, int64_t geneIndex, bool active, double initialTime, double transitionTime,
+        std::vector<int64_t> const & expressionOrder, int expressionIndex
     );
 	
     void receiveInfection(StrainPtr & strain, GenePtr & msPtr);

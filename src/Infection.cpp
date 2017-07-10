@@ -15,18 +15,23 @@
 using namespace std;
 
 Infection::Infection(
-    Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime, double transitionTime
+    Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex,
+    double initialTime, double transitionTime,
+    std::vector<int64_t> const & expOrder, int initialExpressionIndex
 ) :
 	hostPtr(hostPtr), id(id), strainPtr(strainPtr),
 	geneIndex(initialGeneIndex), active(false),
 	initialTime(initialTime),
-    transitionTime(transitionTime)
+    transitionTime(transitionTime),
+    expressionOrder(expOrder),
+    expressionIndex(initialExpressionIndex)
 {
-    for (int64_t i=0; i<strainPtr->size(); i++) {
-        expressionOrder.push_back(i);
+    if(expressionOrder.size() == 0) {
+        for (int64_t i=0; i<strainPtr->size(); i++) {
+            expressionOrder.push_back(i);
+        }
+        std::random_shuffle(expressionOrder.begin(),expressionOrder.end());
     }
-    std::random_shuffle(expressionOrder.begin(),expressionOrder.end());
-    expressionIndex = 0;
 }
 
 Infection::Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, GenePtr & msPtr, int64_t initialGeneIndex, double initialTime) :

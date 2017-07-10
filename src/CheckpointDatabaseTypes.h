@@ -105,6 +105,11 @@ ZPPDB_DEFINE_ROW_TYPE(
         \brief The initial time of infection
     */
     ( (Real)(initialTime) )
+    
+    /**
+        \brief The index of the currently expressed gene.
+    */
+    ( (Integer)(expressionIndex) )
 )
 
 /**

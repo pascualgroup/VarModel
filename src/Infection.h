@@ -81,7 +81,9 @@ class Infection
 friend class Host;
 public:
 	Infection(
-        Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex, double initialTime, double transitionTime
+        Host * hostPtr, int64_t id, StrainPtr & strainPtr, int64_t initialGeneIndex,
+        double initialTime, double transitionTime,
+        std::vector<int64_t> const & expressionOrder, int initialExpressionIndex
     );
     Infection(Host * hostPtr, int64_t id, StrainPtr & strainPtr, GenePtr & msPtr, int64_t initialGeneIndex, double initialTime);
 

@@ -112,6 +112,10 @@ void Population::loadHosts(
         whereHostId << "WHERE hostId = " << hostPtr->id;
         std::vector<CheckpointInfectionRow> infectionRows = cpdb.readTable(infectionsTable, whereHostId.str());
         for(auto & infRow : infectionRows) {
+            stringstream whereInfectionId;
+            whereInfectionId << "WHERE hostId = " << hostPtr->id << " AND infectionId = " << infRow.infectionId.integerValue();
+            std::vector<CheckpointExpressionOrderRow> expOrderRows = cpdb.readTable(expOrderTable, whereInfectionId.str());
+            
             
         }
         

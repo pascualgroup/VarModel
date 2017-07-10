@@ -695,12 +695,11 @@ void Simulation::writePopulationsToCheckpoint(Database & cpdb,
                 if(infection.msPtr != NULL) {
                     infRow.msId = infection.msPtr->id;
                 }
-                if(infection.geneIndex != WAITING_STAGE) {
-                    infRow.geneIndex = infection.geneIndex;
-                }
+                infRow.geneIndex = infection.geneIndex;
                 infRow.active = infection.active;
                 infRow.transitionTime = infection.transitionTime;
                 infRow.initialTime = infection.initialTime;
+                infRow.expressionIndex = infection.expressionIndex;
                 
                 cpdb.insert(infectionsTable, infRow);
                 
