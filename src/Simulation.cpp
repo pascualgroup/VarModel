@@ -656,7 +656,7 @@ void Simulation::writeMicrosatsToCheckpoint(Database & cpdb,
         msRow.immunityLossRate = genePtr->immunityLossRate;
         msRow.source = genePtr->source;
         msRow.functionality = genePtr->functionality;
-        cpdb.insert(genesTable, msRow);
+        cpdb.insert(msTable, msRow);
         
         for(int64_t i = 0; i < parPtr->genes.microsatNumber; i++) {
             LociRow geneAlleleRow;
